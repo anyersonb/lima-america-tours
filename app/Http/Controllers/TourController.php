@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Region;
 use App\Models\Testimonial;
 use App\Models\Tour;
+use App\Support\ImagePath;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -52,16 +53,35 @@ class TourController extends Controller
             $related = Tour::published()->where('id', '!=', $tour->id)->limit(4)->get();
         }
 
+        // SEO por-tour (docs/qa/ficha-tour.md hallazgo #4): seo_title/seo_description/
+        // seo_image/seo_keywords, con fallback al título/descripción/portada del
+        // propio tour, y al genérico del sitio si todo lo demás viene vacío
+        // (ese último fallback ya lo resuelve resources/views/layouts/app.blade.php
+        // cuando estas variables llegan vacías). No se toca tours/show.blade.php:
+        // el layout compartido las prioriza sobre el @section('title'/'description')
+        // que ya define esa vista.
+        $seoTitle = $tour->seo_title ?: ($tour->title.' — '.__('seo.site_name'));
+        $seoDescription = $tour->seo_description
+            ?: (__('seo.tour_description_prefix').$tour->title.__('seo.tour_description_suffix'));
+        $seoImage = $tour->seo_image ? ImagePath::url($tour->seo_image) : $tour->cover_url;
+        $seoKeywords = is_array($tour->seo_keywords) && count($tour->seo_keywords) > 0
+            ? implode(', ', $tour->seo_keywords)
+            : null;
+
         return view('tours.show', [
-            'tour'          => $tour,
-            'related'       => $related,
-            'testimonials'  => Testimonial::active()->featured()->orderBy('order')->limit(4)->get(),
-            'tourReviews'   => $tour->testimonials()
+            'tour' => $tour,
+            'related' => $related,
+            'testimonials' => Testimonial::active()->featured()->orderBy('order')->limit(4)->get(),
+            'tourReviews' => $tour->testimonials()
                 ->where('is_active', true)
                 ->latest()
                 ->get(),
-            'blockedDates'    => BlockedDate::blockedDatesFor($tour->id),
+            'blockedDates' => BlockedDate::blockedDatesFor($tour->id),
             'blockedWeekdays' => BlockedDate::blockedWeekdaysFor($tour->id),
+            'seoTitle' => $seoTitle,
+            'seoDescription' => $seoDescription,
+            'seoImage' => $seoImage,
+            'seoKeywords' => $seoKeywords,
         ]);
     }
 
@@ -74,26 +94,26 @@ class TourController extends Controller
         $tour = Tour::published()->where('slug', $slug)->firstOrFail();
 
         $data = $request->validate([
-            'rating'  => ['required', 'integer', 'between:1,5'],
-            'name'    => ['required', 'string', 'max:120'],
-            'email'   => ['required', 'email', 'max:160'],
+            'rating' => ['required', 'integer', 'between:1,5'],
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:160'],
             'comment' => ['required', 'string', 'min:10', 'max:2000'],
             // Honeypot anti-spam: debe venir vacío
             'website' => ['nullable', 'size:0'],
         ], [], [
-            'rating'  => 'puntuación',
-            'name'    => 'nombre',
-            'email'   => 'correo',
+            'rating' => 'puntuación',
+            'name' => 'nombre',
+            'email' => 'correo',
             'comment' => 'valoración',
         ]);
 
         Testimonial::create([
-            'tour_id'     => $tour->id,
-            'name'        => $data['name'],
-            'quote_es'    => $data['comment'],
-            'rating'      => $data['rating'],
-            'source'      => 'Web',
-            'is_active'   => false, // pendiente de moderación
+            'tour_id' => $tour->id,
+            'name' => $data['name'],
+            'quote_es' => $data['comment'],
+            'rating' => $data['rating'],
+            'source' => 'Web',
+            'is_active' => false, // pendiente de moderación
             'is_featured' => false,
         ]);
 
@@ -109,8 +129,8 @@ class TourController extends Controller
         $tours = Tour::published()
             ->when($q, fn ($query) => $query->where(function ($w) use ($q) {
                 $w->where('title_es', 'like', "%{$q}%")
-                  ->orWhere('title_en', 'like', "%{$q}%")
-                  ->orWhere('description_es', 'like', "%{$q}%");
+                    ->orWhere('title_en', 'like', "%{$q}%")
+                    ->orWhere('description_es', 'like', "%{$q}%");
             }))
             ->ordered()->paginate(12)->withQueryString();
 

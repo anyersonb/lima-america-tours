@@ -11,10 +11,20 @@
 
     $title = trim($__env->yieldContent('title'));
     $description = trim($__env->yieldContent('description'));
+
+    // Per-tour SEO (Tour::seo_title/seo_description/seo_image/seo_keywords) wins
+    // over the generic @section('title'/'description') that tours/show.blade.php
+    // always sets, when TourController@show passes it (docs/qa/ficha-tour.md
+    // hallazgo #4). Any other view simply doesn't define these and falls back
+    // to the existing @section/default behavior below.
+    if (! empty($seoTitle)) { $title = $seoTitle; }
+    if (! empty($seoDescription)) { $description = $seoDescription; }
+
     if ($title === '') { $title = $defaultTitle; }
     if ($description === '') { $description = $defaultDescription; }
 
     $ogImage = trim($__env->yieldContent('og_image'));
+    if (! empty($seoImage)) { $ogImage = $seoImage; }
     if ($ogImage === '') {
         $ogImage = $defaultOgImage
             ? (\Illuminate\Support\Str::startsWith($defaultOgImage, ['http', '/']) ? $defaultOgImage : asset($defaultOgImage))
@@ -50,9 +60,14 @@
     @endif
     <meta name="theme-color" content="#CB101E">
     <meta name="author" content="{{ $siteName }}">
-    @isset($settings['seo_default_keywords'])
-        <meta name="keywords" content="{{ $settings['seo_default_keywords'] }}">
-    @endisset
+    @php
+        // Per-tour keywords (Tour::seo_keywords) win over the site-wide default
+        // (docs/qa/ficha-tour.md hallazgo #4); other views keep the site default.
+        $keywordsContent = ! empty($seoKeywords) ? $seoKeywords : ($settings['seo_default_keywords'] ?? null);
+    @endphp
+    @if ($keywordsContent)
+        <meta name="keywords" content="{{ $keywordsContent }}">
+    @endif
     @if ($googleVerify)
         <meta name="google-site-verification" content="{{ $googleVerify }}">
     @endif

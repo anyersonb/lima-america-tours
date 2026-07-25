@@ -20,10 +20,15 @@ class TourResource extends Resource
     protected static ?string $model = Tour::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-globe-americas';
+
     protected static ?string $navigationGroup = 'Catálogo';
+
     protected static ?string $navigationLabel = 'Tours';
+
     protected static ?string $modelLabel = 'Tour';
+
     protected static ?string $pluralModelLabel = 'Tours';
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
@@ -70,9 +75,10 @@ class TourResource extends Resource
                                             Forms\Components\TextInput::make('price')
                                                 ->required()
                                                 ->numeric()
+                                                ->minValue(0.01)
                                                 ->prefix('$')
                                                 ->label('Precio actual (AHORA)')
-                                                ->helperText('Es el precio que paga el cliente.')
+                                                ->helperText('Es el precio que paga el cliente. Debe ser mayor que 0.')
                                                 ->reactive(),
                                             Forms\Components\TextInput::make('price_before')
                                                 ->numeric()
@@ -92,7 +98,15 @@ class TourResource extends Resource
                                                 $price = (float) $get('price');
                                                 $priceBefore = (float) $get('price_before');
 
-                                                if ($priceBefore <= 0 || $price <= 0) {
+                                                // Cada rama tiene su propio copy porque cada una es una causa
+                                                // distinta de "sin oferta" (docs/qa/ficha-tour.md hallazgo #8:
+                                                // price=0 mostraba el mismo texto que "precio antes vacío",
+                                                // un copy incorrecto que confundía la causa real).
+                                                if ($price <= 0) {
+                                                    return '⚠ Sin oferta: el precio actual (AHORA) debe ser mayor que 0.';
+                                                }
+
+                                                if ($priceBefore <= 0) {
                                                     return '— Sin oferta activa (precio antes vacío).';
                                                 }
 
@@ -100,7 +114,9 @@ class TourResource extends Resource
                                                     return '⚠ Sin oferta: el precio antes debe ser MAYOR que el precio actual.';
                                                 }
 
-                                                $discount = round((1 - $price / $priceBefore) * 100);
+                                                // Misma fórmula que usan la tabla y (a futuro) el front:
+                                                // Tour::offerDiscountPercent() es la única fuente de verdad.
+                                                $discount = Tour::offerDiscountPercent($price, $priceBefore);
 
                                                 return "✔ OFERTA ESPECIAL -{$discount}% activa — el card mostrará \"ANTES US\${$priceBefore}\" tachado y \"AHORA US\${$price}\".";
                                             }),
@@ -157,8 +173,8 @@ class TourResource extends Resource
                                     Forms\Components\TextInput::make('question')->label('Pregunta')->required(),
                                     Forms\Components\Textarea::make('answer')->label('Respuesta')->rows(3)->required(),
                                 ])->collapsible()->reorderable()->defaultItems(0)
-                                  ->itemLabel(fn (array $state): ?string => $state['question'] ?? null)
-                                  ->helperText('Se muestran como acordeón en la página del tour. Déjalo vacío si el tour no lleva FAQs.'),
+                                    ->itemLabel(fn (array $state): ?string => $state['question'] ?? null)
+                                    ->helperText('Se muestran como acordeón en la página del tour. Déjalo vacío si el tour no lleva FAQs.'),
                             ]),
 
                         Tabs\Tab::make('English')
@@ -180,8 +196,8 @@ class TourResource extends Resource
                                     Forms\Components\TextInput::make('question')->label('Question')->required(),
                                     Forms\Components\Textarea::make('answer')->label('Answer')->rows(3)->required(),
                                 ])->collapsible()->reorderable()->defaultItems(0)
-                                  ->itemLabel(fn (array $state): ?string => $state['question'] ?? null)
-                                  ->helperText('Shown as an accordion on the tour page. Falls back to Spanish if empty.'),
+                                    ->itemLabel(fn (array $state): ?string => $state['question'] ?? null)
+                                    ->helperText('Shown as an accordion on the tour page. Falls back to Spanish if empty.'),
                             ]),
 
                         Tabs\Tab::make('Português')
@@ -203,8 +219,8 @@ class TourResource extends Resource
                                     Forms\Components\TextInput::make('question')->label('Pergunta')->required(),
                                     Forms\Components\Textarea::make('answer')->label('Resposta')->rows(3)->required(),
                                 ])->collapsible()->reorderable()->defaultItems(0)
-                                  ->itemLabel(fn (array $state): ?string => $state['question'] ?? null)
-                                  ->helperText('Exibido como acordeão na página do tour. Se vazio, usa o espanhol.'),
+                                    ->itemLabel(fn (array $state): ?string => $state['question'] ?? null)
+                                    ->helperText('Exibido como acordeão na página do tour. Se vazio, usa o espanhol.'),
                             ]),
 
                         Tabs\Tab::make('Comparativa')
@@ -221,7 +237,7 @@ class TourResource extends Resource
                                         Forms\Components\Select::make('comparison.color')
                                             ->label('Color del fondo')
                                             ->options([
-                                                'teal'   => 'Teal oscuro + acento naranja (recomendado)',
+                                                'teal' => 'Teal oscuro + acento naranja (recomendado)',
                                                 'orange' => 'Naranja cálido (atardecer)',
                                             ])
                                             ->default('teal')
@@ -369,14 +385,14 @@ class TourResource extends Resource
                     ->label('Precio'),
                 Tables\Columns\IconColumn::make('has_offer')
                     ->label('Oferta')
-                    ->getStateUsing(fn ($record): bool => filled($record->price_before) && (float) $record->price_before > (float) $record->price)
+                    ->getStateUsing(fn ($record): bool => $record->hasActiveOffer())
                     ->boolean()
                     ->trueIcon('heroicon-o-tag')
                     ->falseIcon('heroicon-o-minus')
                     ->trueColor('success')
                     ->falseColor('gray')
-                    ->tooltip(fn ($record): string => filled($record->price_before) && (float) $record->price_before > (float) $record->price
-                        ? 'OFERTA ESPECIAL -' . round((1 - (float) $record->price / (float) $record->price_before) * 100) . '%'
+                    ->tooltip(fn ($record): string => $record->hasActiveOffer()
+                        ? 'OFERTA ESPECIAL -'.$record->discountPercent().'%'
                         : 'Sin oferta'
                     ),
                 Tables\Columns\TextColumn::make('rating')
