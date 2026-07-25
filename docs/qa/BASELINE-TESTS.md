@@ -1,12 +1,24 @@
 # Línea base de tests — Lima América Tours
 
-`php artisan test` → **9 failed, 33 passed (115 assertions)**. Fecha: 2026-07-25.
-Estos 9 fallos son **herencia del fork** (pre-existentes, confirmados corriendo la suite sin el SmokeTest nuevo).
+**ACTUALIZACIÓN 2026-07-25:** tras corregir el bug del layout `jsonld.blade.php` (`?:`→`?? null`, commit en `qa/setup`), la suite bajó de **9 → 4 fallos** (`4 failed, 38 passed, 133 assertions`). Se resolvieron los 5 VIVO-ROTO (CartTest ×2, CheckoutTest·thanks, NewsletterTest ×2). **La línea base vigente son 4** (los del cobro Culqi pay-now, pendientes de la reescritura de pasarela).
+
+Historial: arrancó en 9 failed / 33 passed (herencia del fork).
 
 ## Gate vigente (reemplaza a "todo verde")
-**El gate pasa si:** `SmokeTest` en verde **Y** cero fallos NUEVOS respecto a esta baseline (los 9 de abajo).
+**El gate pasa si:** `SmokeTest` en verde **Y** cero fallos NUEVOS respecto a la baseline de **4** (los CheckoutTest de abajo marcados "EN ALCANCE · pasarela").
 - `SmokeTest` (8 tests): ✅ VERDE — es lo que el gate debe proteger.
-- Un fallo distinto a estos 9 = regresión = 🔴, detiene el pipeline.
+- Un fallo distinto a esos 4 = regresión = 🔴 → corregir sobre la marcha (modo autonomía).
+
+### Baseline VIGENTE (4)
+- CheckoutTest · payment form renders with items
+- CheckoutTest · process payment with valid token creates booking and charge
+- CheckoutTest · process payment with failed token marks booking failed
+- CheckoutTest · booking email is queued after success
+
+> Los 4 se reescriben con la integración Culqi+PayPal (ver `docs/pagos/PLAN-PASARELAS.md` §10.1). NewsletterTest y CartTest **ya pasan**.
+
+---
+### Baseline original (histórica, 9) — 5 ya RESUELTOS por el fix jsonld
 
 ## Los 9 fallos de la baseline
 
