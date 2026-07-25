@@ -31,10 +31,10 @@
         ? 'https://' . preg_replace('#^https?://#i', '', trim($url))
         : null;
     $sameAs = array_values(array_filter([
-        $stripScheme($settings['social_instagram'] ?: null),
-        $stripScheme($settings['social_facebook'] ?: null),
-        $stripScheme($settings['social_tiktok'] ?: null),
-        $stripScheme($settings['social_youtube'] ?: null),
+        $stripScheme($settings['social_instagram'] ?? null),
+        $stripScheme($settings['social_facebook'] ?? null),
+        $stripScheme($settings['social_tiktok'] ?? null),
+        $stripScheme($settings['social_youtube'] ?? null),
         $settings['social_google_reviews']   ?? null,
         $settings['social_tripadvisor']      ?? null,
         $settings['social_trivago']          ?? null,
