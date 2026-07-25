@@ -20,7 +20,10 @@ class SettingSeeder extends Seeder
             // Contacto
             ['key' => 'contact_email', 'value' => 'hola@limaamericatours.com', 'group' => 'contact'],
             ['key' => 'contact_phone', 'value' => '+51 925 886 725', 'group' => 'contact'],
-            ['key' => 'contact_phone_secondary', 'value' => '190010088', 'group' => 'contact'],
+            // Vacío a propósito: es un teléfono secundario opcional. El front
+            // (contact.blade.php) ya lo oculta con @if(!empty(...)) cuando no
+            // hay valor cargado desde Configuración → Contacto.
+            ['key' => 'contact_phone_secondary', 'value' => '', 'group' => 'contact'],
             ['key' => 'contact_address_es', 'value' => 'Av. Larcomar 233, Of. 410 — Miraflores, Lima', 'group' => 'contact'],
             ['key' => 'contact_address_en', 'value' => 'Larcomar Ave. 233, Off. 410 — Miraflores, Lima', 'group' => 'contact'],
             ['key' => 'contact_hours_es', 'value' => 'Lun – Vie: 9:00 a.m. – 7:00 p.m.', 'group' => 'contact'],
@@ -57,7 +60,7 @@ class SettingSeeder extends Seeder
             ['key' => 'stats_tours', 'value' => '+50', 'group' => 'home'],
 
             // Métodos de pago
-            ['key' => 'payment_methods', 'type' => 'array', 'value' => json_encode(['VISA','Mastercard','AmEx','PayPal','Culqi']), 'group' => 'payment'],
+            ['key' => 'payment_methods', 'type' => 'array', 'value' => json_encode(['VISA', 'Mastercard', 'AmEx', 'PayPal']), 'group' => 'payment'],
         ];
 
         foreach ($settings as $s) {

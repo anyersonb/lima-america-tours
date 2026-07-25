@@ -3,25 +3,27 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\BookingResource\Pages;
-use App\Filament\Resources\BookingResource\RelationManagers;
 use App\Models\Booking;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BookingResource extends Resource
 {
     protected static ?string $model = Booking::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
+
     protected static ?string $navigationGroup = 'Marketing';
+
     protected static ?string $navigationLabel = 'Reservas';
+
     protected static ?string $modelLabel = 'Reserva';
+
     protected static ?string $pluralModelLabel = 'Reservas';
+
     protected static ?int $navigationSort = 8;
 
     public static function getNavigationBadge(): ?string
@@ -55,8 +57,8 @@ class BookingResource extends Resource
                             ->label('Tour del catálogo')
                             ->relationship('tour', 'title_es')
                             ->getOptionLabelFromRecordUsing(fn (\App\Models\Tour $record) => $record->title_es
-                                . ' — US$' . number_format((float) $record->price, 2)
-                                . ' · cap. ' . ($record->max_capacity ?: '∞'))
+                                .' — US$'.number_format((float) $record->price, 2)
+                                .' · cap. '.($record->max_capacity ?: '∞'))
                             ->searchable()
                             ->preload()
                             ->required(fn (Forms\Get $get) => ! $get('use_custom_tour'))
@@ -153,14 +155,14 @@ class BookingResource extends Resource
 
                         Forms\Components\Placeholder::make('pax_hint')
                             ->label('Total de pasajeros')
-                            ->content(fn (Forms\Get $get) => ((int) $get('adults') + (int) $get('children')) . ' persona(s)'),
+                            ->content(fn (Forms\Get $get) => ((int) $get('adults') + (int) $get('children')).' persona(s)'),
 
                         // Oferta / descuento especial (manual)
                         Forms\Components\Select::make('discount_type')
                             ->label('Oferta / descuento especial')
                             ->options([
                                 'percent' => 'Porcentaje (%)',
-                                'fixed'   => 'Monto fijo (US$)',
+                                'fixed' => 'Monto fijo (US$)',
                             ])
                             ->placeholder('Sin descuento')
                             ->live()
@@ -178,7 +180,7 @@ class BookingResource extends Resource
                         Forms\Components\Placeholder::make('discount_amount_hint')
                             ->label('Descuento aplicado')
                             ->visible(fn (Forms\Get $get) => filled($get('discount_type')))
-                            ->content(fn (Forms\Get $get) => 'US$' . number_format((float) $get('discount_amount'), 2)),
+                            ->content(fn (Forms\Get $get) => 'US$'.number_format((float) $get('discount_amount'), 2)),
 
                         Forms\Components\TextInput::make('total_price')
                             ->label('TOTAL a cobrar')
@@ -204,7 +206,7 @@ class BookingResource extends Resource
                         Forms\Components\Select::make('status')
                             ->label('Estado de la reserva')
                             ->options([
-                                'pending'   => 'Pendiente',
+                                'pending' => 'Pendiente',
                                 'confirmed' => 'Confirmada',
                                 'cancelled' => 'Cancelada',
                                 'completed' => 'Completada',
@@ -215,8 +217,8 @@ class BookingResource extends Resource
                         Forms\Components\Select::make('payment_status')
                             ->label('Estado del pago')
                             ->options([
-                                'pending'  => 'Por pagar',
-                                'paid'     => 'Pagado',
+                                'pending' => 'Por pagar',
+                                'paid' => 'Pagado',
                                 'refunded' => 'Reembolsado',
                             ])
                             ->default('pending')
@@ -232,12 +234,12 @@ class BookingResource extends Resource
                         Forms\Components\Select::make('payment_method')
                             ->label('Método de pago')
                             ->options([
-                                'pay_later'    => 'Pagar luego',
-                                'paypal'       => 'PayPal',
-                                'card'         => 'Pago con tarjeta',
+                                'pay_later' => 'Pagar luego',
+                                'paypal' => 'PayPal',
+                                'card' => 'Pago con tarjeta',
                                 'payment_link' => 'Link de pago',
-                                'cash'         => 'Efectivo',
-                                'transfer'     => 'Transferencia',
+                                'cash' => 'Efectivo',
+                                'transfer' => 'Transferencia',
                             ])
                             ->default('pay_later')
                             ->native(false)
@@ -299,11 +301,11 @@ class BookingResource extends Resource
     public static function recalcTotals(Forms\Set $set, Forms\Get $get): void
     {
         $unit = (float) $get('unit_price');
-        $pax  = max(0, (int) $get('adults') + (int) $get('children'));
+        $pax = max(0, (int) $get('adults') + (int) $get('children'));
         $gross = round($unit * $pax, 2);
 
         $type = $get('discount_type');
-        $val  = (float) $get('discount_value');
+        $val = (float) $get('discount_value');
         $discount = 0.0;
 
         if ($type === 'percent') {
@@ -330,18 +332,24 @@ class BookingResource extends Resource
                     ->description(fn ($record) => $record->tour_id ? null : 'Personalizado')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('customer_name')
+                    ->label('Cliente')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('customer_email')
+                    ->label('Correo')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('customer_phone')
+                    ->label('Teléfono')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('travel_date')
+                    ->label('Fecha del tour')
                     ->date()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('adults')
+                    ->label('Adultos')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('children')
+                    ->label('Niños')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('unit_price')
@@ -362,41 +370,41 @@ class BookingResource extends Resource
                     ->label('Estado')
                     ->badge()
                     ->formatStateUsing(fn (string $state) => match ($state) {
-                        'pending'   => 'Pendiente',
+                        'pending' => 'Pendiente',
                         'confirmed' => 'Confirmada',
                         'cancelled' => 'Cancelada',
                         'completed' => 'Completada',
-                        default     => $state,
+                        default => $state,
                     })
                     ->color(fn (string $state) => match ($state) {
                         'confirmed', 'completed' => 'success',
-                        'cancelled'              => 'danger',
-                        default                  => 'warning',
+                        'cancelled' => 'danger',
+                        default => 'warning',
                     }),
                 Tables\Columns\TextColumn::make('payment_status')
                     ->label('Pago')
                     ->badge()
                     ->formatStateUsing(fn (string $state) => match ($state) {
-                        'paid'     => 'Pagado',
-                        'pending'  => 'Por pagar',
+                        'paid' => 'Pagado',
+                        'pending' => 'Por pagar',
                         'refunded' => 'Reembolsado',
-                        default    => $state,
+                        default => $state,
                     })
                     ->color(fn (string $state) => match ($state) {
-                        'paid'     => 'success',
+                        'paid' => 'success',
                         'refunded' => 'gray',
-                        default    => 'warning',
+                        default => 'warning',
                     }),
                 Tables\Columns\TextColumn::make('payment_method')
                     ->label('Método')
                     ->formatStateUsing(fn (?string $state) => match ($state) {
-                        'pay_later'    => 'Pagar luego',
-                        'paypal'       => 'PayPal',
-                        'card'         => 'Pago con tarjeta',
+                        'pay_later' => 'Pagar luego',
+                        'paypal' => 'PayPal',
+                        'card' => 'Pago con tarjeta',
                         'payment_link' => 'Link de pago',
-                        'cash'         => 'Efectivo',
-                        'transfer'     => 'Transferencia',
-                        default        => $state ?: '—',
+                        'cash' => 'Efectivo',
+                        'transfer' => 'Transferencia',
+                        default => $state ?: '—',
                     })
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('payment_reference')
@@ -415,12 +423,15 @@ class BookingResource extends Resource
                         ->toggleable(isToggledHiddenByDefault: true),
                 ] : []),
                 Tables\Columns\TextColumn::make('locale')
+                    ->label('Idioma')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Creado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Actualizado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -451,7 +462,7 @@ class BookingResource extends Resource
                             \Filament\Notifications\Notification::make()
                                 ->success()
                                 ->title('Correo reenviado')
-                                ->body('Se envió la confirmación a ' . $data['email'])
+                                ->body('Se envió la confirmación a '.$data['email'])
                                 ->send();
                         } catch (\Throwable $e) {
                             \Filament\Notifications\Notification::make()

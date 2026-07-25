@@ -8,41 +8,41 @@
 
     $isOrange = ($data['color'] ?? 'teal') === 'orange';
 
-    // Paletas por color de fondo
+    // Paletas por color de fondo (marca lat- roja: variante "ink" oscura + variante "red" intensa)
     if ($isOrange) {
-        $sectionStyle = 'background: linear-gradient(155deg,#eda45b 0%,#d97b32 55%,#b5611f 100%);';
-        $badgeCls   = 'bg-teal-900 text-white';
+        $sectionStyle = 'background: linear-gradient(155deg,#e2545f 0%,#cb101e 55%,#9d0c16 100%);';
+        $badgeCls   = 'bg-lat-ink text-white';
         $titleCls   = 'text-white';
-        $hlCls      = 'text-teal-900';
+        $hlCls      = 'text-lat-ink';
         $introCls   = 'text-white/90';
         $convPanel  = 'bg-white/20 ring-white/25';
         $convTitle  = 'text-white/90';
         $convItem   = 'text-white/90';
         $convIco    = 'bg-white/25 text-white/70';
         $premPanel  = 'bg-white ring-black/5 shadow-lg';
-        $premTitle  = 'text-orange-600';
-        $premItem   = 'text-teal-900/90';
-        $premIco    = 'bg-orange-500 text-white';
-        $vsCls      = 'bg-teal-900 text-white';
-        $footerCls  = 'bg-teal-900/90 text-white';
-        $footerBar  = 'before:bg-orange-400';
+        $premTitle  = 'text-lat-red';
+        $premItem   = 'text-lat-ink/90';
+        $premIco    = 'bg-lat-red text-white';
+        $vsCls      = 'bg-lat-ink text-white';
+        $footerCls  = 'bg-lat-ink/90 text-white';
+        $footerBar  = 'before:bg-white/70';
     } else {
-        $sectionStyle = 'background: linear-gradient(158deg,#124347 0%,#0c3438 55%,#07242700 100%),#0a2c2f;';
-        $badgeCls   = 'bg-orange-500 text-white';
+        $sectionStyle = 'background: linear-gradient(158deg,#171412 0%,#221c18 55%,#17141200 100%),#171412;';
+        $badgeCls   = 'bg-lat-red text-white';
         $titleCls   = 'text-white';
-        $hlCls      = 'text-orange-400';
+        $hlCls      = 'text-lat-red';
         $introCls   = 'text-white/75';
         $convPanel  = 'bg-white/[0.055] ring-white/10';
         $convTitle  = 'text-white/55';
         $convItem   = 'text-white/70';
         $convIco    = 'bg-white/10 text-white/40';
-        $premPanel  = 'bg-orange-500/[0.14] ring-orange-400/30';
-        $premTitle  = 'text-orange-300';
+        $premPanel  = 'bg-lat-red/[0.14] ring-lat-red/30';
+        $premTitle  = 'text-lat-red';
         $premItem   = 'text-white';
-        $premIco    = 'bg-orange-500 text-white';
-        $vsCls      = 'bg-orange-500 text-white';
+        $premIco    = 'bg-lat-red text-white';
+        $vsCls      = 'bg-lat-red text-white';
         $footerCls  = 'bg-white/[0.06] text-white/90';
-        $footerBar  = 'before:bg-orange-400';
+        $footerBar  = 'before:bg-lat-red';
     }
 
     $titleId = 'cmp-' . ($variant ?? 'd') . '-title';

@@ -129,6 +129,17 @@
     svg { width: 15px; height: 15px; }
 }
 
+.lat-badge-offer {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: $lat-red-tint; color: $lat-red-deep; font-weight: 700; font-size: .82rem;
+    padding: 6px 8px 6px 13px; border-radius: $lat-r-pill;
+
+    span {
+        background: $lat-red; color: #fff; font-weight: 800; font-size: .74rem;
+        padding: 3px 9px; border-radius: $lat-r-pill;
+    }
+}
+
 // ── Tabs ─────────────────────────────────────────────────────────────────
 .lat-tabs {
     display: flex; gap: 6px; border-bottom: 1px solid $lat-line; margin-bottom: 24px; overflow-x: auto;
@@ -156,6 +167,16 @@
         li { display: flex; gap: 11px; align-items: flex-start; color: $lat-ink-soft; }
         svg { width: 19px; height: 19px; color: #128a4b; flex: none; margin-top: 2px; }
     }
+
+    &__subtitle {
+        font-family: $lat-font-sans; font-weight: 700; font-size: .82rem; text-transform: uppercase;
+        letter-spacing: .06em; color: $lat-muted; margin: 22px 0 12px;
+        padding-top: 20px; border-top: 1px solid $lat-line;
+
+        &:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+    }
+
+    &__excludes svg { color: $lat-red; }
 }
 
 .lat-itin-step {
@@ -214,6 +235,19 @@
         font-family: $lat-font-serif; font-size: 2.5rem; font-weight: 700; line-height: 1;
         span { font-size: .9rem; font-weight: 500; opacity: .9; }
     }
+
+    &__offer {
+        display: flex; align-items: center; gap: 9px; margin-bottom: 6px;
+    }
+
+    &__before {
+        font-size: .92rem; text-decoration: line-through; opacity: .75;
+    }
+
+    &__pct {
+        background: rgba(255, 255, 255, .22); font-size: .72rem; font-weight: 800;
+        padding: 3px 9px; border-radius: $lat-r-pill; letter-spacing: .02em;
+    }
 }
 
 .lat-book-body { padding: 22px 24px; display: flex; flex-direction: column; gap: 16px; }
@@ -270,6 +304,59 @@
     h5 { font-family: $lat-font-sans; font-size: .9rem; line-height: 1.25; margin-bottom: 5px; color: $lat-ink; }
     .lat-mprice { font-weight: 700; color: $lat-red; font-size: .85rem; }
     .lat-stars { font-size: .76rem; }
+}
+
+// ── Preguntas frecuentes (acordeón nativo <details>, se muestra solo si el tour tiene FAQs) ──
+.lat-faq {
+    margin-top: 36px;
+    padding-top: 30px;
+    border-top: 1px solid $lat-line;
+
+    &__title {
+        font-family: $lat-font-serif; font-weight: 800; color: $lat-ink;
+        font-size: clamp(1.3rem, 2.2vw, 1.6rem); margin-bottom: 16px;
+    }
+}
+
+.lat-faq-item {
+    border: 1px solid $lat-line;
+    border-radius: $lat-r-md;
+    margin-bottom: 10px;
+    overflow: hidden;
+    background: $lat-surface;
+
+    & + & { margin-top: 10px; }
+
+    summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 16px 18px;
+        font-family: $lat-font-sans;
+        font-weight: 700;
+        color: $lat-ink;
+        font-size: .95rem;
+
+        &::-webkit-details-marker { display: none; }
+        &:focus-visible { outline: 2px solid $lat-red; outline-offset: -2px; }
+    }
+
+    &__ic {
+        flex: none; width: 26px; height: 26px; border-radius: 50%;
+        background: $lat-red-tint; color: $lat-red;
+        display: grid; place-items: center; transition: transform .2s ease;
+
+        svg { width: 14px; height: 14px; }
+    }
+
+    &[open] &__ic { transform: rotate(45deg); }
+
+    &__a {
+        margin: 0; padding: 0 18px 18px; color: $lat-ink-soft; font-size: .92rem; line-height: 1.65;
+    }
 }
 
 // ── Franja de garantías (bottom) — reutiliza .lat-guarantee/.lat-gt de Home ──

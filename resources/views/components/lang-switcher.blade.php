@@ -33,7 +33,7 @@
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
         role="listbox"
-        class="absolute right-0 top-full mt-2 min-w-[11rem] bg-white text-teal-700 rounded-lg shadow-xl py-1 ring-1 ring-black/5 z-50">
+        class="absolute right-0 top-full mt-2 min-w-[11rem] bg-white text-lat-ink rounded-lg shadow-xl py-1 ring-1 ring-black/5 z-50">
         @foreach ($supported as $loc)
             <li>
                 <a href="{{ url('/' . $loc . ($path ? '/' . $path : '')) }}"
@@ -41,12 +41,12 @@
                    rel="alternate"
                    role="option"
                    aria-selected="{{ $loc === $current ? 'true' : 'false' }}"
-                   class="flex items-center gap-2 px-4 py-2 hover:bg-teal-50 text-sm
-                          {{ $loc === $current ? 'font-semibold bg-teal-50/60' : '' }}">
+                   class="flex items-center gap-2 px-4 py-2 hover:bg-lat-surface-2 text-sm
+                          {{ $loc === $current ? 'font-semibold bg-lat-red-tint' : '' }}">
                     <span aria-hidden="true" class="text-base leading-none">{{ $flags[$loc] }}</span>
                     <span>{{ $labels[$loc] }}</span>
                     @if ($loc === $current)
-                        <svg class="ml-auto w-3.5 h-3.5 text-teal-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <svg class="ml-auto w-3.5 h-3.5 text-lat-red" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                         </svg>
                     @endif

@@ -3,25 +3,27 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TestimonialResource\Pages;
-use App\Filament\Resources\TestimonialResource\RelationManagers;
 use App\Models\Testimonial;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class TestimonialResource extends Resource
 {
     protected static ?string $model = Testimonial::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-right';
+
     protected static ?string $navigationGroup = 'Contenido';
+
     protected static ?string $navigationLabel = 'Testimonios';
+
     protected static ?string $modelLabel = 'Testimonio';
+
     protected static ?string $pluralModelLabel = 'Testimonios';
+
     protected static ?int $navigationSort = 4;
 
     public static function form(Form $form): Form
@@ -37,10 +39,10 @@ class TestimonialResource extends Resource
                     ->maxLength(255),
                 Forms\Components\Textarea::make('quote_es')
                     ->required()
-                    ->label('Comentário (Español)')
+                    ->label('Comentario (Español)')
                     ->columnSpanFull(),
                 Forms\Components\Textarea::make('quote_en')
-                    ->label('Comentário (English)')
+                    ->label('Comment (English)')
                     ->columnSpanFull(),
                 Forms\Components\Textarea::make('quote_pt')
                     ->label('Comentário (Português)')

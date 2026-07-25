@@ -19,7 +19,7 @@ class BlogPost extends Model
     protected $casts = [
         'is_published' => 'boolean',
         'published_at' => 'datetime',
-        'tags'         => 'array',
+        'tags' => 'array',
     ];
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -43,6 +43,19 @@ class BlogPost extends Model
             if (! empty($post->body_es)) {
                 $wordCount = str_word_count(strip_tags($post->body_es));
                 $post->reading_minutes = (int) ceil($wordCount / 200);
+            }
+
+            // EN/PT translatable columns are nullable at the DB level so an
+            // editor can publish with only the Spanish tab filled in without
+            // a 500. Backfill the raw columns with the Spanish content so
+            // anything that reads them directly (not through the locale
+            // accessors below) still gets sensible content instead of NULL.
+            foreach (['title', 'excerpt', 'body'] as $field) {
+                foreach (['en', 'pt'] as $locale) {
+                    if (empty($post->{"{$field}_{$locale}"})) {
+                        $post->{"{$field}_{$locale}"} = $post->{"{$field}_es"};
+                    }
+                }
             }
         });
     }
@@ -72,7 +85,7 @@ class BlogPost extends Model
      */
     public function getTitleAttribute(): string
     {
-        return $this->{"title_" . app()->getLocale()} ?? $this->title_es ?? '';
+        return $this->{'title_'.app()->getLocale()} ?? $this->title_es ?? '';
     }
 
     /**
@@ -80,7 +93,7 @@ class BlogPost extends Model
      */
     public function getExcerptAttribute(): string
     {
-        return $this->{"excerpt_" . app()->getLocale()} ?? $this->excerpt_es ?? '';
+        return $this->{'excerpt_'.app()->getLocale()} ?? $this->excerpt_es ?? '';
     }
 
     /**
@@ -88,7 +101,7 @@ class BlogPost extends Model
      */
     public function getBodyAttribute(): string
     {
-        return $this->{"body_" . app()->getLocale()} ?? $this->body_es ?? '';
+        return $this->{'body_'.app()->getLocale()} ?? $this->body_es ?? '';
     }
 
     /**

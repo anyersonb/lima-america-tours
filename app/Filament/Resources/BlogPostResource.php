@@ -16,10 +16,15 @@ class BlogPostResource extends Resource
     protected static ?string $model = BlogPost::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-newspaper';
+
     protected static ?string $navigationGroup = 'Contenido';
+
     protected static ?string $navigationLabel = 'Blog';
+
     protected static ?string $modelLabel = 'Artículo';
+
     protected static ?string $pluralModelLabel = 'Artículos';
+
     protected static ?int $navigationSort = 10;
 
     public static function form(Form $form): Form
@@ -204,9 +209,9 @@ class BlogPostResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListBlogPosts::route('/'),
+            'index' => Pages\ListBlogPosts::route('/'),
             'create' => Pages\CreateBlogPost::route('/create'),
-            'edit'   => Pages\EditBlogPost::route('/{record}/edit'),
+            'edit' => Pages\EditBlogPost::route('/{record}/edit'),
         ];
     }
 }

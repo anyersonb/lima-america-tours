@@ -21,6 +21,16 @@
         'warn'    => 'lat-tcard__badge--o',
         default   => '',
     };
+
+    // Oferta especial: activa cuando el CMS trae price_before > price y el flag está encendido
+    $tourOffer = function ($tour) {
+        $before = (float) ($tour->price_before ?? 0);
+        $now    = (float) $tour->price;
+        if (! $tour->show_offer_badge || $before <= 0 || $before <= $now) {
+            return null;
+        }
+        return (int) round((1 - ($now / $before)) * 100);
+    };
 @endphp
 
 @section('title', $sectionTitle . ' — ' . __('seo.site_name'))
@@ -76,11 +86,15 @@
 
         <div class="lat-tours-grid" id="toursGrid">
             @forelse ($tours as $tour)
+                @php $pct = $tourOffer($tour); @endphp
                 <article class="lat-tcard" data-slug="{{ $tour->slug }}" data-cat="{{ $tour->category?->slug ?? '' }}" data-title="{{ mb_strtolower($tour->title) }}">
                     <a href="{{ route('tours.show', ['locale' => $locale, 'slug' => $tour->slug]) }}" class="lat-tcard__media">
                         <img src="{{ $tour->cover_url }}" alt="{{ $tour->title }}" loading="lazy" width="400" height="300">
                         @if ($tour->badge_text)
                             <span class="lat-tcard__badge {{ $badgeClass($tour->badge_type) }}">{{ $tour->badge_text }}</span>
+                        @endif
+                        @if ($pct)
+                            <span class="lat-tcard__offer">{{ $L('Oferta especial', 'Special offer', 'Oferta especial') }} <span>-{{ $pct }}%</span></span>
                         @endif
                     </a>
                     <button type="button" class="lat-tcard__fav" aria-label="{{ $L('Añadir a favoritos', 'Add to favorites', 'Adicionar aos favoritos') }}">
@@ -114,7 +128,11 @@
                                 @if ((float) $tour->price === 0.0)
                                     <span class="lat-amt">{{ $L('Gratis', 'Free', 'Gratuito') }}</span>
                                 @else
-                                    <small>{{ $L('Desde', 'From', 'Desde') }}</small>
+                                    @if ($pct)
+                                        <span class="lat-tcard__before">${{ number_format((float) $tour->price_before, 0) }}</span>
+                                    @else
+                                        <small>{{ $L('Desde', 'From', 'Desde') }}</small>
+                                    @endif
                                     <span class="lat-amt">${{ number_format((float) $tour->price, 0) }}</span>
                                     <span class="lat-per">{{ $L('por persona', 'per person', 'por pessoa') }}</span>
                                 @endif

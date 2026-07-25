@@ -14,7 +14,6 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ReviewController;
-use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\TourController;
 use App\Http\Controllers\WebhookController;
@@ -46,6 +45,7 @@ Route::get('/', function () {
         $preferred = ($rawLang === 'pt') ? 'pt' : config('app.locale');
     }
     $locale = $preferred;
+
     return redirect("/{$locale}");
 });
 
@@ -61,9 +61,9 @@ Route::get('/_diag/mail', function () {
     abort_unless(request('key') === 'lvt-mail-diag-2026', 404);
 
     $mailer = config('mail.default');
-    $conn   = config("mail.mailers.{$mailer}");
+    $conn = config("mail.mailers.{$mailer}");
     $maskedUser = ($u = config('mail.mailers.smtp.username'))
-        ? substr((string) $u, 0, 3) . '***' . (str_contains((string) $u, '@') ? strstr((string) $u, '@') : '')
+        ? substr((string) $u, 0, 3).'***'.(str_contains((string) $u, '@') ? strstr((string) $u, '@') : '')
         : null;
 
     $to = request('to')
@@ -71,37 +71,37 @@ Route::get('/_diag/mail', function () {
         ?: config('mail.from.address');
 
     $config = [
-        'mail_default'   => $mailer,
-        'smtp_host'      => config('mail.mailers.smtp.host'),
-        'smtp_port'      => config('mail.mailers.smtp.port'),
-        'smtp_encryption'=> config('mail.mailers.smtp.encryption') ?? config('mail.mailers.smtp.scheme'),
-        'smtp_username'  => $maskedUser,
+        'mail_default' => $mailer,
+        'smtp_host' => config('mail.mailers.smtp.host'),
+        'smtp_port' => config('mail.mailers.smtp.port'),
+        'smtp_encryption' => config('mail.mailers.smtp.encryption') ?? config('mail.mailers.smtp.scheme'),
+        'smtp_username' => $maskedUser,
         'smtp_password_set' => (bool) config('mail.mailers.smtp.password'),
-        'from_address'   => config('mail.from.address'),
-        'from_name'      => config('mail.from.name'),
-        'app_env'        => config('app.env'),
-        'test_to'        => $to,
+        'from_address' => config('mail.from.address'),
+        'from_name' => config('mail.from.name'),
+        'app_env' => config('app.env'),
+        'test_to' => $to,
     ];
 
     try {
         \Illuminate\Support\Facades\Mail::raw(
-            'Prueba de envío SMTP desde Lima América Tours — ' . now()->toDateTimeString(),
+            'Prueba de envío SMTP desde Lima América Tours — '.now()->toDateTimeString(),
             function ($m) use ($to) {
                 $m->to($to)->subject('[TEST] Diagnóstico SMTP Lima América Tours');
             }
         );
 
         return response()->json([
-            'ok'      => true,
+            'ok' => true,
             'message' => "Correo de prueba enviado a {$to}. Revisa bandeja y SPAM.",
-            'config'  => $config,
+            'config' => $config,
         ], 200, [], JSON_PRETTY_PRINT);
     } catch (\Throwable $e) {
         return response()->json([
-            'ok'        => false,
-            'error'     => $e->getMessage(),
+            'ok' => false,
+            'error' => $e->getMessage(),
             'exception' => get_class($e),
-            'config'    => $config,
+            'config' => $config,
         ], 500, [], JSON_PRETTY_PRINT);
     }
 })->name('diag.mail');
@@ -150,7 +150,7 @@ Route::prefix('{locale}')
             ->middleware('throttle:checkout')
             ->name('checkout.process');
         Route::get('/checkout/gracias', [CheckoutController::class, 'thanks'])->name('checkout.thanks');
-        Route::post('/checkout/paypal/create',  [CheckoutController::class, 'paypalCreateOrder'])
+        Route::post('/checkout/paypal/create', [CheckoutController::class, 'paypalCreateOrder'])
             ->middleware('throttle:checkout')
             ->name('checkout.paypal.create');
         Route::post('/checkout/paypal/capture', [CheckoutController::class, 'paypalCaptureOrder'])
@@ -179,7 +179,7 @@ Route::prefix('{locale}')
 
             // Active testimonials — 4 cards + 1 featured Tripadvisor quote
             $testimonials = \App\Models\Testimonial::active()->latest('order')->take(4)->get();
-            $featured     = \App\Models\Testimonial::active()
+            $featured = \App\Models\Testimonial::active()
                 ->where('source', 'tripadvisor')
                 ->latest()
                 ->first()
@@ -191,6 +191,10 @@ Route::prefix('{locale}')
         // Legal pages
         Route::get('/terminos', [PageController::class, 'terms'])->name('legal.terms');
         Route::get('/privacidad', [PageController::class, 'privacy'])->name('legal.privacy');
+
+        // Generic CMS pages (App\Models\Page) — "contacto"/"nosotros" redirect
+        // to their dedicated routes; any other published slug renders here.
+        Route::get('/pagina/{slug}', [PageController::class, 'show'])->name('pages.show');
 
         // ── Customer portal (Fase 1) ──────────────────────────────────────
         Route::get('/ingresar', [LoginController::class, 'showForm'])->name('customer.login');

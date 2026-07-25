@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\RegionResource\Pages;
-use App\Filament\Resources\RegionResource\RelationManagers;
 use App\Models\Region;
 use App\Support\ImagePath;
 use Filament\Forms;
@@ -11,18 +10,21 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class RegionResource extends Resource
 {
     protected static ?string $model = Region::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-map';
+
     protected static ?string $navigationGroup = 'Catálogo';
+
     protected static ?string $navigationLabel = 'Regiones';
+
     protected static ?string $modelLabel = 'Región';
+
     protected static ?string $pluralModelLabel = 'Regiones';
+
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
@@ -82,33 +84,46 @@ class RegionResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('slug')
+                    ->label('Slug')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('name_es')
+                    ->label('Nombre (ES)')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('name_en')
+                    ->label('Nombre (EN)')
                     ->searchable(),
                 Tables\Columns\ImageColumn::make('hero_image')
+                    ->label('Imagen')
                     ->getStateUsing(fn ($record) => ImagePath::url($record->hero_image)),
                 Tables\Columns\TextColumn::make('eyebrow_es')
+                    ->label('Eyebrow (ES)')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('eyebrow_en')
+                    ->label('Eyebrow (EN)')
                     ->searchable(),
                 Tables\Columns\IconColumn::make('is_active')
+                    ->label('Activo')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('order')
+                    ->label('Orden')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('seo_title')
+                    ->label('SEO — Título')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('seo_description')
+                    ->label('SEO — Descripción')
                     ->searchable(),
                 Tables\Columns\ImageColumn::make('seo_image')
+                    ->label('SEO — Imagen')
                     ->getStateUsing(fn ($record) => ImagePath::url($record->seo_image)),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Creado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Actualizado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

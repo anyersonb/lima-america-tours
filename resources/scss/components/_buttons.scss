@@ -16,7 +16,7 @@
 .btn--primary {
     @include btn-base;
     @include btn-arrow;
-    @apply bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700;
+    @apply bg-lat-red text-white hover:bg-lat-red-deep active:bg-[#7d0a12];
 }
 
 .btn--primary-outline {

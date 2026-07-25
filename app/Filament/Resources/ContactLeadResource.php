@@ -3,25 +3,27 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ContactLeadResource\Pages;
-use App\Filament\Resources\ContactLeadResource\RelationManagers;
 use App\Models\ContactLead;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ContactLeadResource extends Resource
 {
     protected static ?string $model = ContactLead::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-envelope';
+
     protected static ?string $navigationGroup = 'Marketing';
+
     protected static ?string $navigationLabel = 'Mensajes';
+
     protected static ?string $modelLabel = 'Mensaje';
+
     protected static ?string $pluralModelLabel = 'Mensajes';
+
     protected static ?int $navigationSort = 7;
 
     public static function getNavigationBadge(): ?string
@@ -77,30 +79,42 @@ class ContactLeadResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Nombre')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('lastname')
+                    ->label('Apellido')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
+                    ->label('Correo')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('phone')
+                    ->label('Teléfono')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('source')
+                    ->label('Origen')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('locale')
+                    ->label('Idioma')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('ip')
+                    ->label('IP')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('user_agent')
+                    ->label('Navegador')
                     ->searchable(),
                 Tables\Columns\IconColumn::make('is_read')
+                    ->label('Leído')
                     ->boolean(),
                 Tables\Columns\IconColumn::make('is_archived')
+                    ->label('Archivado')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Recibido')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Actualizado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

@@ -189,6 +189,21 @@
         &.is-on svg { fill: $lat-red; }
     }
 
+    // ── Ribbon de oferta especial (precio antes/ahora del CMS) ─────────────
+    &__offer {
+        position: absolute; bottom: 12px; left: 12px; z-index: 2;
+        display: inline-flex; align-items: center; gap: 6px;
+        background: #fff; color: $lat-ink;
+        font-size: .66rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+        padding: 5px 11px 5px 5px; border-radius: $lat-r-pill; box-shadow: $lat-shadow-sm;
+
+        span {
+            display: inline-flex; align-items: center; justify-content: center;
+            background: $lat-red; color: #fff; border-radius: $lat-r-pill;
+            padding: 3px 8px; font-weight: 800;
+        }
+    }
+
     &__body { padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 11px; flex: 1; }
 
     h3 { font-family: $lat-font-sans; font-weight: 700; font-size: 1.14rem; line-height: 1.25; color: $lat-ink; }
@@ -211,6 +226,12 @@
         .lat-per { font-size: .72rem; color: $lat-muted; }
 
         &--free .lat-amt { color: #128a4b; }
+    }
+
+    // ── Precio "antes" tachado, mostrado arriba del precio actual cuando hay oferta ──
+    &__before {
+        display: block; font-size: .78rem; color: $lat-muted; text-decoration: line-through;
+        text-decoration-color: rgba($lat-muted, .6);
     }
 
     &__foot .lat-btn { padding: 10px 16px; font-size: .85rem; }

@@ -11,15 +11,15 @@
     $L = fn($es,$en,$pt) => $locale==='pt'?$pt:($locale==='en'?$en:$es);
 @endphp
 
-<section class="min-h-[70vh] bg-cream-100 flex items-center justify-center py-16 px-4">
+<section class="min-h-[70vh] bg-lat-paper flex items-center justify-center py-16 px-4">
     <div class="w-full max-w-md">
         <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
 
-            <div class="bg-teal-800 px-8 py-7 text-center">
+            <div class="bg-lat-red px-8 py-7 text-center">
                 <h1 class="font-display text-2xl text-white tracking-wide">
                     {{ $L('Crea tu cuenta', 'Create your account', 'Crie sua conta') }}
                 </h1>
-                <p class="text-cream-100/80 text-sm mt-1">
+                <p class="text-white/80 text-sm mt-1">
                     {{ $L('Gestiona tus reservas fácilmente', 'Manage your bookings easily', 'Gerencie suas reservas facilmente') }}
                 </p>
             </div>
@@ -41,54 +41,54 @@
 
                     <div class="space-y-5">
                         <div>
-                            <label for="name" class="block text-sm font-semibold text-teal-800 mb-1.5">
+                            <label for="name" class="block text-sm font-semibold text-lat-ink mb-1.5">
                                 {{ __('customer.name') }}
                             </label>
                             <input type="text" id="name" name="name"
                                    value="{{ old('name') }}"
                                    autocomplete="name"
-                                   class="w-full rounded-xl border border-teal-800/20 bg-cream-100/40 px-4 py-3 text-sm text-teal-800 placeholder-teal-800/40 focus:border-teal-600 focus:ring-1 focus:ring-teal-600 outline-none transition @error('name') border-red-400 @enderror"
+                                   class="w-full rounded-xl border border-lat-line-strong bg-lat-paper/60 px-4 py-3 text-sm text-lat-ink placeholder-lat-ink/40 focus:border-lat-red focus:ring-1 focus:ring-lat-red outline-none transition @error('name') border-red-400 @enderror"
                                    required>
                         </div>
 
                         <div>
-                            <label for="email" class="block text-sm font-semibold text-teal-800 mb-1.5">
+                            <label for="email" class="block text-sm font-semibold text-lat-ink mb-1.5">
                                 {{ __('customer.email') }}
                             </label>
                             <input type="email" id="email" name="email"
                                    value="{{ old('email') }}"
                                    autocomplete="email"
-                                   class="w-full rounded-xl border border-teal-800/20 bg-cream-100/40 px-4 py-3 text-sm text-teal-800 placeholder-teal-800/40 focus:border-teal-600 focus:ring-1 focus:ring-teal-600 outline-none transition @error('email') border-red-400 @enderror"
+                                   class="w-full rounded-xl border border-lat-line-strong bg-lat-paper/60 px-4 py-3 text-sm text-lat-ink placeholder-lat-ink/40 focus:border-lat-red focus:ring-1 focus:ring-lat-red outline-none transition @error('email') border-red-400 @enderror"
                                    required>
                         </div>
 
                         <div>
-                            <label for="phone" class="block text-sm font-semibold text-teal-800 mb-1.5">
+                            <label for="phone" class="block text-sm font-semibold text-lat-ink mb-1.5">
                                 {{ __('customer.phone') }}
                             </label>
                             <input type="tel" id="phone" name="phone"
                                    value="{{ old('phone') }}"
                                    autocomplete="tel"
-                                   class="w-full rounded-xl border border-teal-800/20 bg-cream-100/40 px-4 py-3 text-sm text-teal-800 placeholder-teal-800/40 focus:border-teal-600 focus:ring-1 focus:ring-teal-600 outline-none transition @error('phone') border-red-400 @enderror">
+                                   class="w-full rounded-xl border border-lat-line-strong bg-lat-paper/60 px-4 py-3 text-sm text-lat-ink placeholder-lat-ink/40 focus:border-lat-red focus:ring-1 focus:ring-lat-red outline-none transition @error('phone') border-red-400 @enderror">
                         </div>
 
                         <div>
-                            <label for="password" class="block text-sm font-semibold text-teal-800 mb-1.5">
+                            <label for="password" class="block text-sm font-semibold text-lat-ink mb-1.5">
                                 {{ __('customer.password') }}
                             </label>
                             <input type="password" id="password" name="password"
                                    autocomplete="new-password"
-                                   class="w-full rounded-xl border border-teal-800/20 bg-cream-100/40 px-4 py-3 text-sm text-teal-800 focus:border-teal-600 focus:ring-1 focus:ring-teal-600 outline-none transition"
+                                   class="w-full rounded-xl border border-lat-line-strong bg-lat-paper/60 px-4 py-3 text-sm text-lat-ink focus:border-lat-red focus:ring-1 focus:ring-lat-red outline-none transition"
                                    required>
                         </div>
 
                         <div>
-                            <label for="password_confirmation" class="block text-sm font-semibold text-teal-800 mb-1.5">
+                            <label for="password_confirmation" class="block text-sm font-semibold text-lat-ink mb-1.5">
                                 {{ __('customer.password_confirmation') }}
                             </label>
                             <input type="password" id="password_confirmation" name="password_confirmation"
                                    autocomplete="new-password"
-                                   class="w-full rounded-xl border border-teal-800/20 bg-cream-100/40 px-4 py-3 text-sm text-teal-800 focus:border-teal-600 focus:ring-1 focus:ring-teal-600 outline-none transition"
+                                   class="w-full rounded-xl border border-lat-line-strong bg-lat-paper/60 px-4 py-3 text-sm text-lat-ink focus:border-lat-red focus:ring-1 focus:ring-lat-red outline-none transition"
                                    required>
                         </div>
                     </div>
@@ -96,15 +96,15 @@
                     @include('partials.recaptcha', ['recaptchaAction' => 'register', 'recaptchaFormId' => 'form-register'])
 
                     <button type="submit"
-                            class="mt-7 w-full rounded-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold py-3.5 text-sm transition">
+                            class="mt-7 w-full rounded-full bg-lat-red hover:bg-lat-red-deep active:bg-lat-red-deep text-white font-semibold py-3.5 text-sm transition">
                         {{ __('customer.register') }}
                     </button>
                 </form>
 
-                <p class="mt-6 text-center text-sm text-teal-700">
+                <p class="mt-6 text-center text-sm text-lat-ink-soft">
                     {{ __('customer.already_have_account') }}
                     <a href="{{ route('customer.login', ['locale' => $locale]) }}"
-                       class="font-semibold text-orange-500 hover:underline ml-1">
+                       class="font-semibold text-lat-red hover:underline ml-1">
                         {{ __('customer.login') }}
                     </a>
                 </p>

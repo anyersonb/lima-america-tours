@@ -3,25 +3,27 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\NewsletterSubscriberResource\Pages;
-use App\Filament\Resources\NewsletterSubscriberResource\RelationManagers;
 use App\Models\NewsletterSubscriber;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class NewsletterSubscriberResource extends Resource
 {
     protected static ?string $model = NewsletterSubscriber::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-envelope-open';
+
     protected static ?string $navigationGroup = 'Marketing';
+
     protected static ?string $navigationLabel = 'Newsletter';
+
     protected static ?string $modelLabel = 'Suscriptor';
+
     protected static ?string $pluralModelLabel = 'Suscriptores';
+
     protected static ?int $navigationSort = 9;
 
     public static function form(Form $form): Form
@@ -50,24 +52,32 @@ class NewsletterSubscriberResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Nombre')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
+                    ->label('Correo')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('locale')
+                    ->label('Idioma')
                     ->searchable(),
                 Tables\Columns\IconColumn::make('is_active')
+                    ->label('Activo')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('subscribed_at')
+                    ->label('Suscrito el')
                     ->dateTime()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('unsubscribed_at')
+                    ->label('Baja el')
                     ->dateTime()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Creado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Actualizado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

@@ -263,19 +263,81 @@
 
     <x-footer />
 
-    {{-- Botón flotante WhatsApp — posición 100% inline para funcionar sin rebuild de Tailwind --}}
+    {{-- Botón flotante WhatsApp — posición 100% inline para funcionar sin rebuild de Tailwind.
+         Offset elevado (evita taparse con CTAs "en reposo": hero de Home, cards de Tours, etc.)
+         + se encoge/atenúa mientras el usuario hace scroll para no tapar controles al pasar por encima. --}}
     @php $waNumber = \App\Models\Setting::get('whatsapp') ?: '51925886725'; @endphp
     <a href="https://wa.me/{{ $waNumber }}"
        target="_blank"
        rel="noopener noreferrer"
        aria-label="WhatsApp"
-       style="position:fixed;bottom:24px;right:20px;z-index:9000;width:56px;height:56px;border-radius:9999px;background-color:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:transform .2s ease;color:#fff;text-decoration:none;"
+       id="waFab"
+       style="position:fixed;bottom:104px;right:18px;z-index:9000;width:52px;height:52px;border-radius:9999px;background-color:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:transform .2s ease,opacity .2s ease;color:#fff;text-decoration:none;"
        onmouseover="this.style.transform='scale(1.1)'"
        onmouseout="this.style.transform='scale(1)'">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.51 5.26l-.999 3.648 3.978-1.045zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.148-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.017-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.247-.694.247-1.289.173-1.413z"/>
         </svg>
     </a>
+    <script>
+    (function () {
+        var fab = document.getElementById('waFab');
+        if (!fab) return;
+        var BASE_BOTTOM = 104; // px — despeja el CTA del hero de Home y las cards de Tours "en reposo"
+        var SAFE_GAP = 16;
+
+        function rectsOverlap(a, b) {
+            return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+        }
+
+        // Detección dirigida: solo evita solaparse con controles "tipo botón/CTA"
+        // conocidos (no con cualquier enlace de texto, que siempre habría alguno
+        // cerca). Cubre los casos reportados: CTA del hero, favorito de tarjetas,
+        // filtros, botones de reserva/checkout y la barra sticky del carrito.
+        var CONTROL_SELECTOR = [
+            '.lat-btn', '.lat-tcard__fav', '.lat-filter', '.lat-btn-reservar',
+            '.cart-cta-btn', '.cart-sticky', '.cart-coupon-submit',
+            'button[type="submit"]', '.btn--primary', '.tour-card a[href]:last-child'
+        ].join(', ');
+
+        function avoidOverlap() {
+            fab.style.bottom = BASE_BOTTOM + 'px';
+            var fabRect = fab.getBoundingClientRect();
+            var nodes = document.querySelectorAll(CONTROL_SELECTOR);
+            var highestTop = null;
+            for (var i = 0; i < nodes.length; i++) {
+                var el = nodes[i];
+                if (el === fab || fab.contains(el) || el.contains(fab)) continue;
+                var r = el.getBoundingClientRect();
+                if (r.width === 0 || r.height === 0) continue;
+                if (rectsOverlap(fabRect, r)) {
+                    if (highestTop === null || r.top < highestTop) highestTop = r.top;
+                }
+            }
+            if (highestTop !== null) {
+                var needed = Math.round(window.innerHeight - highestTop + SAFE_GAP);
+                fab.style.bottom = Math.max(BASE_BOTTOM, needed) + 'px';
+            }
+        }
+        avoidOverlap();
+        window.addEventListener('resize', avoidOverlap, { passive: true });
+
+        // Mientras el usuario hace scroll, el botón se atenúa y encoge para no tapar
+        // CTAs/controles que queden justo debajo; vuelve a su tamaño normal (y
+        // recalcula colisiones) al detenerse.
+        var scrollTimer = null;
+        window.addEventListener('scroll', function () {
+            fab.style.opacity = '.45';
+            fab.style.transform = 'scale(.82)';
+            clearTimeout(scrollTimer);
+            scrollTimer = setTimeout(function () {
+                fab.style.opacity = '1';
+                fab.style.transform = 'scale(1)';
+                avoidOverlap();
+            }, 220);
+        }, { passive: true });
+    })();
+    </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js" defer></script>

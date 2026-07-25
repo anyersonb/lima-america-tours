@@ -31,6 +31,15 @@
     &:hover { background: $lat-red-deep; transform: translateY(-2px); box-shadow: 0 10px 24px rgba(203, 16, 30, .32); }
 }
 
+// Variante outline blanco — para usar sobre fondos de color sólido (p. ej. bandas rojas)
+.lat-btn--outline-white {
+    background: transparent;
+    color: #fff;
+    border-color: rgba(255, 255, 255, .6);
+
+    &:hover { background: rgba(255, 255, 255, .12); border-color: #fff; transform: translateY(-2px); }
+}
+
 .lat-eyebrow {
     display: inline-flex;
     align-items: center;

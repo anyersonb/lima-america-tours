@@ -29,6 +29,26 @@
         ]);
     }
 
+    // "No incluye" — se muestra junto a "Incluye" solo cuando el CMS trae datos
+    $rawExcludes = $tour->{"excludes_{$locale}"} ?: $tour->excludes_es ?: [];
+    $excludes = collect($rawExcludes)->filter(fn ($i) => trim((string) $i) !== '')->values();
+
+    // Preguntas frecuentes (repeater question/answer del CMS) — con fallback a español
+    $rawFaqs = $tour->{"faqs_{$locale}"} ?: $tour->faqs_es ?: [];
+    $faqs = collect($rawFaqs)
+        ->map(fn ($f) => is_array($f) ? [
+            'question' => trim((string) ($f['question'] ?? '')),
+            'answer'   => trim((string) ($f['answer'] ?? '')),
+        ] : null)
+        ->filter(fn ($f) => $f && $f['question'] !== '' && $f['answer'] !== '')
+        ->values();
+
+    // Oferta especial: precio "antes" tachado + % de descuento, cuando el CMS la tiene activa
+    $offerBefore = (float) ($tour->price_before ?? 0);
+    $offerNow    = (float) $tour->price;
+    $hasOffer    = (bool) $tour->show_offer_badge && $offerBefore > 0 && $offerBefore > $offerNow;
+    $offerPct    = $hasOffer ? (int) round((1 - ($offerNow / $offerBefore)) * 100) : null;
+
     $rawRecommendations = $tour->{"recommendations_{$locale}"} ?: $tour->recommendations_es ?: '';
     $bring = collect(preg_split('/\r\n|\r|\n|,/', (string) $rawRecommendations))
         ->map(fn ($l) => trim($l))
@@ -174,6 +194,12 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
                         {{ $L('Cancelación gratuita', 'Free cancellation', 'Cancelamento gratuito') }}
                     </span>
+                    @if ($hasOffer)
+                        <span class="lat-badge-offer">
+                            {{ __('ui.special_offer') }}
+                            <span>-{{ $offerPct }}%</span>
+                        </span>
+                    @endif
                 </div>
 
                 {{-- Tabs --}}
@@ -218,11 +244,23 @@
                 </div>
 
                 <div class="lat-tab-panel" data-tab="incl">
+                    @if ($excludes->isNotEmpty())
+                        <p class="lat-tab-panel__subtitle">{{ $L('Incluye', 'Includes', 'Inclui') }}</p>
+                    @endif
                     <ul>
                         @foreach ($includes as $item)
                             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>{{ $item }}</span></li>
                         @endforeach
                     </ul>
+
+                    @if ($excludes->isNotEmpty())
+                        <p class="lat-tab-panel__subtitle">{{ $L('No incluye', "Doesn't include", 'Não inclui') }}</p>
+                        <ul class="lat-tab-panel__excludes">
+                            @foreach ($excludes as $item)
+                                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span>{{ $item }}</span></li>
+                            @endforeach
+                        </ul>
+                    @endif
                 </div>
 
                 <div class="lat-tab-panel" data-tab="bring">
@@ -232,6 +270,24 @@
                         @endforeach
                     </ul>
                 </div>
+
+                {{-- Preguntas frecuentes: solo si el tour tiene FAQs cargadas en el CMS --}}
+                @if ($faqs->isNotEmpty())
+                    <div class="lat-faq" aria-labelledby="faq-title">
+                        <h2 id="faq-title" class="lat-faq__title">{{ $L('Preguntas frecuentes', 'Frequently asked questions', 'Perguntas frequentes') }}</h2>
+                        @foreach ($faqs as $i => $faq)
+                            <details class="lat-faq-item" {{ $i === 0 ? 'open' : '' }}>
+                                <summary>
+                                    <span>{{ $faq['question'] }}</span>
+                                    <span class="lat-faq-item__ic" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                                    </span>
+                                </summary>
+                                <p class="lat-faq-item__a">{{ $faq['answer'] }}</p>
+                            </details>
+                        @endforeach
+                    </div>
+                @endif
             </div>
 
             {{-- ============================================================
@@ -240,6 +296,12 @@
             <aside class="lat-book">
                 <div class="lat-book-card">
                     <div class="lat-book-head">
+                        @if ($hasOffer)
+                            <div class="lat-book-head__offer">
+                                <span class="lat-book-head__before">${{ number_format($offerBefore, 0) }}</span>
+                                <span class="lat-book-head__pct">-{{ $offerPct }}%</span>
+                            </div>
+                        @endif
                         <small>{{ $L('Desde', 'From', 'Desde') }}</small>
                         <div class="lat-amt">${{ number_format((float) $tour->price, 0) }}<span> {{ $L('por persona', 'per person', 'por pessoa') }}</span></div>
                     </div>

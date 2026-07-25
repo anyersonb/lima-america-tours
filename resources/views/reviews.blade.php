@@ -189,10 +189,10 @@
 
         {{-- ───────── SISTEMA PROPIO: DEJA TU RESEÑA ───────── --}}
         <div id="dejar-resena" class="mt-16 scroll-mt-28">
-            <div class="max-w-2xl mx-auto rounded-3xl bg-cream-100 ring-1 ring-teal-800/10 shadow-sm overflow-hidden">
+            <div class="max-w-2xl mx-auto rounded-3xl bg-lat-paper ring-1 ring-lat-ink/10 shadow-sm overflow-hidden">
                 {{-- Encabezado --}}
-                <div class="bg-teal-800 text-white px-6 sm:px-8 py-6 text-center">
-                    <p class="text-[11px] uppercase tracking-[0.22em] text-orange-300 font-bold mb-1.5">
+                <div class="bg-lat-red text-white px-6 sm:px-8 py-6 text-center">
+                    <p class="text-[11px] uppercase tracking-[0.22em] text-white/80 font-bold mb-1.5">
                         {{ $L('Tu opinión cuenta', 'Your opinion matters', 'Sua opinião conta') }}
                     </p>
                     <h2 class="font-display text-2xl sm:text-[28px] leading-tight">
@@ -228,15 +228,15 @@
 
                         {{-- Puntuación --}}
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wide text-teal-800 mb-2">
-                                {{ $L('Tu puntuación', 'Your rating', 'Sua nota') }} <span class="text-orange-500">*</span>
+                            <label class="block text-xs font-bold uppercase tracking-wide text-lat-ink mb-2">
+                                {{ $L('Tu puntuación', 'Your rating', 'Sua nota') }} <span class="text-lat-red">*</span>
                             </label>
                             <div class="flex gap-1.5 text-3xl leading-none select-none">
                                 <template x-for="n in 5" :key="n">
                                     <button type="button" @click="rating = n" @mouseenter="hover = n" @mouseleave="hover = 0"
                                             class="transition-transform hover:scale-110 focus:outline-none"
                                             :aria-label="n + '/5'"
-                                            :class="(hover || rating) >= n ? 'text-orange-400' : 'text-teal-800/20'">★</button>
+                                            :class="(hover || rating) >= n ? 'text-lat-red' : 'text-lat-ink/20'">★</button>
                                 </template>
                             </div>
                             <input type="hidden" name="rating" :value="rating">
@@ -244,48 +244,48 @@
 
                         {{-- Comentario --}}
                         <div>
-                            <label for="rv-comment" class="block text-xs font-bold uppercase tracking-wide text-teal-800 mb-2">
-                                {{ $L('Tu comentario', 'Your review', 'Seu comentário') }} <span class="text-orange-500">*</span>
+                            <label for="rv-comment" class="block text-xs font-bold uppercase tracking-wide text-lat-ink mb-2">
+                                {{ $L('Tu comentario', 'Your review', 'Seu comentário') }} <span class="text-lat-red">*</span>
                             </label>
                             <textarea id="rv-comment" name="comment" required minlength="10" maxlength="2000" rows="4"
                                       placeholder="{{ $L('¿Qué fue lo que más te gustó de tu viaje?', 'What did you enjoy most about your trip?', 'O que você mais gostou da sua viagem?') }}"
-                                      class="w-full rounded-xl border border-teal-800/20 bg-white px-4 py-3 text-sm text-teal-900 placeholder:text-teal-800/35 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700">{{ old('comment') }}</textarea>
+                                      class="w-full rounded-xl border border-lat-line-strong bg-white px-4 py-3 text-sm text-lat-ink placeholder:text-lat-ink/35 focus:outline-none focus:ring-2 focus:ring-lat-red focus:border-lat-red">{{ old('comment') }}</textarea>
                         </div>
 
                         {{-- Nombre + País --}}
                         <div class="grid sm:grid-cols-2 gap-4">
                             <div>
-                                <label for="rv-name" class="block text-xs font-bold uppercase tracking-wide text-teal-800 mb-2">
-                                    {{ $L('Nombre', 'Name', 'Nome') }} <span class="text-orange-500">*</span>
+                                <label for="rv-name" class="block text-xs font-bold uppercase tracking-wide text-lat-ink mb-2">
+                                    {{ $L('Nombre', 'Name', 'Nome') }} <span class="text-lat-red">*</span>
                                 </label>
                                 <input id="rv-name" type="text" name="name" value="{{ old('name') }}" required maxlength="120" autocomplete="name"
-                                       class="w-full rounded-xl border border-teal-800/20 bg-white px-4 py-3 text-sm text-teal-900 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700">
+                                       class="w-full rounded-xl border border-lat-line-strong bg-white px-4 py-3 text-sm text-lat-ink focus:outline-none focus:ring-2 focus:ring-lat-red focus:border-lat-red">
                             </div>
                             <div>
-                                <label for="rv-country" class="block text-xs font-bold uppercase tracking-wide text-teal-800 mb-2">
+                                <label for="rv-country" class="block text-xs font-bold uppercase tracking-wide text-lat-ink mb-2">
                                     {{ $L('País', 'Country', 'País') }}
                                 </label>
                                 <input id="rv-country" type="text" name="country" value="{{ old('country') }}" maxlength="120" autocomplete="country-name"
                                        placeholder="{{ $L('Opcional', 'Optional', 'Opcional') }}"
-                                       class="w-full rounded-xl border border-teal-800/20 bg-white px-4 py-3 text-sm text-teal-900 placeholder:text-teal-800/35 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700">
+                                       class="w-full rounded-xl border border-lat-line-strong bg-white px-4 py-3 text-sm text-lat-ink placeholder:text-lat-ink/35 focus:outline-none focus:ring-2 focus:ring-lat-red focus:border-lat-red">
                             </div>
                         </div>
 
                         {{-- Correo --}}
                         <div>
-                            <label for="rv-email" class="block text-xs font-bold uppercase tracking-wide text-teal-800 mb-2">
-                                {{ $L('Correo', 'Email', 'E-mail') }} <span class="text-orange-500">*</span>
+                            <label for="rv-email" class="block text-xs font-bold uppercase tracking-wide text-lat-ink mb-2">
+                                {{ $L('Correo', 'Email', 'E-mail') }} <span class="text-lat-red">*</span>
                             </label>
                             <input id="rv-email" type="email" name="email" value="{{ old('email') }}" required maxlength="160" autocomplete="email"
-                                   class="w-full rounded-xl border border-teal-800/20 bg-white px-4 py-3 text-sm text-teal-900 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700">
-                            <p class="text-[11px] text-teal-800/50 mt-1.5">{{ $L('No se publicará. Solo para verificar tu reseña.', 'It will not be published. Only to verify your review.', 'Não será publicado. Apenas para verificar sua avaliação.') }}</p>
+                                   class="w-full rounded-xl border border-lat-line-strong bg-white px-4 py-3 text-sm text-lat-ink focus:outline-none focus:ring-2 focus:ring-lat-red focus:border-lat-red">
+                            <p class="text-[11px] text-lat-ink/50 mt-1.5">{{ $L('No se publicará. Solo para verificar tu reseña.', 'It will not be published. Only to verify your review.', 'Não será publicado. Apenas para verificar sua avaliação.') }}</p>
                         </div>
 
                         {{-- Honeypot anti-spam --}}
                         <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="absolute -left-[9999px] w-px h-px opacity-0">
 
                         <button type="submit"
-                                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm py-3 px-8 transition-colors">
+                                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-lat-red hover:bg-lat-red-deep text-white font-bold text-sm py-3 px-8 transition-colors">
                             {{ $L('Enviar reseña', 'Submit review', 'Enviar avaliação') }}
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                         </button>
@@ -296,23 +296,23 @@
             {{-- Plataformas externas (opcional, secundario) --}}
             @if ($links['google'] || $links['tripadvisor'] || $links['trivago'])
                 <div class="mt-8 text-center">
-                    <p class="text-sm text-teal-800/60 mb-3">{{ $L('¿Prefieres reseñarnos en otra plataforma?', 'Prefer to review us on another platform?', 'Prefere nos avaliar em outra plataforma?') }}</p>
+                    <p class="text-sm text-lat-ink/60 mb-3">{{ $L('¿Prefieres reseñarnos en otra plataforma?', 'Prefer to review us on another platform?', 'Prefere nos avaliar em outra plataforma?') }}</p>
                     <div class="flex flex-wrap gap-3 justify-center">
                         @if ($links['google'])
                             <a href="{{ $links['google'] }}" target="_blank" rel="noopener"
-                               class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-teal-800 border border-teal-800/20 font-semibold text-xs hover:border-teal-800/50 transition-colors">
+                               class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-lat-ink border border-lat-ink/20 font-semibold text-xs hover:border-lat-red hover:text-lat-red transition-colors">
                                 <span class="inline-block w-2 h-2 rounded-full" style="background:#4285F4"></span> Google
                             </a>
                         @endif
                         @if ($links['tripadvisor'])
                             <a href="{{ $links['tripadvisor'] }}" target="_blank" rel="noopener"
-                               class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-teal-800 border border-teal-800/20 font-semibold text-xs hover:border-teal-800/50 transition-colors">
+                               class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-lat-ink border border-lat-ink/20 font-semibold text-xs hover:border-lat-red hover:text-lat-red transition-colors">
                                 <span class="inline-block w-2 h-2 rounded-full" style="background:#00AA6C"></span> Tripadvisor
                             </a>
                         @endif
                         @if ($links['trivago'])
                             <a href="{{ $links['trivago'] }}" target="_blank" rel="noopener"
-                               class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-teal-800 border border-teal-800/20 font-semibold text-xs hover:border-teal-800/50 transition-colors">
+                               class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-lat-ink border border-lat-ink/20 font-semibold text-xs hover:border-lat-red hover:text-lat-red transition-colors">
                                 <span class="inline-block w-2 h-2 rounded-full" style="background:#E5546C"></span> Trivago
                             </a>
                         @endif

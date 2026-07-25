@@ -2,11 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Page;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class PageController extends Controller
 {
+    /**
+     * Display a published CMS Page by slug.
+     *
+     * "contacto" and "nosotros" already have dedicated routes/views with
+     * richer CMS blocks (hero images, stats, pillars…), so we redirect those
+     * slugs to their canonical URL instead of rendering a duplicate,
+     * content-poor version here.
+     */
+    public function show(string $locale, string $slug): View|RedirectResponse
+    {
+        if ($slug === 'contacto') {
+            return redirect()->route('contact', ['locale' => $locale]);
+        }
+
+        if ($slug === 'nosotros') {
+            return redirect()->route('about', ['locale' => $locale]);
+        }
+
+        // firstOrFail() throws ModelNotFoundException for unknown/unpublished
+        // slugs, which Laravel's exception handler renders as a normal 404 —
+        // no need to catch it here.
+        $page = Page::published()->where('slug', $slug)->firstOrFail();
+
+        $title = $page->seo_title ?: $page->title;
+        $description = $page->seo_description ?: Str::limit(strip_tags((string) $page->content), 160);
+
+        return view('pages.show', compact('page', 'locale', 'title', 'description'));
+    }
+
     public function terms(): View
     {
         try {
