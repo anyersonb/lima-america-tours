@@ -67,6 +67,17 @@
 
     $related = ($related ?? collect())->take(3);
 
+    // Badge del tour (badge_text/badge_type) — ya se usa en el listado
+    // (tours/index.blade.php), la ficha lo ignoraba (docs/qa/ficha-tour.md
+    // hallazgo #4/#5 según numeración de esta tarea). Mismo mapeo de color.
+    $badgeClass = fn (?string $type) => match ($type) {
+        'success' => 'lat-detail-badge--g',
+        'warn'    => 'lat-detail-badge--o',
+        default   => '',
+    };
+
+    $comparisonData = $tour->comparisonData();
+
     // Respeta el título tal cual lo escribió el editor en el CMS (sin
     // recapitalizar): una transformación previa (mb_convert_case a
     // MB_CASE_TITLE) rompía mayúsculas intencionales (siglas, marcas) en el
@@ -125,9 +136,11 @@
     <div class="lat-crumb-bar">
         <div class="lat-wrap">
             <nav class="lat-crumb" aria-label="Breadcrumb">
-                <a href="{{ route('home', ['locale' => $locale]) }}">{{ __('ui.home') }}</a> &middot;
-                <a href="{{ route('tours.index', ['locale' => $locale]) }}">{{ __('nav.tours') }}</a> &middot;
-                <b>{{ $titleDisplay }}</b>
+                <a href="{{ route('home', ['locale' => $locale]) }}">{{ __('ui.home') }}</a>
+                <span class="lat-crumb__sep" aria-hidden="true">&middot;</span>
+                <a href="{{ route('tours.index', ['locale' => $locale]) }}">{{ __('nav.tours') }}</a>
+                <span class="lat-crumb__sep" aria-hidden="true">&middot;</span>
+                <b class="lat-crumb__current" title="{{ $titleDisplay }}">{{ $titleDisplay }}</b>
             </nav>
         </div>
     </div>
@@ -176,6 +189,9 @@
                 <div class="lat-detail-eyebrow">{{ $tour->category?->name ?? $L('Tour', 'Tour', 'Tour') }}</div>
                 <h1 class="lat-detail-title">{{ $titleDisplay }}</h1>
                 <div class="lat-detail-rate">
+                    @if ($tour->badge_text)
+                        <span class="lat-detail-badge {{ $badgeClass($tour->badge_type) }}">{{ $tour->badge_text }}</span>
+                    @endif
                     <span class="lat-stars">
                         <span class="lat-stars__s">
                             @for ($i = 0; $i < 5; $i++)
@@ -283,6 +299,45 @@
                         @endforeach
                     </div>
                 @endif
+
+                {{-- Bloque comparativo convencional vs. premium: solo cuando el CMS lo
+                     tiene activo y con datos (Tour::comparisonData() ya valida ambas
+                     condiciones y devuelve null en caso contrario). Hallazgo #2. --}}
+                @if ($comparisonData)
+                    <div class="lat-detail-comparison">
+                        <x-tour-comparison :data="$comparisonData" variant="d" />
+                    </div>
+                @endif
+
+                {{-- Reseñas aprobadas del propio tour ($tourReviews, testimonials()
+                     filtrados por is_active en el controlador). Solo el listado de
+                     lectura: el formulario de envío queda fuera de esta corrección
+                     (ver docs/qa/BACKLOG-CONTENIDO.md). Hallazgo #3. --}}
+                @if (($tourReviews ?? collect())->isNotEmpty())
+                    <div class="lat-reviews" aria-labelledby="reviews-title">
+                        <h2 id="reviews-title" class="lat-reviews__title">{{ $L('Reseñas de viajeros', 'Traveler reviews', 'Avaliações de viajantes') }}</h2>
+                        <div class="lat-reviews__list">
+                            @foreach ($tourReviews as $review)
+                                <article class="lat-review">
+                                    <div class="lat-review__head">
+                                        <span class="lat-review__name">{{ $review->name }}</span>
+                                        @if ($review->created_at)
+                                            <span class="lat-review__date">{{ $review->created_at->translatedFormat('d M Y') }}</span>
+                                        @endif
+                                    </div>
+                                    <span class="lat-stars">
+                                        <span class="lat-stars__s">
+                                            @for ($i = 0; $i < 5; $i++)
+                                                <svg viewBox="0 0 24 24" class="{{ $i < round((float) $review->rating) ? '' : 'is-empty' }}"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6L12 2z"/></svg>
+                                            @endfor
+                                        </span>
+                                    </span>
+                                    <p class="lat-review__comment">{{ $review->quote }}</p>
+                                </article>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
             {{-- ============================================================
@@ -304,6 +359,22 @@
                         @csrf
                         <input type="hidden" name="tour_id" value="{{ $tour->id }}">
                         <input type="hidden" name="children" value="0">
+
+                        {{-- El backend ya rechaza fechas bloqueadas (CartController@store,
+                             defensa en profundidad), pero el mensaje nunca se mostraba
+                             (hallazgo #1a): withErrors(['travel_date' => ...]) llega en la
+                             sesión tras el redirect()->back(), y $errors nunca se leía aquí. --}}
+                        @if ($errors->any())
+                            <div class="lat-book-error" role="alert">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>
+                                <div>
+                                    @foreach ($errors->all() as $error)
+                                        <p>{{ $error }}</p>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
                         <div>
                             <label for="bkPax">{{ $L('Número de pasajeros', 'Number of travelers', 'Número de passageiros') }}</label>
                             <div class="lat-book-field">
@@ -317,10 +388,11 @@
                         </div>
                         <div>
                             <label for="bkDate">{{ $L('Seleccionar fecha', 'Select a date', 'Selecionar data') }}</label>
-                            <div class="lat-book-field">
+                            <div class="lat-book-field" id="bkDateField">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                                <input id="bkDate" type="date" name="travel_date" min="{{ now()->addDay()->toDateString() }}" required>
+                                <input id="bkDate" type="date" name="travel_date" min="{{ now()->addDay()->toDateString() }}" required aria-describedby="bkDateError">
                             </div>
+                            <p class="lat-field-error" id="bkDateError" hidden>{{ __('booking.date_blocked') }}</p>
                         </div>
                         <div class="lat-book-total">
                             <span class="lat-lbl">{{ $L('Precio total', 'Total price', 'Preço total') }}</span>
@@ -419,6 +491,53 @@
         };
         pax.addEventListener('change', update);
         update();
+    }
+
+    // Fechas bloqueadas (hallazgo #1b): el <input type="date"> nativo no
+    // tiene forma de "deshabilitar" fechas/días sueltos, así que se valida
+    // en vivo contra las mismas listas que el backend usa para rechazar la
+    // reserva (BlockedDate::blockedDatesFor/blockedWeekdaysFor), min=hoy+1
+    // ya viene del atributo `min`. Si la fecha elegida está bloqueada: se
+    // marca el campo, se muestra el mensaje inline y se bloquea el envío
+    // (setCustomValidity + preventDefault), sin esperar el viaje al server.
+    var dateInput = document.getElementById('bkDate');
+    var dateField = document.getElementById('bkDateField');
+    var dateError = document.getElementById('bkDateError');
+    if (dateInput) {
+        var blockedDates = @json($blockedDates ?? []);
+        var blockedWeekdays = @json($blockedWeekdays ?? []);
+        var blockedMessage = @json(__('booking.date_blocked'));
+
+        var isDateBlocked = function (value) {
+            if (!value) return false;
+            if (blockedDates.indexOf(value) !== -1) return true;
+            var parts = value.split('-');
+            var d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            return blockedWeekdays.indexOf(d.getDay()) !== -1;
+        };
+
+        var validateDate = function () {
+            var blocked = isDateBlocked(dateInput.value);
+            if (dateField) dateField.classList.toggle('is-invalid', blocked);
+            if (dateError) dateError.hidden = !blocked;
+            dateInput.setCustomValidity(blocked ? blockedMessage : '');
+            return !blocked;
+        };
+
+        dateInput.addEventListener('input', validateDate);
+        dateInput.addEventListener('change', validateDate);
+
+        var bookForm = dateInput.closest('form');
+        if (bookForm) {
+            bookForm.addEventListener('submit', function (e) {
+                if (!validateDate()) {
+                    e.preventDefault();
+                    dateInput.reportValidity();
+                }
+            });
+        }
+
+        validateDate();
     }
 })();
 </script>

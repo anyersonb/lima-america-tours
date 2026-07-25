@@ -11,12 +11,32 @@
     border-bottom: 1px solid $lat-line;
     padding: 20px 0;
 
+    // Hallazgo #9 (docs/qa/ficha-tour.md, L5a): con un título extremo el
+    // breadcrumb desbordaba en una sola línea. display:flex + min-width:0
+    // permite que el último tramo (título actual) se achique y trunque con
+    // elipsis, mientras Home/Tours quedan siempre legibles (flex: none).
     .lat-crumb {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 6px;
+        min-width: 0;
         font-size: .82rem;
         color: $lat-muted;
+        overflow: hidden;
 
-        a { color: $lat-muted; &:hover { color: $lat-red; } }
+        a { color: $lat-muted; flex: none; white-space: nowrap; &:hover { color: $lat-red; } }
         b { color: $lat-red; font-weight: 600; }
+
+        &__sep { flex: none; }
+
+        &__current {
+            min-width: 0;
+            flex: 1 1 auto;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
 }
 
@@ -140,6 +160,20 @@
     }
 }
 
+// ── Badge del tour (badge_text/badge_type) — hallazgo #4/#5: en el listado
+// (.lat-tcard__badge) ya se usa como ribbon absoluto sobre la imagen; en la
+// ficha se muestra el mismo esquema de color pero en línea, junto al título
+// y las estrellas de calificación.
+.lat-detail-badge {
+    display: inline-flex; align-items: center;
+    background: $lat-red; color: #fff;
+    font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    padding: 6px 13px; border-radius: $lat-r-pill; box-shadow: $lat-shadow-sm;
+
+    &--g { background: #128a4b; }
+    &--o { background: #e07a1a; }
+}
+
 // ── Tabs ─────────────────────────────────────────────────────────────────
 .lat-tabs {
     display: flex; gap: 6px; border-bottom: 1px solid $lat-line; margin-bottom: 24px; overflow-x: auto;
@@ -256,10 +290,33 @@
     font-size: .8rem; font-weight: 700; color: $lat-ink-soft; display: block; margin-bottom: 7px;
 }
 
+// ── Hallazgo #1 (docs/qa/ficha-tour.md): el backend ya rechaza fechas
+// bloqueadas (CartController@store), pero el mensaje nunca se mostraba
+// ($errors nunca se leía). Bloque general (server round-trip tras el
+// redirect()->back()->withErrors(...)) + mensaje inline (JS, ver script
+// al final de show.blade.php) para feedback inmediato sin recargar.
+.lat-book-error {
+    display: flex; align-items: flex-start; gap: 9px;
+    background: $lat-red-tint; color: $lat-red-deep;
+    border: 1px solid rgba($state-error, .25); border-radius: 12px;
+    padding: 11px 14px; font-size: .84rem; line-height: 1.4;
+
+    svg { width: 17px; height: 17px; flex: none; margin-top: 1px; }
+    p { margin: 0; }
+    p + p { margin-top: 4px; }
+}
+
+.lat-field-error {
+    margin: -8px 0 0; font-size: .78rem; font-weight: 600; color: $state-error;
+
+    &[hidden] { display: none; }
+}
+
 .lat-book-field {
     display: flex; align-items: center; gap: 10px;
     border: 1px solid $lat-line-strong; border-radius: 12px;
     padding: 12px 14px; background: $lat-paper;
+    transition: border-color .15s;
 
     svg { width: 18px; height: 18px; color: $lat-red; flex: none; }
 
@@ -267,6 +324,9 @@
         border: none; background: transparent; font-family: inherit;
         font-size: .95rem; font-weight: 600; color: $lat-ink; width: 100%; outline: none; cursor: pointer;
     }
+
+    // Fecha bloqueada seleccionada en el datepicker (validación JS, hallazgo #1b)
+    &.is-invalid { border-color: $state-error; background: $lat-red-tint; }
 }
 
 .lat-book-total {
@@ -357,6 +417,50 @@
     &__a {
         margin: 0; padding: 0 18px 18px; color: $lat-ink-soft; font-size: .92rem; line-height: 1.65;
     }
+}
+
+// ── Bloque comparativo convencional vs. premium (hallazgo #2: el componente
+// <x-tour-comparison> existía pero nunca se invocaba desde la ficha). El
+// componente ya trae su propio fondo/padding (Tailwind); solo se separa del
+// contenido anterior con el mismo ritmo vertical que FAQ/Reseñas. ──
+.lat-detail-comparison {
+    margin-top: 36px;
+}
+
+// ── Reseñas del tour (hallazgo #3: $tourReviews ya lo trae el controlador
+// pero nunca se pintaba). Reutiliza .lat-stars (mismo look que el rating
+// agregado del tour y los mini-tours relacionados), con una variante
+// "is-empty" para reflejar el rating 1-5 real de cada reseña individual. ──
+.lat-reviews {
+    margin-top: 36px;
+    padding-top: 30px;
+    border-top: 1px solid $lat-line;
+
+    &__title {
+        font-family: $lat-font-serif; font-weight: 800; color: $lat-ink;
+        font-size: clamp(1.3rem, 2.2vw, 1.6rem); margin-bottom: 18px;
+    }
+
+    &__list { display: grid; gap: 16px; }
+}
+
+.lat-review {
+    border: 1px solid $lat-line;
+    border-radius: $lat-r-md;
+    background: $lat-surface;
+    padding: 18px 20px;
+
+    &__head {
+        display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px;
+    }
+
+    &__name { font-family: $lat-font-sans; font-weight: 700; color: $lat-ink; font-size: .95rem; }
+    &__date { font-size: .76rem; color: $lat-muted; flex: none; }
+
+    .lat-stars { margin-bottom: 8px; }
+    .lat-stars__s svg.is-empty { fill: $lat-line-strong; }
+
+    &__comment { margin: 0; color: $lat-ink-soft; font-size: .92rem; line-height: 1.6; }
 }
 
 // ── Franja de garantías (bottom) — reutiliza .lat-guarantee/.lat-gt de Home ──
