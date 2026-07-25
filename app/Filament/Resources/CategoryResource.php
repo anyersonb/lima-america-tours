@@ -31,6 +31,7 @@ class CategoryResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('slug')
+                    ->label('Slug')
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('name_es')
@@ -53,10 +54,13 @@ class CategoryResource extends Resource
                     ->label('Descrição (Português)')
                     ->columnSpanFull(),
                 Forms\Components\TextInput::make('icon')
+                    ->label('Ícono')
                     ->maxLength(255),
                 Forms\Components\Toggle::make('is_active')
+                    ->label('Activo')
                     ->required(),
                 Forms\Components\TextInput::make('order')
+                    ->label('Orden')
                     ->required()
                     ->numeric()
                     ->default(0),

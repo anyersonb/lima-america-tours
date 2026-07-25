@@ -16,10 +16,15 @@ class PageResource extends Resource
     protected static ?string $model = Page::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
+
     protected static ?string $navigationGroup = 'Contenido';
+
     protected static ?string $navigationLabel = 'Páginas';
+
     protected static ?string $modelLabel = 'Página';
+
     protected static ?string $pluralModelLabel = 'Páginas';
+
     protected static ?int $navigationSort = 6;
 
     public static function form(Form $form): Form
@@ -38,6 +43,7 @@ class PageResource extends Resource
                                     ->required()
                                     ->maxLength(255)
                                     ->unique(ignoreRecord: true)
+                                    ->live()
                                     ->helperText('Identificador único en la URL (ej: contacto, nosotros).')
                                     ->columnSpanFull(),
 
@@ -713,9 +719,9 @@ class PageResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListPages::route('/'),
+            'index' => Pages\ListPages::route('/'),
             'create' => Pages\CreatePage::route('/create'),
-            'edit'   => Pages\EditPage::route('/{record}/edit'),
+            'edit' => Pages\EditPage::route('/{record}/edit'),
         ];
     }
 }

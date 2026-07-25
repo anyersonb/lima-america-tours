@@ -31,19 +31,25 @@ class NewsletterSubscriberResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
+                    ->label('Nombre')
                     ->maxLength(255),
                 Forms\Components\TextInput::make('email')
+                    ->label('Correo')
                     ->email()
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('locale')
+                    ->label('Idioma')
                     ->required()
                     ->maxLength(5)
                     ->default('es'),
                 Forms\Components\Toggle::make('is_active')
+                    ->label('Activo')
                     ->required(),
-                Forms\Components\DateTimePicker::make('subscribed_at'),
-                Forms\Components\DateTimePicker::make('unsubscribed_at'),
+                Forms\Components\DateTimePicker::make('subscribed_at')
+                    ->label('Suscrito el'),
+                Forms\Components\DateTimePicker::make('unsubscribed_at')
+                    ->label('Baja el'),
             ]);
     }
 

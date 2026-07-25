@@ -8,7 +8,7 @@ Leyenda capas: ✅ pasa · 🔴/🟠 con hallazgos · — no corrido. Estados: P
 
 | Módulo | L1 | L2 | L3 | L4 | L5 | L6 | Estado | Reporte |
 |---|---|---|---|---|---|---|---|---|
-| Panel Filament | ✅ | — | — | — | — | — | PENDIENTE (F0+F1 hechos, sin hallazgos; falta F2-F7) | `docs/qa/panel-filament.md` |
+| Panel Filament | ✅ | ✅¹ | — | — | — | — | VERIFICADO c/ deuda (F0-F2 hechos; falta F3-F7) | `docs/qa/panel-filament.md` |
 | Ficha de tour | — | — | — | — | — | — | PENDIENTE | |
 | Tours (listado) | — | — | — | — | — | — | PENDIENTE | |
 | Reserva | — | — | — | — | — | — | PENDIENTE | |
@@ -16,6 +16,8 @@ Leyenda capas: ✅ pasa · 🔴/🟠 con hallazgos · — no corrido. Estados: P
 | Home | — | — | — | — | — | — | PENDIENTE | |
 | Contacto | — | — | — | — | — | — | PENDIENTE | |
 | Nosotros | — | — | — | — | — | — | PENDIENTE | |
+
+¹ L2 de **Panel Filament** en sí (labels de formulario, pluralización de BlockedDate, tab reactivo de PageResource, `<title>` de ficha, Offer sin consumidor) quedó corregido por `backend-laravel` en `qa/panel-filament` (2026-07-25) — ver `docs/qa/FIXES.md` filas 2-6. Los hallazgos #3 y #4 de `panel-filament.md` (sync de `Page.blocks` con `contact.blade.php`/`about.blade.php`, ~44 campos) quedan **fuera de este módulo**: se resuelven cuando se verifiquen los módulos Contacto y Nosotros (no bloquean el DoD de Panel Filament, que es sobre el panel admin, no sobre el front de esas páginas). `SmokeTest` verde, `php artisan test` en 4 failed (baseline Culqi) / 88 passed, cero regresiones nuevas.
 
 ## Orden de verificación (§10 del protocolo)
 Panel Filament → Ficha de tour → Tours → Reserva → Blog → Home → Contacto → Nosotros

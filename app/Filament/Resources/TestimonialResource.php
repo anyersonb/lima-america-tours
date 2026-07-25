@@ -31,11 +31,14 @@ class TestimonialResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
+                    ->label('Autor')
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('country')
+                    ->label('País')
                     ->maxLength(255),
                 Forms\Components\TextInput::make('avatar')
+                    ->label('Avatar (URL)')
                     ->maxLength(255),
                 Forms\Components\Textarea::make('quote_es')
                     ->required()
@@ -48,18 +51,23 @@ class TestimonialResource extends Resource
                     ->label('Comentário (Português)')
                     ->columnSpanFull(),
                 Forms\Components\TextInput::make('rating')
+                    ->label('Calificación')
                     ->required()
                     ->numeric()
                     ->default(5.0),
                 Forms\Components\TextInput::make('source')
+                    ->label('Origen')
                     ->required()
                     ->maxLength(255)
                     ->default('Google'),
                 Forms\Components\Toggle::make('is_featured')
+                    ->label('Destacado')
                     ->required(),
                 Forms\Components\Toggle::make('is_active')
+                    ->label('Aprobado')
                     ->required(),
                 Forms\Components\TextInput::make('order')
+                    ->label('Orden')
                     ->required()
                     ->numeric()
                     ->default(0),

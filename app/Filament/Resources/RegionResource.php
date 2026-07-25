@@ -32,6 +32,7 @@ class RegionResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('slug')
+                    ->label('Slug')
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('name_es')
@@ -54,6 +55,7 @@ class RegionResource extends Resource
                     ->label('Descrição (Português)')
                     ->columnSpanFull(),
                 Forms\Components\FileUpload::make('hero_image')
+                    ->label('Imagen')
                     ->image(),
                 Forms\Components\TextInput::make('eyebrow_es')
                     ->maxLength(255)
@@ -65,16 +67,21 @@ class RegionResource extends Resource
                     ->maxLength(255)
                     ->label('Eyebrow (Português)'),
                 Forms\Components\Toggle::make('is_active')
+                    ->label('Activo')
                     ->required(),
                 Forms\Components\TextInput::make('order')
+                    ->label('Orden')
                     ->required()
                     ->numeric()
                     ->default(0),
                 Forms\Components\TextInput::make('seo_title')
+                    ->label('SEO — Título')
                     ->maxLength(255),
                 Forms\Components\TextInput::make('seo_description')
+                    ->label('SEO — Descripción')
                     ->maxLength(320),
                 Forms\Components\FileUpload::make('seo_image')
+                    ->label('SEO — Imagen')
                     ->image(),
             ]);
     }

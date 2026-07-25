@@ -149,7 +149,9 @@ class HomeController extends Controller
     private function fetchOffers(): \Illuminate\Support\Collection
     {
         try {
-            return Offer::active()->orderBy('order')->limit(3)->get();
+            // eager-load "tour" — el front lo usa para el link de la tarjeta
+            // cuando la oferta no trae cta_url propia.
+            return Offer::active()->with('tour')->orderBy('order')->limit(3)->get();
         } catch (\Throwable $e) {
             Log::error('HomeController: failed to fetch offers', [
                 'exception' => $e->getMessage(),

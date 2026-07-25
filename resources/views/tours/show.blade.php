@@ -67,16 +67,11 @@
 
     $related = ($related ?? collect())->take(3);
 
-    $titleDisplay = (function ($raw) {
-        $stop = ['de', 'del', 'la', 'las', 'el', 'los', 'y', 'o', 'u', 'e', 'a', 'al', 'en', 'con', 'para', 'por', 'un', 'una'];
-        $words = preg_split('/\s+/u', mb_strtolower(trim($raw), 'UTF-8'));
-        $out = [];
-        foreach ($words as $i => $w) {
-            if ($w === '') continue;
-            $out[] = ($i > 0 && in_array($w, $stop, true)) ? $w : mb_convert_case($w, MB_CASE_TITLE, 'UTF-8');
-        }
-        return implode(' ', $out);
-    })($tour->title);
+    // Respeta el título tal cual lo escribió el editor en el CMS (sin
+    // recapitalizar): una transformación previa (mb_convert_case a
+    // MB_CASE_TITLE) rompía mayúsculas intencionales (siglas, marcas) en el
+    // <title>/SEO de la ficha (ver docs/qa/panel-filament.md hallazgo #7).
+    $titleDisplay = $tour->title;
 @endphp
 
 @section('title', $titleDisplay . ' — ' . __('seo.site_name'))

@@ -297,6 +297,54 @@
     @endif
 
     {{-- ============================================================
+         OFERTAS ESPECIALES — reales (modelo Offer, admin → Marketing →
+         Ofertas). $offers ya viene calculado por HomeController::fetchOffers()
+         (activas, sin vencer, orden manual, límite 3); antes se calculaba y
+         nunca se pintaba en ningún lugar del sitio (docs/qa/panel-filament.md
+         hallazgo #2).
+         ============================================================ --}}
+    @php $offers = $offers ?? collect(); @endphp
+    @if ($offers->isNotEmpty())
+        <section class="lat-wrap" style="padding:70px 24px" aria-labelledby="offers-title">
+            <div class="lat-sec-head">
+                <span class="lat-eyebrow is-center">{{ $L('Aprovecha ahora', 'Grab it now', 'Aproveite agora') }}</span>
+                <h2 id="offers-title">{{ $L('Ofertas especiales', 'Special offers', 'Ofertas especiais') }}</h2>
+                <p>{{ $L('Promociones por tiempo limitado en nuestros tours más populares.', 'Limited-time promotions on our most popular tours.', 'Promoções por tempo limitado em nossos tours mais populares.') }}</p>
+            </div>
+
+            <div class="lat-dest-grid">
+                @foreach ($offers as $offer)
+                    @php
+                        $offerImg = \App\Support\ImagePath::url($offer->image) ?? asset('assets/banners/hero-machu-picchu.png');
+                        $offerHref = $offer->cta_url
+                            ?: ($offer->tour ? route('tours.show', ['locale' => $locale, 'slug' => $offer->tour->slug]) : route('tours.index', ['locale' => $locale]));
+                    @endphp
+                    <article class="lat-dcard">
+                        <a href="{{ $offerHref }}" class="lat-dcard__media">
+                            <img src="{{ $offerImg }}" alt="{{ $offer->title }}" loading="lazy" width="400" height="275">
+                        </a>
+                        <div class="lat-dcard__body">
+                            <a href="{{ $offerHref }}"><h3 class="clamp-2">{{ $offer->title }}</h3></a>
+                            @if ($offer->description)
+                                <p class="lat-dcard__desc clamp-2">{{ $offer->description }}</p>
+                            @endif
+                            <div class="lat-dcard__foot">
+                                @if ($offer->price)
+                                    <div class="lat-dcard__price">
+                                        <small>{{ $L('Desde', 'From', 'Desde') }}</small>
+                                        <span class="lat-amt">US$ {{ number_format((float) $offer->price, 0) }}</span>
+                                    </div>
+                                @endif
+                                <a href="{{ $offerHref }}" class="lat-btn-out">{{ $offer->cta_label }}</a>
+                            </div>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
+    {{-- ============================================================
          FAQ (AEO) — se mantiene por su valor SEO; solo renderiza si hay
          preguntas configuradas en Settings. Estilo teal/orange heredado
          del diseño anterior: pendiente de repintar a rojo en un milestone

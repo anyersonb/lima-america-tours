@@ -17,12 +17,17 @@ class BlockedDateResource extends Resource
 {
     protected static ?string $model = BlockedDate::class;
 
-    protected static ?string $navigationIcon  = 'heroicon-o-calendar-days';
+    protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
+
     protected static ?string $navigationGroup = 'Reservas';
+
     protected static ?string $navigationLabel = 'Fechas bloqueadas';
-    protected static ?string $modelLabel      = 'Fecha bloqueada';
+
+    protected static ?string $modelLabel = 'Fecha bloqueada';
+
     protected static ?string $pluralModelLabel = 'Fechas bloqueadas';
-    protected static ?int    $navigationSort  = 20;
+
+    protected static ?int $navigationSort = 20;
 
     // ─────────────────────────────────────────────────────────────────────────
     // FORM
@@ -37,7 +42,7 @@ class BlockedDateResource extends Resource
                         Forms\Components\Radio::make('type')
                             ->label('Tipo de bloqueo')
                             ->options([
-                                'date'    => 'Fecha específica',
+                                'date' => 'Fecha específica',
                                 'weekday' => 'Día de la semana (recurrente)',
                             ])
                             ->default('date')
@@ -85,6 +90,7 @@ class BlockedDateResource extends Resource
                                 $tours = Tour::published()
                                     ->orderBy('title_es')
                                     ->pluck('title_es', 'id');
+
                                 return $tours;
                             })
                             ->placeholder('Todos los tours')
@@ -101,31 +107,51 @@ class BlockedDateResource extends Resource
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // WEEKDAY LABEL (plural, in Spanish — extracted for unit testing)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Builds the "Todos los {día}" label for a recurring weekly block.
+     *
+     * Spanish weekday names ending in "s" (lunes, martes, miércoles, jueves,
+     * viernes) are already invariant in the plural — only "sábado" and
+     * "domingo" take an "s". A naive `"{$day}s"` concatenation therefore
+     * produced "Todos los Luness", "Todos los Martess", etc. This map holds
+     * the correct plural form for each ISO-ish weekday index (0=Sunday).
+     */
+    public static function weeklyBlockLabel(?int $weekday): string
+    {
+        $weekdayPlural = [
+            0 => 'domingos',
+            1 => 'lunes',
+            2 => 'martes',
+            3 => 'miércoles',
+            4 => 'jueves',
+            5 => 'viernes',
+            6 => 'sábados',
+        ];
+
+        $day = $weekdayPlural[$weekday] ?? "día {$weekday}";
+
+        return "Todos los {$day}";
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // TABLE
     // ─────────────────────────────────────────────────────────────────────────
 
     public static function table(Table $table): Table
     {
-        $weekdayNames = [
-            0 => 'Domingo',
-            1 => 'Lunes',
-            2 => 'Martes',
-            3 => 'Miércoles',
-            4 => 'Jueves',
-            5 => 'Viernes',
-            6 => 'Sábado',
-        ];
-
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('type_display')
                     ->label('Bloqueo')
-                    ->state(function (BlockedDate $record) use ($weekdayNames): string {
+                    ->state(function (BlockedDate $record): string {
                         if ($record->date !== null) {
                             return $record->date->format('d/m/Y');
                         }
-                        $day = $weekdayNames[$record->weekday] ?? "Día {$record->weekday}";
-                        return "Todos los {$day}s";
+
+                        return static::weeklyBlockLabel($record->weekday);
                     })
                     ->searchable(false)
                     ->sortable(false),
@@ -165,9 +191,9 @@ class BlockedDateResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListBlockedDates::route('/'),
+            'index' => Pages\ListBlockedDates::route('/'),
             'create' => Pages\CreateBlockedDate::route('/create'),
-            'edit'   => Pages\EditBlockedDate::route('/{record}/edit'),
+            'edit' => Pages\EditBlockedDate::route('/{record}/edit'),
         ];
     }
 

@@ -51,8 +51,10 @@ class OfferResource extends Resource
                     ->label('Descrição (Português)')
                     ->columnSpanFull(),
                 Forms\Components\FileUpload::make('image')
+                    ->label('Imagen')
                     ->image(),
                 Forms\Components\TextInput::make('price')
+                    ->label('Precio')
                     ->numeric()
                     ->prefix('$'),
                 Forms\Components\TextInput::make('cta_label_es')
@@ -67,6 +69,7 @@ class OfferResource extends Resource
                     ->maxLength(255)
                     ->label('CTA (Português)'),
                 Forms\Components\TextInput::make('cta_url')
+                    ->label('URL destino')
                     ->maxLength(255),
                 Forms\Components\Select::make('tour_id')
                     ->label('Tour')
@@ -74,12 +77,15 @@ class OfferResource extends Resource
                     ->searchable()
                     ->preload(),
                 Forms\Components\Toggle::make('is_active')
+                    ->label('Activo')
                     ->required(),
                 Forms\Components\TextInput::make('order')
+                    ->label('Orden')
                     ->required()
                     ->numeric()
                     ->default(0),
-                Forms\Components\DateTimePicker::make('valid_until'),
+                Forms\Components\DateTimePicker::make('valid_until')
+                    ->label('Válida hasta'),
             ]);
     }
 

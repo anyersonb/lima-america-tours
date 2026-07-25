@@ -41,35 +41,46 @@ class ContactLeadResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
+                    ->label('Nombre')
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('lastname')
+                    ->label('Apellido')
                     ->maxLength(255),
                 Forms\Components\TextInput::make('email')
+                    ->label('Correo')
                     ->email()
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('phone')
+                    ->label('Teléfono')
                     ->tel()
                     ->maxLength(255),
                 Forms\Components\Textarea::make('message')
+                    ->label('Mensaje')
                     ->required()
                     ->columnSpanFull(),
                 Forms\Components\TextInput::make('source')
+                    ->label('Origen')
                     ->required()
                     ->maxLength(255)
                     ->default('contact_form'),
                 Forms\Components\TextInput::make('locale')
+                    ->label('Idioma')
                     ->required()
                     ->maxLength(5)
                     ->default('es'),
                 Forms\Components\TextInput::make('ip')
+                    ->label('IP')
                     ->maxLength(255),
                 Forms\Components\TextInput::make('user_agent')
+                    ->label('Navegador')
                     ->maxLength(255),
                 Forms\Components\Toggle::make('is_read')
+                    ->label('Leído')
                     ->required(),
                 Forms\Components\Toggle::make('is_archived')
+                    ->label('Archivado')
                     ->required(),
             ]);
     }
