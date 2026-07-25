@@ -9,6 +9,8 @@
 .env.backup
 .env.production
 .env.prod
+.env.qa
+.env.testing
 /public/screenshots
 .phpunit.result.cache
 Homestead.json
@@ -30,3 +32,6 @@ CLAUDE.md
 
 # Artefactos de automatización del navegador
 /.playwright-mcp
+
+# Snapshots de BD de QA (dumps, no se commitean)
+/docs/qa/snapshots/
