@@ -1,0 +1,156 @@
+// ═══════════════════════════════════════════════════════════════════════
+// LIMA AMÉRICA TOURS — Footer (fondo fotográfico + overlay, borde rojo)
+// ═══════════════════════════════════════════════════════════════════════
+@use '../abstracts/variables' as *;
+
+.lat-footer {
+    position: relative;
+    border-top: 4px solid $lat-red;
+    background-color: #100d0b;
+    background-size: cover;
+    background-position: center;
+    color: #c9c0b4;
+    font-family: $lat-font-sans;
+    padding-top: 64px;
+
+    .lat-wrap { position: relative; z-index: 1; }
+
+    &__grid {
+        display: grid;
+        grid-template-columns: 1.6fr 1fr 1.3fr 1fr;
+        gap: 40px;
+        padding-bottom: 46px;
+
+        @media (max-width: 860px) { grid-template-columns: 1fr 1fr; }
+        @media (max-width: 520px) { grid-template-columns: 1fr; }
+    }
+
+    &__logo { height: 48px; width: auto; margin-bottom: 18px; }
+
+    &__desc { color: #9a9186; max-width: 300px; font-size: .92rem; line-height: 1.6; }
+
+    &__social {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+
+        a {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: rgba(255, 255, 255, .06);
+            display: grid; place-items: center;
+            transition: background .2s, transform .2s;
+            color: #fff;
+        }
+        a:hover { background: $lat-red; transform: translateY(-3px); }
+        svg { width: 17px; height: 17px; }
+    }
+
+    h4 {
+        font-family: $lat-font-sans;
+        font-size: .78rem;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        color: #fff;
+        margin-bottom: 20px;
+        font-weight: 700;
+    }
+
+    &__links {
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+
+        a { color: #9a9186; font-size: .92rem; transition: color .15s; }
+        a:hover { color: $lat-red; }
+    }
+
+    &__contact {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        li { display: flex; align-items: flex-start; gap: 10px; font-size: .9rem; color: #9a9186; }
+        a { color: #9a9186; }
+        a:hover { color: $lat-red; }
+        svg { width: 16px; height: 16px; color: $lat-red; flex: none; margin-top: 2px; }
+    }
+
+    &__seals {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px 40px;
+        justify-content: center;
+        padding: 22px 0;
+        border-top: 1px solid rgba(255, 255, 255, .1);
+    }
+
+    &__seal {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: #d7cec2;
+        font-size: .86rem;
+        font-weight: 600;
+
+        svg { width: 20px; height: 20px; color: $lat-red; flex: none; }
+    }
+
+    &__lang {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, .08);
+        border: 1px solid rgba(255, 255, 255, .14);
+        border-radius: $lat-r-pill;
+        padding: 7px 14px;
+        color: #e7ded4;
+        font-weight: 600;
+        font-size: .84rem;
+
+        svg { width: 14px; height: 14px; }
+    }
+
+    &__bottom {
+        border-top: 1px solid rgba(255, 255, 255, .08);
+        padding: 20px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: .82rem;
+        color: #7f776c;
+    }
+
+    &__legal {
+        display: flex;
+        gap: 18px;
+
+        a { color: #7f776c; font-size: .82rem; }
+        a:hover { color: #fff; }
+    }
+
+    // Newsletter band (fila superior sobre el footer)
+    &__newsletter {
+        padding-bottom: 46px;
+        display: grid;
+        gap: 30px;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+
+        @media (max-width: 860px) { grid-template-columns: 1fr; }
+    }
+}
+
+.lat-payment {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+
+    li { background: #fff; border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; }
+}

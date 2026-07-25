@@ -1,0 +1,275 @@
+// ═══════════════════════════════════════════════════════════════════════
+// LIMA AMÉRICA TOURS — Ficha de Tour (calca de lat-04-detalle.jpeg)
+// Namespace "lat-" — reutiliza .lat-btn, .lat-btn--red, .lat-stars,
+// .lat-eyebrow, .lat-wrap, .lat-guarantee/.lat-gt (franja de garantías).
+// ═══════════════════════════════════════════════════════════════════════
+@use '../abstracts/variables' as *;
+
+// ── Barra de breadcrumb (blanca, delgada) ───────────────────────────────
+.lat-crumb-bar {
+    background: $lat-surface-2;
+    border-bottom: 1px solid $lat-line;
+    padding: 20px 0;
+
+    .lat-crumb {
+        font-size: .82rem;
+        color: $lat-muted;
+
+        a { color: $lat-muted; &:hover { color: $lat-red; } }
+        b { color: $lat-red; font-weight: 600; }
+    }
+}
+
+// ── Layout principal: contenido + aside sticky ──────────────────────────
+.lat-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 372px;
+    gap: 40px;
+    align-items: start;
+    padding: 32px 0 70px;
+
+    > * { min-width: 0; }
+
+    @media (max-width: 980px) { grid-template-columns: 1fr; }
+}
+
+// ── Galería ──────────────────────────────────────────────────────────────
+.lat-gal {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+
+    &__main {
+        grid-column: 1 / -1;
+        aspect-ratio: 16 / 8.4;
+        border-radius: $lat-r-md;
+        overflow: hidden;
+        position: relative;
+
+        img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    }
+
+    &__more {
+        position: absolute; right: 12px; bottom: 12px;
+        background: rgba($lat-ink, .7); color: #fff;
+        font-size: .78rem; font-weight: 600; padding: 8px 14px;
+        border-radius: $lat-r-pill; backdrop-filter: blur(4px);
+        display: inline-flex; gap: 7px; align-items: center; border: none; cursor: pointer;
+
+        svg { width: 15px; height: 15px; }
+    }
+
+    &__thumb {
+        aspect-ratio: 4 / 3;
+        border-radius: $lat-r-sm;
+        overflow: hidden;
+        cursor: pointer;
+        position: relative;
+        border: 2px solid transparent;
+        transition: border-color .2s;
+        padding: 0;
+        background: none;
+
+        img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; display: block; }
+
+        &:hover img { transform: scale(1.08); }
+        &.is-active { border-color: $lat-red; }
+    }
+
+    @media (max-width: 640px) {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        &__main { aspect-ratio: 4 / 3; }
+    }
+}
+
+// ── Barra de info (duración / grupo / idiomas / salidas) ────────────────
+.lat-detail-info {
+    background: $lat-surface;
+    border: 1px solid $lat-line;
+    border-radius: $lat-r-md;
+    padding: 18px 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px 34px;
+    margin: 24px 0 8px;
+    box-shadow: $lat-shadow-sm;
+}
+
+.lat-di {
+    display: flex; align-items: center; gap: 12px;
+
+    svg { width: 24px; height: 24px; color: $lat-red; flex: none; }
+    b { display: block; font-family: $lat-font-serif; font-size: 1.02rem; color: $lat-ink; line-height: 1.1; }
+    span { font-size: .78rem; color: $lat-muted; }
+}
+
+.lat-detail-eyebrow {
+    color: $lat-red; font-weight: 700; font-size: .74rem; letter-spacing: .14em; text-transform: uppercase;
+    margin-top: 22px;
+}
+
+.lat-detail-title {
+    font-family: $lat-font-serif;
+    font-weight: 800;
+    color: $lat-ink;
+    font-size: clamp(1.9rem, 3.6vw, 2.7rem);
+    line-height: 1.1;
+    margin: 12px 0 14px;
+}
+
+.lat-detail-rate {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 26px;
+}
+
+.lat-badge-free {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: #e7f6ec; color: #128a4b; font-weight: 600; font-size: .82rem;
+    padding: 6px 13px; border-radius: $lat-r-pill;
+
+    svg { width: 15px; height: 15px; }
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────────────
+.lat-tabs {
+    display: flex; gap: 6px; border-bottom: 1px solid $lat-line; margin-bottom: 24px; overflow-x: auto;
+}
+
+.lat-tab {
+    padding: 13px 4px; margin-right: 22px; font-family: $lat-font-sans;
+    font-weight: 600; color: $lat-muted; cursor: pointer; border: none; background: none;
+    border-bottom: 2px solid transparent; white-space: nowrap; transition: color .2s, border-color .2s;
+
+    &:hover { color: $lat-ink; }
+    &.is-active { color: $lat-red; border-color: $lat-red; }
+}
+
+.lat-tab-panel {
+    display: none;
+
+    &.is-active { display: block; }
+
+    p { color: $lat-ink-soft; margin-bottom: 14px; line-height: 1.65; }
+
+    ul {
+        margin: 0 0 10px; padding-left: 0; list-style: none; display: grid; gap: 12px;
+
+        li { display: flex; gap: 11px; align-items: flex-start; color: $lat-ink-soft; }
+        svg { width: 19px; height: 19px; color: #128a4b; flex: none; margin-top: 2px; }
+    }
+}
+
+.lat-itin-step {
+    display: flex; gap: 16px; padding-bottom: 20px; position: relative;
+
+    &:not(:last-child)::before {
+        content: ""; position: absolute; left: 15px; top: 34px; bottom: 0; width: 2px; background: $lat-line;
+    }
+
+    &__num {
+        width: 32px; height: 32px; border-radius: 50%; background: $lat-red; color: #fff;
+        font-weight: 700; font-size: .9rem; display: grid; place-items: center; flex: none; z-index: 1;
+    }
+
+    &__time {
+        font-size: .74rem; font-weight: 700; color: $lat-red; letter-spacing: .04em; display: block; margin-bottom: 2px;
+    }
+
+    h4 { font-family: $lat-font-sans; font-size: 1rem; margin-bottom: 5px; color: $lat-ink; }
+    p { font-size: .92rem; color: $lat-muted; margin: 0; }
+}
+
+.lat-detail-highlights {
+    display: flex; flex-wrap: wrap; gap: 12px 28px;
+    margin-top: 22px; padding-top: 22px; border-top: 1px solid $lat-line;
+
+    .lat-h { display: inline-flex; align-items: center; gap: 9px; font-size: .9rem; font-weight: 500; color: $lat-ink-soft; }
+    svg { width: 18px; height: 18px; color: $lat-red; }
+}
+
+// ── Caja de reserva (aside sticky) ───────────────────────────────────────
+.lat-book {
+    position: sticky;
+    top: 104px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    @media (max-width: 980px) { position: static; }
+}
+
+.lat-book-card {
+    background: $lat-surface;
+    border: 1px solid $lat-line;
+    border-radius: $lat-r-md;
+    box-shadow: $lat-shadow-md;
+    overflow: hidden;
+}
+
+.lat-book-head {
+    background: $lat-red; color: #fff; padding: 20px 24px;
+
+    small { font-size: .8rem; opacity: .9; }
+
+    .lat-amt {
+        font-family: $lat-font-serif; font-size: 2.5rem; font-weight: 700; line-height: 1;
+        span { font-size: .9rem; font-weight: 500; opacity: .9; }
+    }
+}
+
+.lat-book-body { padding: 22px 24px; display: flex; flex-direction: column; gap: 16px; }
+
+.lat-book-body label {
+    font-size: .8rem; font-weight: 700; color: $lat-ink-soft; display: block; margin-bottom: 7px;
+}
+
+.lat-book-field {
+    display: flex; align-items: center; gap: 10px;
+    border: 1px solid $lat-line-strong; border-radius: 12px;
+    padding: 12px 14px; background: $lat-paper;
+
+    svg { width: 18px; height: 18px; color: $lat-red; flex: none; }
+
+    select, input {
+        border: none; background: transparent; font-family: inherit;
+        font-size: .95rem; font-weight: 600; color: $lat-ink; width: 100%; outline: none; cursor: pointer;
+    }
+}
+
+.lat-book-total {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 6px; border-top: 1px dashed $lat-line-strong;
+
+    .lat-lbl { color: $lat-muted; font-size: .9rem; }
+    .lat-tot { font-family: $lat-font-serif; font-size: 1.7rem; font-weight: 700; color: $lat-red; }
+}
+
+.lat-book-secure {
+    display: flex; align-items: center; justify-content: center; gap: 8px; color: $lat-muted; font-size: .82rem;
+
+    svg { width: 15px; height: 15px; color: #128a4b; }
+}
+
+.lat-more-tours-card {
+    background: $lat-surface; border: 1px solid $lat-line; border-radius: $lat-r-md;
+    box-shadow: $lat-shadow-sm; padding: 20px 22px;
+
+    h4 {
+        font-family: $lat-font-serif; font-size: 1.15rem; margin-bottom: 16px; padding-bottom: 12px;
+        border-bottom: 2px solid $lat-red; display: inline-block; color: $lat-ink;
+    }
+}
+
+.lat-mini-tour {
+    display: flex; gap: 13px; padding: 11px 0; border-bottom: 1px solid $lat-line;
+
+    &:last-of-type { border-bottom: none; }
+
+    &__img { width: 74px; height: 60px; border-radius: 10px; overflow: hidden; flex: none; }
+    &__img img { width: 100%; height: 100%; object-fit: cover; }
+
+    h5 { font-family: $lat-font-sans; font-size: .9rem; line-height: 1.25; margin-bottom: 5px; color: $lat-ink; }
+    .lat-mprice { font-weight: 700; color: $lat-red; font-size: .85rem; }
+    .lat-stars { font-size: .76rem; }
+}
+
+// ── Franja de garantías (bottom) — reutiliza .lat-guarantee/.lat-gt de Home ──

@@ -1,0 +1,40 @@
+// ═══════════════════════════════════════════════════════════════════════
+// LIMA AMÉRICA TOURS — Hero plano (sin imagen de fondo)
+// Usado en pantallas donde el mockup aprobado NO lleva foto de portada:
+// checkout paso 2 "Detalles de la Reserva" (lat-06-reserva.jpeg) y
+// Contacto (lat-07-contacto.jpeg). Reutiliza .lat-eyebrow / .lat-wrap
+// ya definidos en pages/lat-home + layouts/lat-header.
+// ═══════════════════════════════════════════════════════════════════════
+@use '../abstracts/variables' as *;
+
+.lat-flat-hero {
+    background: $lat-paper;
+    padding: 44px 0 6px;
+
+    &__crumb {
+        font-size: .82rem;
+        color: $lat-muted;
+        margin-bottom: 14px;
+
+        a { color: $lat-muted; text-decoration: none; &:hover { color: $lat-red; } }
+    }
+
+    .lat-eyebrow { margin: 0 0 14px; }
+
+    h1 {
+        font-family: $lat-font-serif;
+        font-weight: 800;
+        font-size: clamp(2rem, 4.2vw, 2.9rem);
+        color: $lat-ink;
+        line-height: 1.08;
+        margin: 0 0 16px;
+    }
+
+    &__sub {
+        color: $lat-ink-soft;
+        font-size: 1rem;
+        line-height: 1.5;
+        max-width: 640px;
+        margin: 0;
+    }
+}

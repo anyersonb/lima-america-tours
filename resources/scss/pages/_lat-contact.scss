@@ -1,0 +1,88 @@
+// ═══════════════════════════════════════════════════════════════════════
+// LIMA AMÉRICA TOURS — Contacto (lat-07-contacto.jpeg)
+// Reutiliza .lat-flat-hero, .lat-eyebrow, .lat-wrap, .lat-btn y tokens $lat-*.
+// ═══════════════════════════════════════════════════════════════════════
+@use '../abstracts/variables' as *;
+
+.lat-contact-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+
+    @media (max-width: 1023px) { grid-template-columns: 1fr; }
+}
+
+.lat-contact-card {
+    background: $lat-surface;
+    border: 1px solid $lat-line;
+    border-radius: $lat-r-lg;
+    box-shadow: $lat-shadow-sm;
+    padding: 28px;
+
+    @media (max-width: 640px) { padding: 20px; border-radius: $lat-r-md; }
+}
+
+.lat-contact-card__head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 22px; }
+
+.lat-contact-icon-circle {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+    background: $lat-red-tint; color: $lat-red;
+    display: grid; place-items: center;
+}
+.lat-contact-icon-circle svg { width: 22px; height: 22px; }
+
+.lat-contact-card__title { font-family: $lat-font-serif; font-weight: 800; font-size: 1.35rem; color: $lat-ink; margin: 0; line-height: 1.2; }
+.lat-contact-card__desc { font-size: .85rem; color: $lat-muted; margin: 4px 0 0; }
+
+.lat-contact-form-grid { display: grid; gap: 18px; }
+.lat-contact-two {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    @media (max-width: 560px) { grid-template-columns: 1fr; }
+}
+
+.lat-contact-field label { display: block; font-size: .82rem; font-weight: 700; color: $lat-ink; margin-bottom: 8px; }
+.lat-contact-field label .req { color: $lat-red; }
+
+.lat-contact-input, .lat-contact-textarea {
+    width: 100%; border-radius: 12px; border: 1px solid $lat-line-strong;
+    background: $lat-surface-2; padding: 13px 16px; font-size: .92rem; color: $lat-ink-soft;
+    font-family: $lat-font-sans; outline: none; transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.lat-contact-input { height: 48px; }
+.lat-contact-textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
+.lat-contact-input::placeholder, .lat-contact-textarea::placeholder { color: rgba(58, 53, 47, .4); }
+.lat-contact-input:focus, .lat-contact-textarea:focus {
+    border-color: $lat-red; box-shadow: 0 0 0 3px rgba(203, 16, 30, .12); background: $lat-surface;
+}
+
+.lat-contact-submit {
+    width: 100%; height: 52px; border-radius: 14px; border: none; margin-top: 4px;
+    background: $lat-red; color: #fff; font-weight: 700; font-size: .95rem;
+    display: flex; align-items: center; justify-content: center; gap: 9px; cursor: pointer;
+    transition: background .15s; font-family: $lat-font-sans;
+}
+.lat-contact-submit svg { width: 18px; height: 18px; }
+.lat-contact-submit:hover { background: $lat-red-deep; }
+
+// ── Columna derecha: canales de contacto ──────────────────────────────────
+.lat-contact-channels { display: grid; gap: 16px; }
+
+.lat-contact-channel { display: flex; gap: 14px; align-items: flex-start; }
+.lat-contact-channel h3 { font-family: $lat-font-serif; font-weight: 800; font-size: 1.05rem; color: $lat-ink; margin: 0 0 4px; }
+.lat-contact-channel p, .lat-contact-channel a {
+    display: block; font-size: .88rem; color: $lat-ink-soft; line-height: 1.5;
+}
+.lat-contact-channel a { color: $lat-ink-soft; text-decoration: none; }
+.lat-contact-channel a:hover { color: $lat-red; }
+
+.lat-contact-wa-btn {
+    width: 100%; height: 52px; border-radius: 14px; border: none;
+    background: $lat-wa; color: #fff; font-weight: 700; font-size: .95rem;
+    display: flex; align-items: center; justify-content: center; gap: 9px; cursor: pointer;
+    text-decoration: none; transition: filter .15s; font-family: $lat-font-sans;
+}
+.lat-contact-wa-btn svg { width: 19px; height: 19px; }
+.lat-contact-wa-btn:hover { filter: brightness(.94); }
+
+.lat-contact-pickup-note { font-size: .85rem; color: $lat-muted; line-height: 1.5; margin: 6px 0 0; }

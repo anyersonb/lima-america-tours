@@ -1,0 +1,224 @@
+// ═══════════════════════════════════════════════════════════════════════
+// LIMA AMÉRICA TOURS — Listado de Tours (calca de lat-03-tours.jpeg)
+// Namespace "lat-" — reutiliza tokens/variables y componentes ya globales
+// (.lat-btn, .lat-btn--red, .lat-eyebrow, .lat-stars, .lat-wrap).
+// ═══════════════════════════════════════════════════════════════════════
+@use '../abstracts/variables' as *;
+
+// ── Hero interno con imagen de fondo (todas las páginas internas) ──────
+.lat-page-hero {
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    padding: 132px 0 60px;
+    background-color: $lat-ink;
+    background-size: cover;
+    background-position: center 42%;
+
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background: linear-gradient(115deg, rgba($lat-ink, .9) 0%, rgba($lat-ink, .6) 52%, rgba($lat-red-deep, .55) 100%);
+    }
+
+    .lat-wrap { position: relative; z-index: 1; }
+
+    &__crumb {
+        font-size: .82rem;
+        color: rgba(255, 255, 255, .82);
+        margin-bottom: 10px;
+
+        a { color: rgba(255, 255, 255, .82); &:hover { color: #fff; } }
+        b { color: #ff9ea4; font-weight: 600; }
+    }
+
+    .lat-eyebrow { color: #ffd7d9; margin-bottom: 14px; &::before { background: #ffd7d9; } }
+
+    h1 {
+        font-family: $lat-font-serif;
+        font-weight: 800;
+        line-height: 1.06;
+        font-size: clamp(2.1rem, 4.6vw, 3.3rem);
+        color: #fff;
+        margin: 0 0 16px;
+        max-width: 700px;
+        text-shadow: 0 2px 26px rgba(0, 0, 0, .35);
+    }
+
+    &__sub {
+        color: #f1ebe4;
+        font-size: 1.05rem;
+        max-width: 560px;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    @media (max-width: 760px) {
+        padding: 108px 0 44px;
+        h1 { max-width: 100%; }
+    }
+}
+
+// ── Buscador de tours ───────────────────────────────────────────────────
+.lat-tours-search {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    background: $lat-surface;
+    border: 1px solid $lat-line-strong;
+    border-radius: $lat-r-pill;
+    padding: 12px 20px;
+    margin-bottom: 22px;
+    max-width: 560px;
+    box-shadow: $lat-shadow-sm;
+
+    svg { width: 19px; height: 19px; color: $lat-red; flex: none; }
+
+    input {
+        border: none;
+        background: transparent;
+        outline: none;
+        font-family: $lat-font-sans;
+        font-size: .96rem;
+        color: $lat-ink;
+        width: 100%;
+
+        &::placeholder { color: $lat-muted; }
+    }
+}
+
+// ── Toolbar: chips de categoría + contador de resultados ───────────────
+.lat-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+
+.lat-filters { display: flex; flex-wrap: wrap; gap: 9px; }
+
+.lat-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 17px;
+    border-radius: $lat-r-pill;
+    background: $lat-surface;
+    border: 1px solid $lat-line;
+    color: $lat-ink-soft;
+    font-family: $lat-font-sans;
+    font-size: .86rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s, color .2s, border-color .2s, transform .2s;
+
+    &:hover { border-color: $lat-red; color: $lat-red; transform: translateY(-2px); }
+
+    &.is-active { background: $lat-red; border-color: $lat-red; color: #fff; }
+}
+
+.lat-result-count {
+    color: $lat-muted;
+    font-size: .9rem;
+    white-space: nowrap;
+
+    b { color: $lat-ink; }
+}
+
+// ── Grid de tarjetas ─────────────────────────────────────────────────────
+.lat-tours-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+
+    @media (max-width: 1180px) { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 840px)  { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 520px)  { grid-template-columns: 1fr; }
+}
+
+.lat-tcard {
+    position: relative;
+    background: $lat-surface;
+    border: 1px solid $lat-line;
+    border-radius: $lat-r-md;
+    overflow: hidden;
+    box-shadow: $lat-shadow-sm;
+    display: flex;
+    flex-direction: column;
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s;
+
+    &:hover { transform: translateY(-6px); box-shadow: $lat-shadow-lg; border-color: transparent; }
+
+    &.is-hidden { display: none; }
+
+    &__media {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        overflow: hidden;
+        display: block;
+
+        img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+    }
+
+    &:hover &__media img { transform: scale(1.07); }
+
+    &__badge {
+        position: absolute; top: 12px; left: 12px; z-index: 2;
+        background: $lat-red; color: #fff;
+        font-size: .66rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+        padding: 6px 12px; border-radius: $lat-r-pill; box-shadow: $lat-shadow-sm;
+
+        &--g { background: #128a4b; }
+        &--o { background: #e07a1a; }
+    }
+
+    &__fav {
+        position: absolute; top: 12px; right: 12px; z-index: 2;
+        width: 36px; height: 36px; border-radius: 50%;
+        background: rgba(255, 255, 255, .92); border: none;
+        display: grid; place-items: center; cursor: pointer;
+        box-shadow: $lat-shadow-sm; transition: transform .2s, background .2s;
+
+        svg { width: 18px; height: 18px; color: $lat-red; fill: none; stroke: $lat-red; stroke-width: 2; }
+
+        &:hover { transform: scale(1.12); }
+        &.is-on svg { fill: $lat-red; }
+    }
+
+    &__body { padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 11px; flex: 1; }
+
+    h3 { font-family: $lat-font-sans; font-weight: 700; font-size: 1.14rem; line-height: 1.25; color: $lat-ink; }
+
+    &__feats {
+        display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: .82rem; color: $lat-muted;
+
+        span { display: inline-flex; align-items: center; gap: 6px; }
+        svg { width: 14px; height: 14px; color: $lat-red; flex: none; }
+    }
+
+    &__foot {
+        margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between;
+        gap: 10px; padding-top: 14px; border-top: 1px solid $lat-line;
+    }
+
+    &__price {
+        small { display: block; font-size: .7rem; color: $lat-muted; letter-spacing: .04em; }
+        .lat-amt { font-family: $lat-font-serif; font-size: 1.5rem; font-weight: 700; color: $lat-ink; line-height: 1; }
+        .lat-per { font-size: .72rem; color: $lat-muted; }
+
+        &--free .lat-amt { color: #128a4b; }
+    }
+
+    &__foot .lat-btn { padding: 10px 16px; font-size: .85rem; }
+}
+
+.lat-empty-note {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: $lat-muted;
+    padding: 50px 0;
+}

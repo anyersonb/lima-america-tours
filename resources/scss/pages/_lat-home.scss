@@ -1,0 +1,445 @@
+// ═══════════════════════════════════════════════════════════════════════
+// LIMA AMÉRICA TOURS — Home (calca de lat-01-home.jpeg)
+// ═══════════════════════════════════════════════════════════════════════
+@use '../abstracts/variables' as *;
+
+.lat-page { background: $lat-paper; font-family: $lat-font-sans; color: $lat-ink; }
+
+// ── Botones genéricos de la sección Home ──────────────────────────────
+.lat-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    font-family: $lat-font-sans;
+    font-weight: 600;
+    font-size: .95rem;
+    padding: 13px 26px;
+    border-radius: $lat-r-pill;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform .18s ease, box-shadow .2s ease, background .2s ease, color .2s ease;
+    white-space: nowrap;
+
+    svg { width: 18px; height: 18px; }
+}
+
+.lat-btn--red {
+    background: $lat-red;
+    color: #fff;
+
+    &:hover { background: $lat-red-deep; transform: translateY(-2px); box-shadow: 0 10px 24px rgba(203, 16, 30, .32); }
+}
+
+.lat-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: $lat-font-sans;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: $lat-red;
+
+    &::before { content: ""; width: 26px; height: 2px; background: $lat-red; border-radius: 2px; display: inline-block; }
+
+    &.is-center {
+        justify-content: center;
+        &::after { content: ""; width: 26px; height: 2px; background: $lat-red; border-radius: 2px; display: inline-block; }
+    }
+}
+
+// ── Hero ────────────────────────────────────────────────────────────────
+.lat-hero {
+    position: relative;
+    isolation: isolate;
+    min-height: 720px;
+    display: flex;
+    align-items: stretch;
+    padding: 40px 0 0;
+    overflow: hidden;
+    color: #fff;
+
+    &__bg {
+        position: absolute; inset: 0; z-index: -2;
+        img { width: 100%; height: 100%; object-fit: cover; }
+
+        &::after {
+            content: "";
+            position: absolute; inset: 0;
+            background: linear-gradient(180deg, rgba(20, 15, 13, .6) 0%, rgba(20, 15, 13, .42) 46%, rgba(20, 15, 13, .72) 100%);
+        }
+    }
+
+    &__inner { max-width: 900px; padding: 40px 0 56px; }
+
+    h1 {
+        font-family: $lat-font-serif;
+        font-weight: 800;
+        line-height: 1.05;
+        font-size: clamp(2.5rem, 6vw, 4.6rem);
+        color: #fff;
+        margin: 0;
+        text-shadow: 0 2px 30px rgba(0, 0, 0, .3);
+
+        em { font-style: normal; color: #ff9ea4; }
+    }
+
+    &__sub {
+        margin: 20px 0 0;
+        font-size: 1.1rem;
+        color: #f1ebe4;
+        max-width: 600px;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 760px) {
+        min-height: auto;
+        padding: 20px 0 0;
+
+        &__inner { padding: 20px 0 40px; }
+    }
+}
+
+// ── Buscador dentro del hero ────────────────────────────────────────────
+.lat-search {
+    background: rgba(255, 255, 255, .92);
+    backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, .5);
+    border-radius: $lat-r-lg;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 1.7fr 1fr 1.1fr auto;
+    gap: 8px;
+    box-shadow: $lat-shadow-lg;
+    max-width: 860px;
+    margin-top: 28px;
+
+    .lat-search__field {
+        display: flex; flex-direction: column; gap: 2px;
+        padding: 8px 14px; border-radius: 14px;
+        min-width: 0;
+        transition: background .2s;
+
+        &:hover { background: $lat-surface-2; }
+        & + & { border-left: 1px solid $lat-line; }
+    }
+
+    label {
+        font-size: .66rem; font-weight: 700; letter-spacing: .1em;
+        text-transform: uppercase; color: $lat-muted;
+    }
+
+    .lat-search__val {
+        display: flex; align-items: center; gap: 8px;
+        font-weight: 600; font-size: .95rem; color: $lat-ink;
+        min-width: 0;
+
+        svg { width: 16px; height: 16px; color: $lat-red; flex: none; }
+    }
+
+    select, input {
+        border: none; background: transparent; font-family: inherit;
+        font-weight: 600; font-size: .95rem; color: $lat-ink;
+        width: 100%; padding: 0; cursor: pointer; min-width: 0; text-overflow: ellipsis;
+
+        &:focus { outline: none; }
+    }
+
+    .lat-search__go { align-self: stretch; }
+    .lat-search__go .lat-btn { height: 100%; width: 100%; }
+
+    @media (max-width: 760px) {
+        grid-template-columns: 1fr 1fr;
+
+        .lat-search__go { grid-column: 1 / -1; }
+        .lat-search__field + .lat-search__field { border-left: none; }
+        .lat-search__field:nth-child(2) { border-left: 1px solid $lat-line; }
+    }
+    @media (max-width: 440px) {
+        grid-template-columns: 1fr;
+        .lat-search__field + .lat-search__field { border-left: none; border-top: 1px solid $lat-line; }
+    }
+}
+
+.lat-chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
+
+.lat-chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 15px; border-radius: $lat-r-pill;
+    background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .28);
+    color: #fff; font-size: .83rem; font-weight: 500;
+    backdrop-filter: blur(6px);
+    transition: background .2s, transform .2s;
+
+    &:hover { background: $lat-red; border-color: $lat-red; transform: translateY(-2px); }
+    svg { width: 14px; height: 14px; }
+}
+
+// ── Fila de features dentro del hero ───────────────────────────────────
+.lat-hero-features {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px;
+    margin-top: auto;
+    padding: 40px 0 52px;
+    border-top: 1px solid rgba(255, 255, 255, .2);
+
+    @media (max-width: 900px) { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 520px) { grid-template-columns: 1fr; gap: 16px; padding: 22px 0 34px; }
+}
+
+.lat-hf {
+    display: flex; align-items: center; gap: 14px; color: #fff;
+
+    &__ic {
+        width: 50px; height: 50px; border-radius: 50%;
+        background: $lat-red; display: grid; place-items: center; flex: none;
+        box-shadow: 0 8px 20px rgba(203, 16, 30, .4);
+
+        svg { width: 23px; height: 23px; color: #fff; }
+    }
+
+    b { display: block; font-family: $lat-font-serif; font-size: 1.05rem; }
+    span { font-size: .8rem; color: #e7ded4; line-height: 1.3; }
+}
+
+// ── Tarjeta blanca superpuesta bajo el hero ─────────────────────────────
+.lat-hero-card-wrap { position: relative; z-index: 6; margin-top: -42px; margin-bottom: 20px; }
+
+.lat-hero-card {
+    background: $lat-surface;
+    border: 1px solid $lat-line;
+    border-radius: $lat-r-lg;
+    box-shadow: $lat-shadow-lg;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 20px;
+    padding: 22px 26px;
+    align-items: center;
+
+    .lat-btn { white-space: nowrap; }
+
+    @media (max-width: 900px) {
+        grid-template-columns: 1fr 1fr;
+        .lat-btn { grid-column: 1 / -1; }
+    }
+    @media (max-width: 520px) { grid-template-columns: 1fr; }
+}
+
+.lat-hc {
+    display: flex; align-items: center; gap: 13px;
+
+    svg { width: 26px; height: 26px; color: $lat-red; flex: none; }
+    b { display: block; font-family: $lat-font-serif; font-size: 1.05rem; color: $lat-ink; line-height: 1.1; }
+    span { font-size: .82rem; color: $lat-muted; }
+
+    & + & { border-left: 1px solid $lat-line; padding-left: 20px; }
+
+    @media (max-width: 900px) {
+        & + & { border-left: none; padding-left: 0; }
+        &:nth-child(2) { border-left: 1px solid $lat-line; padding-left: 20px; }
+    }
+    @media (max-width: 520px) {
+        &:nth-child(2) { border-left: none; padding-left: 0; }
+    }
+}
+
+// ── Encabezados de sección ──────────────────────────────────────────────
+.lat-sec-head {
+    max-width: 640px;
+    margin: 0 auto 40px;
+    text-align: center;
+
+    h2 {
+        font-family: $lat-font-serif;
+        font-weight: 800;
+        color: #16305b;
+        font-size: clamp(2rem, 3.8vw, 2.9rem);
+        margin: 16px 0 14px;
+    }
+
+    p { color: $lat-muted; font-size: 1.05rem; }
+}
+
+// ── Tours Destacados (dest-grid) ────────────────────────────────────────
+.lat-dest-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+
+    @media (max-width: 1100px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 560px) { grid-template-columns: 1fr; }
+}
+
+.lat-dcard {
+    background: $lat-surface;
+    border: 1px solid $lat-line;
+    border-radius: $lat-r-md;
+    overflow: hidden;
+    box-shadow: $lat-shadow-sm;
+    display: flex;
+    flex-direction: column;
+    transition: transform .3s ease, box-shadow .3s ease;
+
+    &:hover { transform: translateY(-6px); box-shadow: $lat-shadow-lg; }
+
+    &__media {
+        position: relative; aspect-ratio: 16 / 11; overflow: hidden;
+
+        img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+
+        &::after {
+            content: ""; position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(15, 11, 10, .78), transparent 44%);
+        }
+    }
+
+    &:hover &__media img { transform: scale(1.06); }
+
+    &__badge {
+        position: absolute; top: 12px; left: 12px; z-index: 2;
+        background: $lat-red; color: #fff;
+        font-size: .66rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+        padding: 6px 12px; border-radius: $lat-r-pill; box-shadow: $lat-shadow-sm;
+
+        &--g { background: #128a4b; }
+        &--o { background: #e07a1a; }
+        &--p { background: #7b3fe4; }
+    }
+
+    &__meta {
+        position: absolute; left: 14px; bottom: 12px; z-index: 2;
+        display: flex; gap: 16px; color: #fff; font-size: .78rem;
+
+        span { display: inline-flex; align-items: center; gap: 6px; }
+        svg { width: 14px; height: 14px; }
+    }
+
+    &__body { padding: 18px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+
+    h3 { font-family: $lat-font-sans; font-weight: 700; font-size: 1.12rem; line-height: 1.25; color: #16305b; }
+
+    &__desc { color: $lat-muted; font-size: .88rem; flex: 1; }
+
+    &__foot {
+        display: flex; align-items: flex-end; justify-content: space-between;
+        gap: 10px; padding-top: 12px; border-top: 1px solid $lat-line;
+    }
+
+    &__price {
+        small { display: block; font-size: .72rem; color: $lat-muted; }
+        .lat-amt { font-family: $lat-font-serif; font-size: 1.4rem; font-weight: 700; color: $lat-red; line-height: 1; }
+    }
+}
+
+.lat-btn-out {
+    background: transparent; border: 1px solid $lat-red; color: $lat-red;
+    padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: .85rem;
+    transition: background .2s, color .2s;
+}
+.lat-dcard:hover .lat-btn-out { background: $lat-red; color: #fff; }
+
+.lat-stars {
+    display: inline-flex; align-items: center; gap: 7px; font-size: .85rem;
+
+    .lat-stars__s { display: inline-flex; color: #f5a623; svg { width: 15px; height: 15px; fill: #f5a623; } }
+    .lat-stars__rate { font-weight: 700; color: $lat-ink; }
+    .lat-stars__cnt { color: $lat-muted; }
+}
+
+// ── Tira de garantías ────────────────────────────────────────────────────
+.lat-guarantee {
+    background: $lat-surface-2;
+    border-top: 1px solid $lat-line;
+    border-bottom: 1px solid $lat-line;
+
+    &__grid {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px;
+        padding: 36px 24px;
+
+        @media (max-width: 820px) { grid-template-columns: 1fr 1fr; }
+        @media (max-width: 480px) { grid-template-columns: 1fr; }
+    }
+}
+
+.lat-gt {
+    display: flex; gap: 15px; align-items: flex-start;
+
+    &__ic {
+        width: 46px; height: 46px; border-radius: 12px;
+        border: 1.5px solid $lat-red; color: $lat-red;
+        display: grid; place-items: center; flex: none;
+
+        svg { width: 22px; height: 22px; }
+    }
+
+    b { display: block; font-family: $lat-font-serif; font-size: 1.02rem; color: $lat-ink; margin-bottom: 3px; }
+    span { font-size: .84rem; color: $lat-muted; line-height: 1.35; }
+}
+
+// ── Explora por categoría ────────────────────────────────────────────────
+.lat-cats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+
+    @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 520px) { grid-template-columns: 1fr; }
+}
+
+.lat-cat {
+    position: relative;
+    border-radius: $lat-r-md;
+    overflow: hidden;
+    min-height: 230px;
+    display: flex;
+    align-items: flex-end;
+    box-shadow: $lat-shadow-sm;
+    isolation: isolate;
+    transition: transform .3s ease, box-shadow .3s ease;
+
+    &:hover { transform: translateY(-5px); box-shadow: $lat-shadow-lg; }
+
+    img {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        z-index: -2; transition: transform .55s ease;
+    }
+    &:hover img { transform: scale(1.09); }
+
+    &::after {
+        content: ""; position: absolute; inset: 0; z-index: -1;
+        background: linear-gradient(to top, rgba(15, 11, 10, .9) 6%, rgba(15, 11, 10, .28) 62%, rgba(15, 11, 10, .1) 100%);
+    }
+
+    &__count {
+        position: absolute; top: 14px; right: 14px;
+        background: rgba(255, 255, 255, .92); color: $lat-ink;
+        font-size: .72rem; font-weight: 700; padding: 5px 12px; border-radius: $lat-r-pill;
+    }
+
+    &__body { padding: 20px; color: #fff; width: 100%; }
+
+    &__name { font-family: $lat-font-serif; font-size: 1.4rem; font-weight: 700; line-height: 1.1; }
+
+    &__sub {
+        font-size: .84rem; color: #e9e1d7; margin-top: 5px;
+        display: flex; align-items: center; gap: 7px;
+
+        svg { width: 15px; height: 15px; transition: transform .25s ease; }
+        b { color: #ffb3b8; font-weight: 600; }
+    }
+
+    &:hover &__sub svg { transform: translateX(4px); }
+}
+
+.lat-reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity .7s ease, transform .7s ease;
+
+    &.is-in { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lat-reveal { opacity: 1; transform: none; transition: none; }
+}

@@ -1,0 +1,14 @@
+<?php
+
+return [
+    'contact_description' => 'Estamos aquí para resolver tus dudas. Contáctanos y planifica tu próxima aventura por Perú.',
+    'default_description' => 'Descubre Lima con tours guiados por expertos: city tour, gastronomía, Pachacámac, islas Palomino y más. Reserva online con cancelación flexible.',
+    'default_title' => 'Lima América Tours — Tours y experiencias en Lima, Perú',
+    'home_description' => 'Reserva los mejores tours en Lima: gastronomía, historia, naturaleza y aventura. Guías locales, grupos pequeños y reserva 100% online.',
+    'home_title' => 'Tours en Lima — Experiencias inolvidables | Lima América Tours',
+    'site_name' => 'Lima América Tours',
+    'tour_description_prefix' => 'Reserva online: ',
+    'tour_description_suffix' => '. Salidas diarias, guías oficiales, transporte cómodo. Mejor precio garantizado.',
+    'tours_description' => 'Explora todos nuestros tours en Lima y alrededores. Filtra por categoría, duración y precio. Reserva con confirmación inmediata.',
+    'tours_title' => 'Catálogo de tours en Lima | Lima América Tours',
+];

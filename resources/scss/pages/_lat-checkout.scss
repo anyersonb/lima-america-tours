@@ -1,0 +1,139 @@
+// ═══════════════════════════════════════════════════════════════════════
+// LIMA AMÉRICA TOURS — Checkout: panel "Detalles de la Reserva" (paso 2)
+// Reutiliza tokens $lat-*. Namespace "lat-checkout-" para no colisionar
+// con las clases "cart-" (paso 1 / carrito, paleta teal-gold heredada
+// del motor original mientras se recolorea en un milestone posterior).
+// ═══════════════════════════════════════════════════════════════════════
+@use '../abstracts/variables' as *;
+
+// ── Layout 2 columnas ────────────────────────────────────────────────────
+.lat-checkout-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+    margin-top: 28px;
+
+    @media (max-width: 1023px) { grid-template-columns: 1fr; gap: 22px; }
+}
+
+.lat-checkout-card {
+    background: $lat-surface;
+    border: 1px solid $lat-line;
+    border-radius: $lat-r-lg;
+    box-shadow: $lat-shadow-sm;
+    padding: 28px;
+
+    @media (max-width: 640px) { padding: 20px; border-radius: $lat-r-md; }
+}
+
+.lat-checkout-card__head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 22px; }
+
+.lat-checkout-num {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: $lat-red; color: #fff; font-weight: 800; font-size: .95rem;
+    display: grid; place-items: center; flex-shrink: 0;
+}
+
+.lat-checkout-card__title { font-family: $lat-font-serif; font-weight: 800; font-size: 1.3rem; color: $lat-ink; margin: 0; line-height: 1.2; }
+.lat-checkout-card__desc { font-size: .85rem; color: $lat-muted; margin: 4px 0 0; }
+
+// ── Formulario ───────────────────────────────────────────────────────────
+.lat-checkout-form-grid { display: grid; gap: 18px; }
+.lat-checkout-two {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    @media (max-width: 560px) { grid-template-columns: 1fr; }
+}
+
+.lat-checkout-field label {
+    display: block; font-size: .82rem; font-weight: 700; color: $lat-ink; margin-bottom: 8px;
+}
+.lat-checkout-field label .req { color: $lat-red; }
+
+.lat-checkout-input, .lat-checkout-select {
+    width: 100%; height: 48px; border-radius: 12px; border: 1px solid $lat-line-strong;
+    background: $lat-surface-2; padding: 0 16px; font-size: .92rem; color: $lat-ink-soft;
+    font-family: $lat-font-sans; outline: none; transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.lat-checkout-select {
+    -webkit-appearance: none; appearance: none; padding-right: 38px; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23171412' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; background-size: 14px 14px;
+}
+.lat-checkout-input:focus, .lat-checkout-select:focus {
+    border-color: $lat-red; box-shadow: 0 0 0 3px rgba(203, 16, 30, .12); background: $lat-surface;
+}
+.lat-checkout-input::placeholder { color: rgba(58, 53, 47, .4); }
+
+.lat-checkout-phone { display: flex; gap: 8px; }
+.lat-checkout-phone select { max-width: 108px; flex: 0 0 auto; padding-right: 30px; }
+.lat-checkout-phone input { flex: 1; min-width: 0; }
+
+// ── Franja de 3 features ─────────────────────────────────────────────────
+.lat-checkout-features {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px;
+    margin-top: 24px; padding-top: 24px; border-top: 1px solid $lat-line;
+
+    @media (max-width: 760px) { grid-template-columns: 1fr; gap: 16px; }
+}
+.lat-checkout-feature { display: flex; gap: 12px; align-items: flex-start; }
+.lat-checkout-feature svg { width: 22px; height: 22px; color: $lat-red; flex-shrink: 0; margin-top: 2px; }
+.lat-checkout-feature b { display: block; font-size: .9rem; color: $lat-ink; margin-bottom: 2px; }
+.lat-checkout-feature span { font-size: .8rem; color: $lat-muted; line-height: 1.4; }
+
+// ── Aside "Resumen de tu Reserva" ─────────────────────────────────────────
+.lat-checkout-aside { @media (min-width: 1024px) { position: sticky; top: 100px; } }
+
+.lat-checkout-aside__head { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.lat-checkout-aside__head svg { width: 20px; height: 20px; color: $lat-red; flex-shrink: 0; }
+.lat-checkout-aside__head h3 { font-family: $lat-font-serif; font-weight: 800; font-size: 1.2rem; color: $lat-ink; margin: 0; }
+
+.lat-checkout-item {
+    display: flex; gap: 12px; padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid $lat-line;
+}
+.lat-checkout-item img { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; flex-shrink: 0; }
+.lat-checkout-item__body { flex: 1; min-width: 0; }
+.lat-checkout-item__title { font-size: .85rem; font-weight: 700; color: $lat-ink; line-height: 1.3; margin: 0 0 4px; }
+.lat-checkout-item__meta { font-size: .75rem; color: $lat-muted; }
+.lat-checkout-item__price { font-weight: 800; color: $lat-ink; font-size: .9rem; white-space: nowrap; }
+
+.lat-checkout-row { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; font-size: .85rem; color: $lat-ink-soft; line-height: 1.4; }
+.lat-checkout-row b { color: $lat-ink; font-weight: 700; }
+.lat-checkout-divider { border: none; border-top: 1px solid $lat-line; margin: 8px 0; }
+
+.lat-checkout-total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 6px; }
+.lat-checkout-total span { font-size: .82rem; font-weight: 700; color: $lat-ink; text-transform: uppercase; letter-spacing: .05em; }
+.lat-checkout-total b { font-family: $font-price; font-size: 1.9rem; color: $lat-red; line-height: 1; }
+
+.lat-checkout-notice {
+    margin-top: 18px; background: rgba(37, 211, 102, .09); border: 1px solid rgba(37, 211, 102, .3);
+    border-radius: 14px; padding: 12px 14px; font-size: .8rem; line-height: 1.5; color: #0d6b3a;
+}
+.lat-checkout-notice b { color: #0a5a30; }
+
+.lat-checkout-terms {
+    display: flex; gap: 10px; align-items: flex-start; margin-top: 16px;
+    font-size: .78rem; color: $lat-muted; line-height: 1.4; cursor: pointer;
+}
+.lat-checkout-terms input { margin-top: 3px; accent-color: $lat-red; flex-shrink: 0; }
+.lat-checkout-terms a { color: $lat-red; text-decoration: underline; text-underline-offset: 2px; }
+
+.lat-checkout-btn-wa {
+    width: 100%; height: 52px; border-radius: 14px; border: none; margin-top: 16px;
+    background: $lat-wa; color: #fff; font-weight: 700; font-size: .95rem;
+    display: flex; align-items: center; justify-content: center; gap: 9px; cursor: pointer;
+    transition: filter .15s; font-family: $lat-font-sans;
+}
+.lat-checkout-btn-wa svg { width: 19px; height: 19px; }
+.lat-checkout-btn-wa:hover { filter: brightness(.94); }
+.lat-checkout-btn-wa:disabled { opacity: .55; cursor: not-allowed; }
+
+.lat-checkout-btn-outline {
+    width: 100%; height: 50px; border-radius: 14px; border: 1px solid $lat-line-strong; margin-top: 10px;
+    background: $lat-surface; color: $lat-ink; font-weight: 700; font-size: .9rem;
+    display: flex; align-items: center; justify-content: center; gap: 9px; cursor: pointer;
+    transition: background .15s; font-family: $lat-font-sans;
+}
+.lat-checkout-btn-outline svg { width: 17px; height: 17px; }
+.lat-checkout-btn-outline:hover { background: $lat-surface-2; }
+.lat-checkout-btn-outline:disabled { opacity: .55; cursor: not-allowed; }

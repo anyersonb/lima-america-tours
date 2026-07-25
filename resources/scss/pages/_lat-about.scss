@@ -1,0 +1,229 @@
+// ═══════════════════════════════════════════════════════════════════════
+// LIMA AMÉRICA TOURS — Nosotros (calca de lat-02-nosotros.jpeg)
+// Namespace "lat-" — reutiliza .lat-page-hero, .lat-eyebrow, .lat-btn,
+// .lat-wrap y tokens globales ya definidos en pages/lat-tours + lat-home.
+// ═══════════════════════════════════════════════════════════════════════
+@use '../abstracts/variables' as *;
+
+// ── Split: imagen + texto "10 años mostrando lo mejor del Perú" ────────
+.lat-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    align-items: center;
+
+    @media (max-width: 940px) { grid-template-columns: 1fr; gap: 34px; }
+}
+
+.lat-split__media {
+    position: relative;
+    border-radius: $lat-r-lg;
+    overflow: hidden;
+    box-shadow: $lat-shadow-md;
+    aspect-ratio: 4 / 3.4;
+
+    img { width: 100%; height: 100%; object-fit: cover; display: block; }
+}
+
+.lat-split__badge {
+    position: absolute;
+    left: 0;
+    bottom: 26px;
+    background: $lat-red;
+    color: #fff;
+    padding: 16px 26px 16px 22px;
+    border-radius: 0 $lat-r-md $lat-r-md 0;
+    box-shadow: $lat-shadow-lg;
+    line-height: 1.15;
+
+    b { display: block; font-family: $lat-font-serif; font-size: 1.8rem; font-weight: 800; }
+    span { display: block; font-size: .78rem; max-width: 130px; opacity: .95; }
+}
+
+.lat-split-title {
+    font-family: $lat-font-serif;
+    font-weight: 800;
+    color: $lat-ink;
+    font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+    line-height: 1.15;
+    margin: 14px 0 20px;
+}
+
+.lat-split__body p {
+    color: $lat-ink-soft;
+    line-height: 1.7;
+    margin: 0 0 16px;
+    font-size: .98rem;
+}
+
+.lat-split__highlight {
+    color: $lat-red;
+    font-weight: 700;
+}
+
+.lat-split__tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+
+.lat-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: $lat-surface-2;
+    border: 1px solid $lat-line;
+    color: $lat-ink-soft;
+    font-size: .84rem;
+    font-weight: 600;
+    padding: 8px 15px;
+    border-radius: $lat-r-pill;
+    transition: border-color .2s, color .2s;
+
+    svg { width: 14px; height: 14px; color: $lat-red; flex: none; }
+
+    &:hover { border-color: $lat-red; color: $lat-red; }
+}
+
+// ── Misión, Visión y Valores ─────────────────────────────────────────────
+.lat-mvv {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+
+    @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+.lat-mvv-card {
+    background: $lat-surface;
+    border: 1px solid $lat-line;
+    border-radius: $lat-r-md;
+    box-shadow: $lat-shadow-sm;
+    padding: 30px 28px;
+    transition: transform .3s ease, box-shadow .3s ease;
+
+    &:hover { transform: translateY(-5px); box-shadow: $lat-shadow-lg; }
+
+    &__ic {
+        width: 52px; height: 52px; border-radius: 14px;
+        background: $lat-red-tint; color: $lat-red;
+        display: grid; place-items: center; margin-bottom: 18px;
+
+        svg { width: 26px; height: 26px; }
+    }
+
+    h3 { font-family: $lat-font-serif; font-weight: 800; font-size: 1.28rem; color: $lat-ink; margin: 0 0 12px; }
+
+    p { color: $lat-muted; line-height: 1.65; font-size: .94rem; margin: 0; }
+
+    &__tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .lat-mvv-tag {
+        display: inline-block;
+        background: $lat-surface-2;
+        border: 1px solid $lat-line;
+        color: $lat-ink-soft;
+        font-size: .78rem;
+        font-weight: 600;
+        padding: 6px 13px;
+        border-radius: $lat-r-pill;
+    }
+}
+
+// ── Banda de estadísticas ("Miles de viajeros ya confiaron en nosotros") ─
+.lat-stats-band {
+    background: $lat-ink;
+    color: #fff;
+    padding: 56px 0;
+}
+
+.lat-stats-band__grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 40px;
+    align-items: center;
+
+    @media (max-width: 860px) { grid-template-columns: 1fr; gap: 30px; }
+}
+
+.lat-stats-band__intro h2 {
+    font-family: $lat-font-serif;
+    font-weight: 800;
+    font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+    line-height: 1.15;
+    margin: 14px 0 14px;
+}
+
+.lat-stats-band__intro p {
+    color: #d8d2ca;
+    font-size: .96rem;
+    line-height: 1.6;
+    margin: 0 0 24px;
+    max-width: 460px;
+}
+
+.lat-stat-tiles {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.lat-stat-tile {
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: $lat-r-md;
+    padding: 22px 20px;
+    text-align: center;
+
+    strong {
+        display: block;
+        font-family: $lat-font-serif;
+        font-weight: 800;
+        font-size: clamp(1.8rem, 2.6vw, 2.3rem);
+        color: #fff;
+        line-height: 1;
+        margin-bottom: 8px;
+    }
+
+    span { display: block; font-size: .82rem; color: #cfc8bf; }
+}
+
+// ── CTA final ("Empecemos a planear") ────────────────────────────────────
+.lat-cta-final {
+    position: relative;
+    isolation: isolate;
+    padding: 70px 0;
+    text-align: center;
+    color: #fff;
+    background: linear-gradient(120deg, $lat-red-deep 0%, $lat-red 100%);
+    overflow: hidden;
+
+    &::after {
+        content: "";
+        position: absolute; inset: 0; z-index: -1;
+        background: radial-gradient(circle at 85% 20%, rgba(255, 255, 255, .12), transparent 55%);
+    }
+
+    h2 {
+        font-family: $lat-font-serif;
+        font-weight: 800;
+        font-size: clamp(1.9rem, 3.6vw, 2.8rem);
+        line-height: 1.15;
+        margin: 14px auto 14px;
+        max-width: 640px;
+    }
+
+    p { color: #ffe3e5; font-size: 1rem; max-width: 520px; margin: 0 auto 30px; }
+
+    &__actions { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+}
+
+.lat-btn--wa {
+    background: $lat-wa;
+    color: #fff;
+
+    &:hover { background: #1fb857; transform: translateY(-2px); box-shadow: 0 10px 24px rgba(37, 211, 102, .35); }
+}
+
+.lat-btn--white {
+    background: #fff;
+    color: $lat-red;
+
+    &:hover { background: #ffe9ea; transform: translateY(-2px); }
+}

@@ -1,0 +1,229 @@
+<?php
+
+use App\Http\Controllers\BlogController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\Customer\AccountController;
+use App\Http\Controllers\Customer\ForgotPasswordController;
+use App\Http\Controllers\Customer\LoginController;
+use App\Http\Controllers\Customer\LogoutController;
+use App\Http\Controllers\Customer\RegisterController;
+use App\Http\Controllers\Customer\ResetPasswordController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\RobotsController;
+use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\TourController;
+use App\Http\Controllers\WebhookController;
+use Illuminate\Support\Facades\Route;
+
+// SEO automático
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
+Route::get('/llms.txt', [SitemapController::class, 'llms'])->name('llms');
+
+// Newsletter (sin locale)
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])
+    ->middleware('throttle:newsletter')
+    ->name('newsletter.subscribe');
+
+Route::get('/newsletter/confirm/{token}', [NewsletterController::class, 'confirm'])
+    ->name('newsletter.confirm');
+
+Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])
+    ->name('newsletter.unsubscribe');
+
+// Redirección por idioma del navegador
+Route::get('/', function () {
+    $supported = config('app.supported_locales', ['es', 'en']);
+    // Map pt-BR and pt-PT to our 'pt' locale
+    $preferred = request()->getPreferredLanguage($supported);
+    if (! $preferred) {
+        $rawLang = substr(request()->server('HTTP_ACCEPT_LANGUAGE', ''), 0, 2);
+        $preferred = ($rawLang === 'pt') ? 'pt' : config('app.locale');
+    }
+    $locale = $preferred;
+    return redirect("/{$locale}");
+});
+
+Route::get('/mantenimiento', fn () => view('errors.maintenance'))->name('maintenance');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Diagnóstico SMTP temporal (2026-07-16). Protegido por token. Envía un correo
+// de prueba y devuelve la config de correo + el error exacto si falla.
+// QUITAR después de resolver el problema de envío de reservas.
+// Uso: /_diag/mail?key=lvt-mail-diag-2026&to=tucorreo@dominio.com
+// ─────────────────────────────────────────────────────────────────────────────
+Route::get('/_diag/mail', function () {
+    abort_unless(request('key') === 'lvt-mail-diag-2026', 404);
+
+    $mailer = config('mail.default');
+    $conn   = config("mail.mailers.{$mailer}");
+    $maskedUser = ($u = config('mail.mailers.smtp.username'))
+        ? substr((string) $u, 0, 3) . '***' . (str_contains((string) $u, '@') ? strstr((string) $u, '@') : '')
+        : null;
+
+    $to = request('to')
+        ?: \App\Models\Setting::get('booking_notification_email')
+        ?: config('mail.from.address');
+
+    $config = [
+        'mail_default'   => $mailer,
+        'smtp_host'      => config('mail.mailers.smtp.host'),
+        'smtp_port'      => config('mail.mailers.smtp.port'),
+        'smtp_encryption'=> config('mail.mailers.smtp.encryption') ?? config('mail.mailers.smtp.scheme'),
+        'smtp_username'  => $maskedUser,
+        'smtp_password_set' => (bool) config('mail.mailers.smtp.password'),
+        'from_address'   => config('mail.from.address'),
+        'from_name'      => config('mail.from.name'),
+        'app_env'        => config('app.env'),
+        'test_to'        => $to,
+    ];
+
+    try {
+        \Illuminate\Support\Facades\Mail::raw(
+            'Prueba de envío SMTP desde Lima América Tours — ' . now()->toDateTimeString(),
+            function ($m) use ($to) {
+                $m->to($to)->subject('[TEST] Diagnóstico SMTP Lima América Tours');
+            }
+        );
+
+        return response()->json([
+            'ok'      => true,
+            'message' => "Correo de prueba enviado a {$to}. Revisa bandeja y SPAM.",
+            'config'  => $config,
+        ], 200, [], JSON_PRETTY_PRINT);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'ok'        => false,
+            'error'     => $e->getMessage(),
+            'exception' => get_class($e),
+            'config'    => $config,
+        ], 500, [], JSON_PRETTY_PRINT);
+    }
+})->name('diag.mail');
+
+Route::prefix('{locale}')
+    ->where(['locale' => 'es|en|pt'])
+    ->middleware('setlocale')
+    ->group(function () {
+        Route::get('/', [HomeController::class, 'index'])->name('home');
+
+        Route::get('/tours', [TourController::class, 'index'])->name('tours.index');
+        Route::get('/tours/categoria/{categoria}', [TourController::class, 'category'])
+            ->where('categoria', 'lima|ica|cusco')
+            ->name('tours.category');
+        // Slug legacy (título renombrado antes del blindaje de slug) → 301 al slug vigente
+        Route::get('/tours/detalle/tour-de-dia-completo-al-oasis-de-huacachina-con-buggie-privado-canam-islas-ballestas-en-paracas',
+            fn (string $locale) => redirect("/{$locale}/tours/detalle/tour-privado-huacachina-islas-ballestas-atardecer-buggy-can-am", 301));
+        Route::get('/tours/detalle/{slug}', [TourController::class, 'show'])->name('tours.show');
+        Route::post('/tours/detalle/{slug}/resena', [TourController::class, 'storeReview'])
+            ->middleware('throttle:6,1')
+            ->name('tours.review.store');
+        Route::get('/buscar', [TourController::class, 'search'])->name('tours.results');
+
+        // Cart routes (Fase 2)
+        Route::get('/carrito', [CartController::class, 'index'])->name('cart.index');
+        Route::post('/carrito/agregar', [CartController::class, 'store'])->name('cart.store');
+        Route::post('/carrito/cupon', [CartController::class, 'applyCoupon'])
+            ->middleware('throttle:30,1')
+            ->name('cart.coupon');
+        Route::delete('/carrito/vaciar', [CartController::class, 'clear'])->name('cart.clear');
+        // Carrito abandonado: captura de contacto (AJAX) + link de recuperación
+        Route::post('/carrito/guardar-contacto', [CartController::class, 'saveContact'])
+            ->middleware('throttle:30,1')
+            ->name('cart.contact');
+        Route::get('/carrito/recuperar/{token}', [CartController::class, 'recover'])
+            ->name('cart.recover');
+        Route::patch('/carrito/{rowId}', [CartController::class, 'updateItem'])->name('cart.update');
+        Route::delete('/carrito/{rowId}', [CartController::class, 'destroy'])->name('cart.destroy');
+
+        // Legacy /checkout alias → redirect 301 to cart.index
+        Route::get('/checkout', fn (string $locale) => redirect()->route('cart.index', ['locale' => $locale], 301))->name('checkout');
+
+        // Checkout Phase 3 — payment flow
+        Route::get('/checkout/pago', [CheckoutController::class, 'showPaymentForm'])->name('checkout.pay');
+        Route::post('/checkout/procesar', [CheckoutController::class, 'processPayment'])
+            ->middleware('throttle:checkout')
+            ->name('checkout.process');
+        Route::get('/checkout/gracias', [CheckoutController::class, 'thanks'])->name('checkout.thanks');
+        Route::post('/checkout/paypal/create',  [CheckoutController::class, 'paypalCreateOrder'])
+            ->middleware('throttle:checkout')
+            ->name('checkout.paypal.create');
+        Route::post('/checkout/paypal/capture', [CheckoutController::class, 'paypalCaptureOrder'])
+            ->middleware('throttle:checkout')
+            ->name('checkout.paypal.capture');
+
+        Route::get('/contacto', [ContactController::class, 'show'])->name('contact');
+        Route::post('/contacto', [ContactController::class, 'submit'])
+            ->middleware('throttle:contact')
+            ->name('contact.submit');
+        Route::get('/gracias', fn () => view('gracias'))->name('contact.thanks');
+
+        // Página de reseñas/comentarios de clientes (Google + Tripadvisor + Web)
+        Route::get('/resenas', [ReviewController::class, 'index'])->name('reviews');
+        // Envío de reseña propia desde la página de reseñas (moderada antes de publicar)
+        Route::post('/resenas/enviar', [ReviewController::class, 'store'])
+            ->middleware('throttle:6,1')
+            ->name('reviews.store');
+
+        // Blog
+        Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+        Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+
+        Route::get('/nosotros', function () {
+            $page = \App\Models\Page::where('slug', 'nosotros')->first();
+
+            // Active testimonials — 4 cards + 1 featured Tripadvisor quote
+            $testimonials = \App\Models\Testimonial::active()->latest('order')->take(4)->get();
+            $featured     = \App\Models\Testimonial::active()
+                ->where('source', 'tripadvisor')
+                ->latest()
+                ->first()
+                ?? \App\Models\Testimonial::active()->latest()->first();
+
+            return view('about', compact('page', 'testimonials', 'featured'));
+        })->name('about');
+
+        // Legal pages
+        Route::get('/terminos', [PageController::class, 'terms'])->name('legal.terms');
+        Route::get('/privacidad', [PageController::class, 'privacy'])->name('legal.privacy');
+
+        // ── Customer portal (Fase 1) ──────────────────────────────────────
+        Route::get('/ingresar', [LoginController::class, 'showForm'])->name('customer.login');
+        Route::post('/ingresar', [LoginController::class, 'login'])
+            ->middleware('throttle:5,1')
+            ->name('customer.login.post');
+
+        Route::get('/registro', [RegisterController::class, 'showForm'])->name('customer.register');
+        Route::post('/registro', [RegisterController::class, 'register'])
+            ->middleware('throttle:10,1')
+            ->name('customer.register.post');
+
+        Route::post('/salir', [LogoutController::class, 'logout'])
+            ->name('customer.logout');
+
+        Route::get('/recuperar', [ForgotPasswordController::class, 'showForm'])->name('customer.password.request');
+        Route::post('/recuperar', [ForgotPasswordController::class, 'sendResetLink'])
+            ->middleware('throttle:5,1')
+            ->name('customer.password.email');
+
+        Route::get('/recuperar/{token}', [ResetPasswordController::class, 'showForm'])->name('customer.password.reset');
+        Route::post('/recuperar/reset', [ResetPasswordController::class, 'reset'])
+            ->middleware('throttle:5,1')
+            ->name('customer.password.update');
+
+        // Protected customer routes
+        Route::middleware('auth:customer')->group(function () {
+            Route::get('/mi-cuenta', [AccountController::class, 'dashboard'])->name('customer.account');
+            Route::patch('/mi-cuenta/perfil', [AccountController::class, 'updateProfile'])->name('customer.profile.update');
+        });
+    });
+
+// Culqi Webhook — outside locale group, CSRF exempt
+Route::post('/webhooks/culqi', [WebhookController::class, 'culqi'])
+    ->name('webhooks.culqi')
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);

@@ -1,0 +1,60 @@
+// Brand tokens — sync con tailwind.config.js y guía de marca
+$teal-700: #15474b;   // Color principal de marca
+$teal-800: #0f3438;
+$orange-500: #e29347; // Acento / CTA
+$orange-600: #c87530;
+
+$cream-100: #f5f0ed;  // Primario del brand guide (fondo cream claro)
+$cream-200: #ece6e2;  // Primario oscuro
+
+$state-error: #c81f21;
+$state-success: #145212;
+
+$font-sans: 'Albert Sans', system-ui, sans-serif;        // Cuerpo y botones
+$font-display: 'Hedvig Letters Serif', Georgia, serif;   // Titulares
+$font-price: 'Instrument Serif', Georgia, serif;         // Precios
+
+// Breakpoints (mobile-first, mirror Tailwind)
+$bp-sm: 640px;
+$bp-md: 768px;
+$bp-lg: 1024px;
+$bp-xl: 1280px;
+$bp-2xl: 1536px;
+
+// Z-index scale
+$z-header: 50;
+$z-modal: 100;
+$z-toast: 200;
+
+// ─────────────────────────────────────────────────────────────────────────
+// LIMA AMÉRICA TOURS — paleta de marca (header/footer/home, mockup aprobado)
+// Prefijo "lat-" para no colisionar con los tokens teal/orange/cream del
+// diseño anterior (Lima View), que otras páginas aún usan mientras se
+// migran en próximos milestones.
+// ─────────────────────────────────────────────────────────────────────────
+$lat-red:        #cb101e;
+$lat-red-deep:   #9d0c16;
+$lat-red-tint:   #fbeaea;
+$lat-ink:        #171412;   // fondos fijos oscuros (topbar, header, footer, overlays)
+$lat-paper:      #faf7f2;   // fondo general de página
+$lat-surface:    #ffffff;
+$lat-surface-2:  #f4efe7;
+$lat-line:       #e9e3da;
+$lat-line-strong:#dcd4c8;
+$lat-muted:      #6f6a63;
+$lat-ink-soft:   #3a352f;
+$lat-wa:         #25d366;
+
+$lat-shadow-sm: 0 1px 2px rgba(28, 27, 26, .06), 0 2px 8px rgba(28, 27, 26, .05);
+$lat-shadow-md: 0 6px 18px rgba(28, 27, 26, .09), 0 2px 6px rgba(28, 27, 26, .06);
+$lat-shadow-lg: 0 24px 60px rgba(28, 27, 26, .16);
+
+$lat-r-sm: 12px;
+$lat-r-md: 18px;
+$lat-r-lg: 26px;
+$lat-r-pill: 999px;
+
+$lat-font-serif: 'Raleway', system-ui, sans-serif; // Titulares
+$lat-font-sans:  'Roboto', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; // Cuerpo
+
+$lat-wrap: 1480px; // ancho máximo del contenedor

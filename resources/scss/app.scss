@@ -1,0 +1,133 @@
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
+@use 'base/reset';
+@use 'base/typography';
+@use 'layouts/header';
+@use 'layouts/footer';
+@use 'layouts/lat-header';
+@use 'layouts/lat-footer';
+@use 'layouts/lat-flat-hero';
+@use 'components/buttons';
+@use 'components/cards';
+@use 'components/carousels';
+@use 'pages/home';
+@use 'pages/about';
+@use 'pages/lat-home';
+@use 'pages/lat-tours';
+@use 'pages/lat-tour';
+@use 'pages/lat-blog';
+@use 'pages/lat-about';
+@use 'pages/lat-checkout';
+@use 'pages/lat-contact';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Line-clamp: fuera de @layer para garantizar cascade después de utilities ── */
+.clamp-1, .clamp-2, .clamp-3 {
+    overflow: hidden;
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical;
+}
+.clamp-1 { -webkit-line-clamp: 1; }
+.clamp-2 { -webkit-line-clamp: 2; }
+.clamp-3 { -webkit-line-clamp: 3; }
+
+/* Tema CLARO forzado: los controles del navegador (inputs, date pickers,
+   scrollbars) se renderizan en claro aunque el dispositivo esté en oscuro. */
+:root { color-scheme: light; }
+
+/* ============================================================
+   MODO NOCTURNO DESACTIVADO — se fuerza tema claro para todos.
+   El bloque se conserva pero NO aplica (la media nunca coincide).
+   Para reactivarlo, quita "and (min-width: 99999px)".
+   ============================================================ */
+@media (prefers-color-scheme: dark) and (min-width: 99999px) {
+
+    /* Página */
+    body { background-color: #0b1d1f !important; color: #e7eceb; }
+
+    /* Superficies de sección y tarjetas */
+    .bg-white { background-color: #14302f !important; }
+    .bg-cream-50, .bg-cream-100, .bg-cream-200 { background-color: #0e2527 !important; }
+    [class*="bg-cream-200\/"], [class*="bg-cream-100\/"] { background-color: rgba(255,255,255,.05) !important; }
+    .bg-orange-50 { background-color: rgba(226,147,71,.14) !important; }
+
+    /* Texto teal oscuro (sólido y variantes de opacidad) → claro */
+    [class*="text-teal-7"], [class*="text-teal-8"], [class*="text-teal-9"] { color: #e7eceb !important; }
+
+    /* Bordes / anillos / divisores claros → translúcidos claros */
+    [class*="border-teal-8"], [class*="border-cream"], .border-cream-200\/60, .border-cream-200\/80 { border-color: rgba(255,255,255,.10) !important; }
+    [class*="ring-teal-8"], [class*="ring-cream"], [class*="ring-black"], [class*="ring-orange-400"] { --tw-ring-color: rgba(255,255,255,.10) !important; }
+    [class*="divide-cream"] > *, [class*="divide-teal"] > * { border-color: rgba(255,255,255,.10) !important; }
+    hr { border-color: rgba(255,255,255,.10) !important; }
+
+    /* Inputs / selects / textarea */
+    input, select, textarea {
+        background-color: #0e2527 !important;
+        color: #e7eceb !important;
+        border-color: rgba(255,255,255,.14) !important;
+    }
+    input::placeholder, textarea::placeholder { color: rgba(231,236,235,.45) !important; }
+
+    /* Drawer / menú móvil (usa colores vía theme(), no utilidades) */
+    .site-menu { background-color: #0e2527 !important; }
+    .site-menu__row, .site-menu__txt b { color: #e7eceb !important; }
+    .site-menu__txt small, .site-menu__sub { color: rgba(231,236,235,.7) !important; }
+    .site-menu__ico { background: #18403d !important; color: #e7eceb !important; }
+    .site-menu__row:hover, .site-menu__sub:hover { background: rgba(255,255,255,.05) !important; }
+    .site-menu__row:hover .site-menu__ico { background: #1f4f4b !important; }
+
+    /* Tarjetas de testimonios: superficie más clara que la sección para separar */
+    .review-card { background-color: #1b3f3c !important; }
+
+    /* Footer: chips de métodos de pago un poco atenuados para no chocar */
+    footer .bg-white { background-color: #f3f3f3 !important; }
+
+    /* Sombras más suaves sobre fondo oscuro */
+    .shadow-sm, .shadow, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl { --tw-shadow-color: rgba(0,0,0,.55); }
+}
+
+/* ============================================================
+   AJUSTE LAPTOP 1200–1599px — pedido del cliente:
+   "en laptop de 1200 a 1600 baja los tamaños ya que se ve
+   grande todo". Rango exclusivo: NO toca <1200 (mobile/tablet)
+   ni >=1600 (desktop grande). Se compone de dos partes:
+   1) Reescala global vía font-size en <html> (afecta a toda
+      utilidad Tailwind basada en rem: paddings, gaps, radios,
+      la mayoría de tamaños de texto, max-width del contenedor
+      en secciones que usan rem, etc).
+   2) Overrides puntuales para valores arbitrarios en PX fijos
+      (hero home/tours, galería desktop de detalle de tour) que
+      no responden al font-size de <html> porque no usan rem.
+   ============================================================ */
+@media (min-width: 1200px) and (max-width: 1599.98px) {
+
+    html { font-size: 87.5%; }
+
+    /* Overrides con !important: las utilidades Tailwind de valor
+       arbitrario (text-[104px], h-[500px], etc.) se emiten después
+       en el CSS compilado y ganan la cascada a igual especificidad. */
+
+    /* Home — hero: alto y padding-top fijos en px (no escalan con rem) */
+    .home-hero__wrap {
+        min-height: 560px !important;
+        padding-top: 100px !important;
+    }
+
+    /* Home — hero: título con tamaño fijo en px */
+    .home-hero__title {
+        font-size: 72px !important;
+    }
+
+    /* Tours (listado) — hero: título con tamaño fijo en px */
+    .tours-hero__title {
+        font-size: 58px !important;
+    }
+
+    /* Tour (detalle) — galería hero desktop con alto fijo en px */
+    .tour-gallery__hero {
+        height: 400px !important;
+    }
+}
