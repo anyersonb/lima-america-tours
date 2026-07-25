@@ -8,7 +8,7 @@ Leyenda capas: ✅ pasa · 🔴/🟠 con hallazgos · — no corrido. Estados: P
 
 | Módulo | L1 | L2 | L3 | L4 | L5 | L6 | Estado | Reporte |
 |---|---|---|---|---|---|---|---|---|
-| Panel Filament | — | — | — | — | — | — | PENDIENTE | |
+| Panel Filament | ✅ | — | — | — | — | — | PENDIENTE (F0+F1 hechos, sin hallazgos; falta F2-F7) | `docs/qa/panel-filament.md` |
 | Ficha de tour | — | — | — | — | — | — | PENDIENTE | |
 | Tours (listado) | — | — | — | — | — | — | PENDIENTE | |
 | Reserva | — | — | — | — | — | — | PENDIENTE | |
