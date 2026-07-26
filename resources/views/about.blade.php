@@ -64,7 +64,27 @@
             'tags_pt' => ['Responsabilidade', 'Laboriosidade', 'Honestidade', 'Honradez', 'Dignidade', 'Justiça', 'Solidariedade', 'Humanismo'],
         ],
     ];
-    $mvvItems = $b['mvv'] ?? $defaultMvv;
+    // Repeater real del CMS (PageResource → "Stats band", Misión/Visión/Valores/Equipo).
+    // Mismo slot visual que las tarjetas MVV: si el admin cargó items, se usan (con
+    // icono asignado por posición, ya que el repeater no tiene campo "icono"); si no,
+    // se mantiene el contenido de hoy. "$b['mvv']" queda como fallback legado (campo
+    // huérfano sin UI en el admin, nunca poblado, pero se respeta por compatibilidad).
+    $mvvIconsByPosition = ['target', 'eye', 'heart'];
+    if (!empty($b['stats']) && is_array($b['stats'])) {
+        $mvvItems = collect($b['stats'])->values()->map(function ($item, $i) use ($mvvIconsByPosition) {
+            return [
+                'icon'     => $mvvIconsByPosition[$i] ?? 'target',
+                'title_es' => $item['title_es'] ?? '',
+                'title_en' => $item['title_en'] ?? '',
+                'title_pt' => $item['title_pt'] ?? '',
+                'desc_es'  => $item['desc_es'] ?? '',
+                'desc_en'  => $item['desc_en'] ?? '',
+                'desc_pt'  => $item['desc_pt'] ?? '',
+            ];
+        })->all();
+    } else {
+        $mvvItems = $b['mvv'] ?? $defaultMvv;
+    }
 
     // ── Banda de estadísticas — datos reales cuando existen ───────────────
     $foundedYear = (int) (\App\Models\Setting::get('company_founded_year') ?: 2015);

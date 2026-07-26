@@ -17,9 +17,18 @@
         ?: $L('Lunes a domingo · 9:30 a.m. – 7:00 p.m.', 'Monday to Sunday · 9:30 a.m. – 7:00 p.m.', 'Segunda a domingo · 9:30 – 19:00');
     $waPhoneDigits = preg_replace('/\D/', '', $contactPhone);
 
-    // Blocks from CMS (Page model, slug "contacto") — igual patrón que about.blade.php
+    // Blocks from CMS (Page model, slug "contacto") — igual patrón que about.blade.php.
+    // Nota: el mockup aprobado (docs/propuesta/exports/lat-07-contacto.jpeg) confirma un
+    // hero plano SIN imagen ni collage; los campos blocks.img_hero/img_collage_1..4 del
+    // admin no tienen sección viva en este diseño (ver docs/qa/contacto.md). Solo se
+    // cablean aquí los 9 campos de texto del hero (eyebrow/título H1/lead ×3 idiomas).
     $page ??= null;
     $b = $page?->blocks ?? [];
+
+    $bl = function (string $key, string $fallback) use ($b, $locale): string {
+        $val = trim((string) ($b[$key . '_' . $locale] ?? ''));
+        return $val !== '' ? $val : $fallback;
+    };
 @endphp
 
 @section('content')
@@ -31,14 +40,14 @@
             <a href="{{ route('home', ['locale' => $locale]) }}">{{ __('ui.home') }}</a> &middot;
             <b style="color:inherit">{{ __('ui.contact_us') }}</b>
         </nav>
-        <span class="lat-eyebrow">{{ $L('ESTAMOS PARA AYUDARTE', 'WE ARE HERE TO HELP', 'ESTAMOS AQUI PARA AJUDAR') }}</span>
-        <h1 id="contact-hero-title">{{ __('ui.contact_us') }}</h1>
+        <span class="lat-eyebrow">{{ $bl('hero_eyebrow', $L('ESTAMOS PARA AYUDARTE', 'WE ARE HERE TO HELP', 'ESTAMOS AQUI PARA AJUDAR')) }}</span>
+        <h1 id="contact-hero-title">{{ $bl('hero_title', __('ui.contact_us')) }}</h1>
         <p class="lat-flat-hero__sub">
-            {{ $L(
+            {{ $bl('hero_lead', $L(
                 '¿Tienes dudas o quieres armar un tour a tu medida? Escríbenos y te respondemos el mismo día.',
                 'Have questions or want a custom-made tour? Write to us and we will reply the same day.',
                 'Tem dúvidas ou quer montar um tour sob medida? Escreva para nós e respondemos no mesmo dia.'
-            ) }}
+            )) }}
         </p>
     </div>
 </section>
