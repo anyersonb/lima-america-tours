@@ -93,7 +93,8 @@
         margin: 0;
         text-shadow: 0 2px 30px rgba(0, 0, 0, .3);
 
-        em { font-style: normal; color: #ff9ea4; }
+        // Título del hero todo en blanco — rojo solo como acento en otros elementos.
+        em { font-style: normal; color: inherit; }
     }
 
     &__sub {
