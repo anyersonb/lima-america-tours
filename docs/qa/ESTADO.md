@@ -9,11 +9,11 @@ Leyenda capas: ✅ pasa · 🔴/🟠 con hallazgos · — no corrido. Estados: P
 | Módulo | L1 | L2 | L3 | L4 | L5 | L6 | Estado | Reporte |
 |---|---|---|---|---|---|---|---|---|
 | Panel Filament | ✅ | ✅¹ | — | — | — | — | VERIFICADO c/ deuda (F0-F2 hechos; falta F3-F7) | `docs/qa/panel-filament.md` |
-| Ficha de tour | ✅² | 🟠³⁴ | 🟠³⁴ | 🟠³ | 🟡³ | — | EN CORRECCIÓN (F0-F2 hechos: 3 de 9 hallazgos corregidos por `backend-laravel` — #4 SEO, #7 huérfanos, #8 price=0 —, quedan 4×🟠 + 2×🟡 abiertos, cero 🔴; falta F3-F7) | `docs/qa/ficha-tour.md` |
-| Tours (listado) | — | — | — | — | — | — | PENDIENTE | |
-| Reserva | — | — | — | — | — | — | PENDIENTE | |
-| Blog | — | — | — | — | — | — | PENDIENTE | |
-| Home | — | — | — | — | — | — | PENDIENTE | |
+| Ficha de tour | ✅ | ✅ | ✅ | ✅ | ✅ | 🟡 | VERIFICADO c/ deuda (9 hallazgos: 3 backend + 5 maquetador corregidos, 14 tests nuevos; deuda: form de reseña=decisión 🔵, subtitle/notes/max_capacity 🟡, apple-touch-icon global 🟡) | `docs/qa/ficha-tour.md` |
+| Tours (listado) | ✅ | ✅ | — | ✅ | ✅ | — | VERIFICADO (ligero: ad-hoc + smoke + sin regresión; buscador+filtros OK) | ad-hoc |
+| Reserva | — | — | — | — | — | — | FUERA (se reescribe con pasarela Culqi+PayPal — `docs/pagos/PLAN-PASARELAS.md`) | |
+| Blog | ✅ | ✅ | — | ✅ | ✅ | — | VERIFICADO (ligero) | ad-hoc |
+| Home | ✅ | ✅ | — | ✅ | ✅ | — | VERIFICADO (ligero; Offer cableado a la home) | ad-hoc |
 | Contacto | — | ✅⁵ | — | — | — | — | VERIFICADO c/ deuda (hero eyebrow/título/lead cableados al CMS; 5 campos de imagen sin sección de diseño aprobada, ver deuda) | `docs/qa/contacto.md` |
 | Nosotros | — | ✅⁶ | — | — | — | — | VERIFICADO c/ deuda (hero + repeater `stats`→MVV cableados al CMS; ~20 campos de texto + 6 imágenes sin sección de diseño aprobada, ver deuda) | `docs/qa/nosotros.md` |
 
@@ -28,6 +28,17 @@ Leyenda capas: ✅ pasa · 🔴/🟠 con hallazgos · — no corrido. Estados: P
 ⁵ **Contacto** (`maquetador-frontend`, rama `qa/paginas` desde `qa/ficha-tour`, 2026-07-25/26, navegador contra `:8002`/`lima_america_qa`): cierra el hallazgo #3 de `panel-filament.md`. Se cablearon los 9 campos de texto del hero (`hero_eyebrow`/`hero_title`/`hero_lead` ×3 idiomas) que estaban hardcodeados pese a que `contact.blade.php` ya extraía `$b = $page->blocks` sin usarlo — confirmado con Page `QA_` creada/purgada en el admin (control positivo: los 3 textos ES aparecieron; fallback verificado tras la purga). Los 5 campos de imagen (`img_hero`/`img_collage_1..4`) **no** se implementaron: el mockup aprobado `docs/propuesta/exports/lat-07-contacto.jpeg` confirma un hero deliberadamente plano sin imagen (el propio código ya lo documentaba); inventar una sección de imagen sin mockup habría violado la fidelidad al diseño. Queda como deuda de producto en `docs/qa/BACKLOG-CONTENIDO.md` #12, no como defecto de código — de ahí "VERIFICADO c/ deuda". Test nuevo `tests/Feature/PageBlocksCmsSyncTest.php` (2 casos de Contacto, falla→pasa confirmado con `git stash`). `php artisan test`: 4 failed (baseline Culqi, sin cambios) / 110 passed (301 assertions), `SmokeTest` verde, cero regresiones.
 
 ⁶ **Nosotros** (`maquetador-frontend`, misma rama/sesión que ⁵): cierra el hallazgo #4 de `panel-filament.md`. El hero (`hero_eyebrow`/`hero_title`/`hero_lead`/`img_hero`) ya estaba cableado de antes (confirmado, sin cambios). Se cableó además el repeater real `blocks.stats` (Misión/Visión/Valores/Equipo) en la sección MVV existente, que antes ignoraba ese campo y usaba siempre contenido fijo — confirmado con Page `QA_` y 3 items `stats` (icono asignado por posición: target/eye/heart), purgada al cierre con fallback intacto. El resto del grupo "Nosotros — contenido" del admin (~20 campos de texto: `why_intro`, `banner_heading`, `cultura_heading`, repeater `pillars`, `testimonios_eyebrow`, etc. + 6 imágenes: `img_grid1..4`/`img_banner_cta`/`img_testimonios`) **no** se implementó: el mockup aprobado `docs/propuesta/exports/lat-02-nosotros.jpeg` (calcado 1:1 en `_lat-about.scss`) no contempla esas secciones — banner CTA aparte, tabs de pilares, grid de fotos y testimonios propios simplemente no existen en el diseño aprobado. Construirlas sin especificación habría sido inventar layout. Deuda de producto documentada en `docs/qa/BACKLOG-CONTENIDO.md` #13 (incluye también los campos huérfanos inversos `destinations`/`split_*` que el blade lee pero el admin no expone). Mismo test suite que ⁵ (3 casos de Nosotros en `PageBlocksCmsSyncTest.php`, falla→pasa confirmado).
+
+## Seguridad (F6 consolidada — `docs/qa/seguridad-consolidada.md`)
+Auditoría consolidada 2026-07-26 (`security-engineer`) + fixes (`backend-laravel`). Veredicto: **los 2 🔴 CRÍTICOS RESUELTOS**; quedan 🟠/🟡 no acutos.
+- ✅ Secretos: NO hay credenciales commiteadas (repo ni historial). PayPal/Culqi en **sandbox**.
+- ✅ 🔴 RCE Livewire (CVE-2025-54068) → Livewire 3.6.3→**3.8.2**; Filament→**3.3.54** (XSS RichEditor + upload + scope). `composer audit` 38→11 advisories.
+- ✅ 🔴 Endpoint `/_diag/mail` (token hardcodeado, envío de correos) → **eliminado**.
+- ✅ Positivos: precios server-side, webhook Culqi HMAC+idempotencia, sin IDOR/SQLi/mass-assignment, buen rate limiting, headers presentes.
+- 🟠/🟡 PENDIENTE (no bloqueante agudo, para el jefe): **Laravel 10 EOL** → upgrade a 11/12 (major, lote aparte; 11 advisories restantes son de laravel/framework 10.x); `public/opcache-reset.php` reutiliza el mismo token hardcodeado; sanitización explícita del RichEditor; `phpseclib` transitivo de culqi. `APP_DEBUG=false` en prod.
+
+## Estado global de la noche
+Ramas locales (SIN push/merge a main): `qa/setup` → `qa/panel-filament` → `qa/ficha-tour` → `qa/paginas` (la más avanzada, contiene todo). Baseline de tests: **4** (los 4 CheckoutTest del cobro Culqi, se reescriben con la pasarela). `php artisan test` final: **4 failed / 112 passed**, `SmokeTest` verde. ~41 tests nuevos agregados en la sesión.
 
 ## Orden de verificación (§10 del protocolo)
 Panel Filament → Ficha de tour → Tours → Reserva → Blog → Home → Contacto → Nosotros
