@@ -12,11 +12,13 @@
 
 Bloqueado por dependencias con vulnerabilidades **críticas/altas** (incluye RCE en Livewire) y por un **endpoint de diagnóstico expuesto**. El código propio de la aplicación está, en general, bien construido (precios server-side, webhook con HMAC, sin IDOR, sin SQLi/command injection, buen rate limiting). El bloqueo proviene sobre todo de la **cadena de dependencias desactualizada** y de un **debug endpoint que quedó en `routes/web.php`**.
 
+> **ACTUALIZACIÓN 2026-07-25 (backend-laravel, rama `qa/paginas`):** Ambos hallazgos 🔴 críticos (C-1 y C-2) quedaron **RESUELTOS**. Ver detalle en cada sección y en `docs/qa/FIXES.md` fila #17. Quedan pendientes (no bloqueantes para este lote, documentados abajo): A-1 (Laravel 10 EOL), A-2 (XSS de contenido admin sin escapar — mitigado en parte por el bump de Filament pero sin sanitización explícita del HTML del RichEditor), `phpseclib/phpseclib` desactualizado (transitivo de `culqi/culqi-php`, fuera de alcance por tratarse del árbol de la pasarela de pago) y un hallazgo nuevo menor: `public/opcache-reset.php` reutiliza el mismo token hardcodeado `lvt-mail-diag-2026` que tenía `/_diag/mail` (no formaba parte de este encargo, que era específicamente sobre `routes/web.php`).
+
 ### Conteo por nivel
 
 | Nivel | Cantidad |
 |-------|----------|
-| 🔴 Crítico (bloqueante) | 2 |
+| 🔴 Crítico (bloqueante) | 2 → **0 pendientes** (2 resueltos 2026-07-25) |
 | 🟠 Alto | 3 |
 | 🟡 Medio | 4 |
 | 🟢 Bajo / hardening | 4 |
@@ -25,7 +27,7 @@ Bloqueado por dependencias con vulnerabilidades **críticas/altas** (incluye RCE
 
 ## Hallazgos críticos (BLOQUEANTES)
 
-### 🔴 C-1 · Dependencias con CVEs críticas/altas — RCE en Livewire
+### ✅ RESUELTO — 🔴 C-1 · Dependencias con CVEs críticas/altas — RCE en Livewire
 - **Módulo/superficie:** Dependencias Composer (panel Filament + framework).
 - **Descripción:** `composer audit` reporta **38 advisories en 17 paquetes**. La más grave:
   - **`livewire/livewire` v3.6.3 → CVE-2025-54068 (CRÍTICA): Remote Command Execution** durante la hidratación de propiedades de componentes. Filament corre sobre Livewire, por lo que el panel `/admin` (y cualquier componente Livewire público) es superficie de ataque. Corregido en **3.6.4** (la instalada está a **un solo patch** de la corrección).
@@ -41,8 +43,10 @@ Bloqueado por dependencias con vulnerabilidades **críticas/altas** (incluye RCE
   2. Correr `php artisan test` tras actualizar (GATE de humo).
   3. Volver a ejecutar `composer audit` hasta dejar 0 críticas/altas.
 - **Deriva a:** backend-laravel.
+- **Resolución (2026-07-25, rama `qa/paginas`):** `composer update livewire/livewire symfony/mime symfony/http-foundation guzzlehttp/guzzle league/commonmark --with-dependencies` (Livewire 3.6.3→**3.8.2**, symfony/mime 6.4.21→6.4.41, symfony/http-foundation 6.4.22→6.4.42, guzzle 7.9.3→7.15.1, commonmark 2.7.0→2.8.3) + `composer update "filament/*"` (3.3.26→**3.3.54**, dentro del constraint `^3.2` ya existente, sin editar `composer.json`). El CVE-2025-54068 (RCE) ya no aparece en `composer audit`; tampoco los CVEs de Filament RichEditor XSS (2026-55409), upload sin auth (2026-48500) ni bypass de scope Attach/Associate (2026-48067). `composer audit` bajó de **38 advisories/17 paquetes** a **11 advisories/6 paquetes**. Verificado: `php artisan test` sin regresiones (baseline 4 failed de `CheckoutTest` intacta, `SmokeTest` verde), `curl` a `:8002/admin` y `:8002/es` (+ tours/blog) responden 200 tras `php artisan filament:clear-cached-components`. Detalle completo en `docs/qa/FIXES.md` #17.
+- **Pendiente (no crítico, no bloqueante):** los 11 advisories restantes son `laravel/framework` 10.x (requieren Laravel ≥12.61.1/13.12.0 — major upgrade, ver A-1) + sus transitivos `symfony/mailer`/`process`/`routing`/`yaml` (mismo motivo) + `phpseclib/phpseclib` 3.0.52→3.0.54 (transitivo de `culqi/culqi-php`, no tocado en este lote por estar en el árbol de la pasarela de pago — fuera del alcance autorizado).
 
-### 🔴 C-2 · Endpoint de diagnóstico de correo expuesto en producción
+### ✅ RESUELTO — 🔴 C-2 · Endpoint de diagnóstico de correo expuesto en producción
 - **Módulo/superficie:** `routes/web.php:65-113` — ruta `GET /_diag/mail`.
 - **Descripción:** Ruta de diagnóstico protegida solo por un **token hardcodeado y commiteado**: `key=lvt-mail-diag-2026`. Con esa clave (visible en el repo y adivinable) cualquiera puede:
   - **Enviar correos a CUALQUIER dirección** (`?to=` arbitrario) usando el SMTP del cliente → abuso / mail-bombing / riesgo de blacklist del dominio.
@@ -51,6 +55,8 @@ Bloqueado por dependencias con vulnerabilidades **críticas/altas** (incluye RCE
 - **Vector:** `GET /_diag/mail?key=lvt-mail-diag-2026&to=victima@dominio.com` — no requiere sesión.
 - **Remediación:** **Eliminar la ruta** antes de producción (el propio comentario dice "QUITAR después de resolver"). Si se necesita diagnóstico, condicionarla a `app()->environment('local')` y protegerla tras `auth` del panel, nunca por token en código.
 - **Deriva a:** backend-laravel.
+- **Resolución (2026-07-25, rama `qa/paginas`):** Ruta y closure completos eliminados de `routes/web.php` (líneas 54-107 del archivo original). `php artisan route:list` ya no muestra ninguna ruta `diag.*`. Verificado con `tests/Feature/DiagMailEndpointRemovedTest.php`: antes del fix, `GET /_diag/mail?key=lvt-mail-diag-2026` devolvía 200 (confirmando el hallazgo); tras el fix, tanto con token válido como sin él devuelve 404.
+- **Hallazgo relacionado sin resolver (fuera de este encargo):** `public/opcache-reset.php` reutiliza el **mismo token hardcodeado** `lvt-mail-diag-2026` para autorizar un reset de OPcache vía `?key=`. No se tocó porque el encargo era específicamente sobre `routes/web.php`, pero es el mismo patrón de riesgo (token commiteado y adivinable) y debería revisarse en un próximo lote — idealmente moverlo a un comando artisan protegido por `auth` o rotarlo a un secreto en `.env`.
 
 ---
 
@@ -156,13 +162,15 @@ Bloqueado por dependencias con vulnerabilidades **críticas/altas** (incluye RCE
 
 ## Top hallazgos accionables (orden de prioridad)
 
-| # | Hallazgo | Nivel | Acción | Responsable |
-|---|----------|-------|--------|-------------|
-| 1 | Livewire RCE + CVEs de dependencias | 🔴 | `composer update` (Livewire ≥3.6.4, Filament ≥3.3.53, Symfony ≥6.4.41, Guzzle ≥7.15.1) + `php artisan test` | backend-laravel |
-| 2 | `/_diag/mail` expuesto | 🔴 | Eliminar la ruta de `routes/web.php` | backend-laravel |
-| 3 | Laravel 10 EOL | 🟠 | Planificar upgrade a 11/12 | backend-laravel |
-| 4 | XSS RichEditor (blog/hero) | 🟠 | Sanitizar HTML + actualizar Filament | backend-laravel |
-| 5 | Verificar `.env` prod (debug/https/cookies) | 🟡 | Checklist de deploy | deploy |
-| 6 | reCAPTCHA habilitado en prod | 🟡 | Config panel | deploy/cliente |
+| # | Hallazgo | Nivel | Acción | Responsable | Estado |
+|---|----------|-------|--------|-------------|--------|
+| 1 | Livewire RCE + CVEs de dependencias | 🔴 | `composer update` (Livewire ≥3.6.4, Filament ≥3.3.53, Symfony ≥6.4.41, Guzzle ≥7.15.1) + `php artisan test` | backend-laravel | ✅ Resuelto 2026-07-25 (Livewire 3.8.2, Filament 3.3.54) |
+| 2 | `/_diag/mail` expuesto | 🔴 | Eliminar la ruta de `routes/web.php` | backend-laravel | ✅ Resuelto 2026-07-25 |
+| 3 | Laravel 10 EOL | 🟠 | Planificar upgrade a 11/12 | backend-laravel | 🟠 Pendiente (major upgrade, requiere lote dedicado) |
+| 4 | XSS RichEditor (blog/hero) | 🟠 | Sanitizar HTML + actualizar Filament | backend-laravel | 🟡 Parcial: Filament actualizado (cierra los CVEs conocidos de RichEditor/upload/scope); falta sanitización explícita de `{!! !!}` en `blog/show.blade.php`/`home.blade.php` (defense-in-depth) |
+| 5 | Verificar `.env` prod (debug/https/cookies) | 🟡 | Checklist de deploy | deploy | Pendiente (operativo, no de código) |
+| 6 | reCAPTCHA habilitado en prod | 🟡 | Config panel | deploy/cliente | Pendiente (operativo) |
+| 7 | `phpseclib/phpseclib` desactualizado (transitivo de `culqi/culqi-php`) | 🟡 | `composer update phpseclib/phpseclib` (3.0.52→3.0.54) | backend-laravel | 🟡 Pendiente — no tocado en este lote por estar en el árbol de dependencias de la pasarela de pago (fuera del alcance autorizado) |
+| 8 | `public/opcache-reset.php` con el mismo token hardcodeado que tenía `/_diag/mail` | 🟡 | Mover a comando artisan con `auth` o rotar a secreto `.env` | backend-laravel | 🟡 Pendiente — detectado como efecto colateral de C-2, no formaba parte de este encargo |
 
-**Re-auditar** tras aplicar C-1 y C-2 (y correr de nuevo `composer audit`) antes de habilitar el paso a producción.
+**Re-auditado 2026-07-25** tras aplicar C-1 y C-2: `composer audit` bajó de 38 advisories/17 paquetes a 11 advisories/6 paquetes (los restantes atados a Laravel 10 EOL y phpseclib, ver arriba). Con C-1 y C-2 resueltos, el veredicto de bloqueo por críticos queda levantado; persisten los 🟠/🟡/🟢 documentados como deuda a planificar antes de producción.
