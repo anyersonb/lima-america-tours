@@ -191,7 +191,9 @@
     padding: 70px 0;
     text-align: center;
     color: #fff;
-    background: linear-gradient(120deg, $lat-red-deep 0%, $lat-red 100%);
+    // Franja CTA en degradado ink neutro (antes rojo a sangre completa);
+    // el rojo queda solo en el hover del botón blanco.
+    background: linear-gradient(120deg, $lat-ink 0%, $lat-ink-soft 100%);
     overflow: hidden;
 
     &::after {
@@ -209,7 +211,7 @@
         max-width: 640px;
     }
 
-    p { color: #ffe3e5; font-size: 1rem; max-width: 520px; margin: 0 auto 30px; }
+    p { color: #e7e2da; font-size: 1rem; max-width: 520px; margin: 0 auto 30px; }
 
     &__actions { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
 }
@@ -223,7 +225,8 @@
 
 .lat-btn--white {
     background: #fff;
-    color: $lat-red;
+    color: $lat-ink;
 
-    &:hover { background: #ffe9ea; transform: translateY(-2px); }
+    // El rojo aparece solo al pasar el cursor (acento de hover).
+    &:hover { background: $lat-red; color: #fff; transform: translateY(-2px); }
 }

@@ -60,7 +60,9 @@
                         </label>
                     </div>
                     @include('partials.recaptcha', ['recaptchaAction' => 'newsletter', 'recaptchaFormId' => 'form-newsletter'])
-                    <button type="submit" class="lat-btn lat-btn--red" style="width:100%;">
+                    {{-- Sobre fondo oscuro del footer, el botón ink quedaría invisible;
+                         se usa la variante blanca (ink por defecto, rojo solo en hover). --}}
+                    <button type="submit" class="lat-btn lat-btn--white" style="width:100%;">
                         {{ __('footer.newsletter_submit') }}
                     </button>
                 </form>

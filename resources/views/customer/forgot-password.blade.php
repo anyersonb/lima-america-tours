@@ -15,7 +15,7 @@
     <div class="w-full max-w-md">
         <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
 
-            <div class="bg-lat-red px-8 py-7 text-center">
+            <div class="bg-lat-ink px-8 py-7 text-center">
                 <h1 class="font-display text-2xl text-white tracking-wide">
                     {{ __('customer.recover_password') }}
                 </h1>
@@ -53,7 +53,7 @@
                     </div>
 
                     <button type="submit"
-                            class="mt-7 w-full rounded-full bg-lat-red hover:bg-lat-red-deep active:bg-lat-red-deep text-white font-semibold py-3.5 text-sm transition">
+                            class="mt-7 w-full rounded-full bg-lat-ink hover:bg-lat-red active:bg-lat-red-deep text-white font-semibold py-3.5 text-sm transition">
                         {{ __('customer.send_link') }}
                     </button>
                 </form>

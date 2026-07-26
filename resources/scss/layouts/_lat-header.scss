@@ -18,7 +18,7 @@
 
 // ── Topbar ─────────────────────────────────────────────────────────────
 .lat-topbar {
-    background: $lat-red;
+    background: $lat-ink;
     color: #fff;
     font-family: $lat-font-sans;
     font-size: .82rem;
@@ -71,17 +71,23 @@
     @media (max-width: 640px) { padding: 10px 16px; }
 }
 
-// ── Brand (chip rojo + logo blanco) ────────────────────────────────────
+// ── Brand (plate ink + logo original) ───────────────────────────────────
+// Nota rebrand: el logo original del cliente (logo-america-original.webp)
+// viene en variante monocromo blanco (artwork blanco sobre transparente,
+// sin versión a color entregada) — invisible sobre el header blanco. En
+// vez de un chip rojo a sangre (versión anterior), se usa una placa ink
+// (mismo tono que el topbar) del tamaño justo del logo para darle
+// contraste sin reintroducir rojo en el header.
 .lat-brand {
     display: flex;
     align-items: center;
-    background: $lat-red;
+    background: $lat-ink;
     padding: 8px 16px;
     border-radius: 14px;
     flex: none;
-    transition: transform .15s ease;
+    transition: transform .15s ease, background .15s ease;
 
-    &:hover { transform: translateY(-1px); }
+    &:hover { background: $lat-ink-soft; transform: translateY(-1px); }
 
     img {
         display: block;
@@ -128,13 +134,14 @@
     font-size: .9rem;
     padding: 11px 20px;
     border-radius: $lat-r-pill;
-    background: $lat-red;
+    background: $lat-ink;
     color: #fff;
     white-space: nowrap;
     transition: background .2s, transform .2s, box-shadow .2s;
 
+    // Botón primario del header en ink; el rojo queda solo como acento de hover.
     &:hover {
-        background: $lat-red-deep;
+        background: $lat-red;
         transform: translateY(-2px);
         box-shadow: 0 10px 24px rgba(203, 16, 30, .3);
     }

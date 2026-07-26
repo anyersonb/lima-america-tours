@@ -24,8 +24,12 @@
    Prefijo: cart-   (no colisiona con Tailwind)
 ════════════════════════════════════════════════════════════ */
 :root {
-    /* Recoloreado a paleta lat- (rojo Lima América) — antes teal/dorado heredado */
+    /* Recoloreado a paleta lat- (rojo Lima América) — antes teal/dorado heredado.
+       Rebrand "rojo = acento": los botones primarios/CTAs del carrito pasan a
+       ink (--cart-ink/--cart-ink2); --cart-green/--cart-green2 quedan
+       reservados para precios, badges e hovers puntuales. */
     --cart-ink:    #171412; /* $lat-ink */
+    --cart-ink2:   #3a352f; /* $lat-ink-soft — variante para degradados de botones */
     --cart-muted:  #6f6a63; /* $lat-muted */
     --cart-line:   #e9e3da; /* $lat-line */
     --cart-green:  #cb101e; /* $lat-red — acento principal (antes teal #143E40) */
@@ -65,7 +69,7 @@
 }
 .cart-switch-btn.active,
 .cart-switch-btn:focus-visible {
-    background: linear-gradient(135deg, var(--cart-green2), var(--cart-green));
+    background: linear-gradient(135deg, var(--cart-ink2), var(--cart-ink));
     color: #fff;
     border-color: transparent;
     outline: none;
@@ -112,7 +116,7 @@
     transition: background .18s, color .18s;
 }
 .cart-seg-btn.active .cart-seg-num {
-    background: var(--cart-green);
+    background: var(--cart-ink);
     color: #fff;
 }
 .cart-seg-label {
@@ -276,7 +280,7 @@
 .cart-more-price { font-size: 18px; font-weight: 700; color: var(--cart-green); margin-top: auto; margin-bottom: 10px; }
 .cart-add-btn {
     width: 100%; height: 38px; border-radius: 14px; border: 1px solid #D8E5DE;
-    background: #F1F7F3; color: var(--cart-green); padding: 0 10px;
+    background: #F1F7F3; color: var(--cart-ink); padding: 0 10px;
     display: flex; align-items: center; justify-content: center;
     font-size: 12px; font-weight: 700; cursor: pointer;
     transition: background .15s, color .15s; font-family: inherit;
@@ -321,7 +325,7 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
 }
 .cart-save-btn {
     width: 100%; height: 44px; border-radius: 14px;
-    background: linear-gradient(135deg, var(--cart-green2), var(--cart-green));
+    background: linear-gradient(135deg, var(--cart-ink2), var(--cart-ink));
     color: #fff; border: none; font-size: 13px; font-weight: 700;
     cursor: pointer; font-family: inherit; transition: opacity .15s;
 }
@@ -343,7 +347,7 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
 }
 .cart-payment-order-num {
     width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
-    background: var(--cart-green); color: #fff; font-size: 9px; font-weight: 900;
+    background: var(--cart-ink); color: #fff; font-size: 9px; font-weight: 900;
 }
 .cart-payment-tour-card h4 { margin: 0; font-family: 'Hedvig Letters Serif', Georgia, serif; font-size: 15.5px; line-height: 1.08; color: var(--cart-ink); }
 .cart-payment-badge {
@@ -435,7 +439,7 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
 
 /* ── Cupón ── */
 .cart-coupon-card {
-    background: linear-gradient(135deg, var(--cart-green2), var(--cart-green));
+    background: linear-gradient(135deg, var(--cart-ink2), var(--cart-ink));
     color: #fff; border-radius: 20px; padding: 14px 16px;
     display: flex; flex-direction: column; gap: 10px;
 }
@@ -450,7 +454,7 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
 .cart-coupon-input::placeholder { color: rgba(255,255,255,.55); }
 .cart-coupon-input:focus { border-color: rgba(255,255,255,.6); }
 .cart-coupon-submit {
-    height: 40px; border-radius: 999px; background: #fff; color: var(--cart-green);
+    height: 40px; border-radius: 999px; background: #fff; color: var(--cart-ink);
     border: none; padding: 0 18px; font-size: 11px; font-weight: 700;
     text-transform: uppercase; letter-spacing: .08em; cursor: pointer; white-space: nowrap;
     transition: background .15s; font-family: inherit;
@@ -474,10 +478,10 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
 .cart-total-price { font-family: 'Instrument Serif', Georgia, serif; font-size: 26px; line-height: 1; color: var(--cart-green); }
 .cart-cta-btn {
     height: 50px; border-radius: 16px;
-    background: linear-gradient(135deg, var(--cart-green2), var(--cart-green));
+    background: linear-gradient(135deg, var(--cart-ink2), var(--cart-ink));
     color: #fff; border: none; display: flex; align-items: center; justify-content: center;
     gap: 9px; font-size: 13.5px; font-weight: 700;
-    box-shadow: 0 12px 22px rgba(203,16,30,.18); cursor: pointer;
+    box-shadow: 0 12px 22px rgba(23,20,18,.22); cursor: pointer;
     text-decoration: none; font-family: inherit; transition: opacity .15s; width: 100%;
 }
 .cart-cta-btn:hover { opacity: .9; }
@@ -499,8 +503,8 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
     transition: background .15s, opacity .15s;
 }
 .cart-step-btn:hover { background: #f6f1e9; }
-.cart-step-btn.primary { background: var(--cart-green); color: #fff; border-color: transparent; }
-.cart-step-btn.primary:hover { background: var(--cart-green2); opacity: 1; }
+.cart-step-btn.primary { background: var(--cart-ink); color: #fff; border-color: transparent; }
+.cart-step-btn.primary:hover { background: var(--cart-green); opacity: 1; }
 
 /* ── Estado vacío ── */
 .cart-empty-state {
@@ -522,14 +526,14 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
 .cart-empty-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
 .cart-btn-dark {
     flex: 1; min-width: 120px; height: 40px; border-radius: 12px;
-    background: linear-gradient(135deg, var(--cart-green2), var(--cart-green));
+    background: linear-gradient(135deg, var(--cart-ink2), var(--cart-ink));
     color: #fff; border: none; display: flex; align-items: center; justify-content: center;
     font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: none; font-family: inherit; transition: opacity .15s;
 }
 .cart-btn-dark:hover { opacity: .88; }
 .cart-btn-outline {
     flex: 1; min-width: 120px; height: 40px; border-radius: 12px;
-    background: #fff; border: 1px solid #d8dcd8; color: var(--cart-green);
+    background: #fff; border: 1px solid #d8dcd8; color: var(--cart-ink);
     display: flex; align-items: center; justify-content: center;
     font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: none; font-family: inherit; transition: background .15s;
 }

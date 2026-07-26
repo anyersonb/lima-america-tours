@@ -191,7 +191,7 @@
         <div id="dejar-resena" class="mt-16 scroll-mt-28">
             <div class="max-w-2xl mx-auto rounded-3xl bg-lat-paper ring-1 ring-lat-ink/10 shadow-sm overflow-hidden">
                 {{-- Encabezado --}}
-                <div class="bg-lat-red text-white px-6 sm:px-8 py-6 text-center">
+                <div class="bg-lat-ink text-white px-6 sm:px-8 py-6 text-center">
                     <p class="text-[11px] uppercase tracking-[0.22em] text-white/80 font-bold mb-1.5">
                         {{ $L('Tu opinión cuenta', 'Your opinion matters', 'Sua opinião conta') }}
                     </p>
@@ -285,7 +285,7 @@
                         <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="absolute -left-[9999px] w-px h-px opacity-0">
 
                         <button type="submit"
-                                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-lat-red hover:bg-lat-red-deep text-white font-bold text-sm py-3 px-8 transition-colors">
+                                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-lat-ink hover:bg-lat-red text-white font-bold text-sm py-3 px-8 transition-colors">
                             {{ $L('Enviar reseña', 'Submit review', 'Enviar avaliação') }}
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                         </button>

@@ -34,7 +34,7 @@
             </div>
         </section>
         {{-- bottom half: title + follow us --}}
-        <section class="bg-lat-red text-white py-14 lg:py-20">
+        <section class="bg-lat-ink text-white py-14 lg:py-20">
             <div class="container mx-auto px-5 lg:px-10 grid gap-6 lg:grid-cols-[1fr_auto] items-end">
                 <div>
                     <h1 class="font-display text-5xl md:text-6xl lg:text-7xl">En Mantenimiento</h1>
@@ -44,7 +44,7 @@
                     <p class="font-display text-2xl">Follow us</p>
                     <ul class="mt-3 inline-flex items-center gap-4">
                         @foreach (['Instagram','Facebook','TikTok','Vimeo'] as $sn)
-                            <li><a href="#" aria-label="{{ $sn }}" class="hover:text-lat-ink transition"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg></a></li>
+                            <li><a href="#" aria-label="{{ $sn }}" class="hover:text-lat-red transition"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg></a></li>
                         @endforeach
                     </ul>
                 </div>

@@ -10,7 +10,10 @@
 
     // Paletas por color de fondo (marca lat- roja: variante "ink" oscura + variante "red" intensa)
     if ($isOrange) {
-        $sectionStyle = 'background: linear-gradient(155deg,#e2545f 0%,#cb101e 55%,#9d0c16 100%);';
+        // Rebrand "rojo = acento": esta variante usaba un degradado rojo a
+        // sangre completa; ahora es un ink cálido (coherente con la otra
+        // variante), el rojo queda solo en $premTitle/$premIco.
+        $sectionStyle = 'background: linear-gradient(155deg,#2b2118 0%,#171412 55%,#0f0d0c 100%);';
         $badgeCls   = 'bg-lat-ink text-white';
         $titleCls   = 'text-white';
         $hlCls      = 'text-lat-ink';

@@ -26,7 +26,7 @@
         overflow: hidden;
 
         a { color: $lat-muted; flex: none; white-space: nowrap; &:hover { color: $lat-red; } }
-        b { color: $lat-red; font-weight: 600; }
+        b { color: $lat-ink; font-weight: 600; }
 
         &__sep { flex: none; }
 
@@ -221,7 +221,9 @@
     }
 
     &__num {
-        width: 32px; height: 32px; border-radius: 50%; background: $lat-red; color: #fff;
+        // Ink en vez de rojo: se repite un círculo por paso del itinerario y
+        // varios juntos leían como "mucho rojo"; el rojo queda en __time.
+        width: 32px; height: 32px; border-radius: 50%; background: $lat-ink; color: #fff;
         font-weight: 700; font-size: .9rem; display: grid; place-items: center; flex: none; z-index: 1;
     }
 
@@ -261,7 +263,10 @@
 }
 
 .lat-book-head {
-    background: $lat-red; color: #fff; padding: 20px 24px;
+    // Ink en vez de rojo a sangre completa — el monto sigue en blanco
+    // (contraste) y funciona como el "acento" al ser el único bloque oscuro
+    // dentro de una tarjeta blanca.
+    background: $lat-ink; color: #fff; padding: 20px 24px;
 
     small { font-size: .8rem; opacity: .9; }
 

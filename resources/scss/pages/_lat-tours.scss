@@ -20,7 +20,9 @@
         position: absolute;
         inset: 0;
         z-index: 0;
-        background: linear-gradient(115deg, rgba($lat-ink, .9) 0%, rgba($lat-ink, .6) 52%, rgba($lat-red-deep, .55) 100%);
+        // Degradado neutro (antes terminaba en $lat-red-deep) — el rojo ya no
+        // tiñe los heroes internos, solo queda como acento puntual (eyebrow).
+        background: linear-gradient(115deg, rgba($lat-ink, .92) 0%, rgba($lat-ink, .68) 52%, rgba($lat-ink, .5) 100%);
     }
 
     .lat-wrap { position: relative; z-index: 1; }
@@ -31,7 +33,7 @@
         margin-bottom: 10px;
 
         a { color: rgba(255, 255, 255, .82); &:hover { color: #fff; } }
-        b { color: #ff9ea4; font-weight: 600; }
+        b { color: #fff; font-weight: 600; }
     }
 
     .lat-eyebrow { color: #ffd7d9; margin-bottom: 14px; &::before { background: #ffd7d9; } }

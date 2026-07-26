@@ -29,7 +29,7 @@
         </section>
 
         {{-- ── mitad inferior: mensaje real + CTAs + follow us ── --}}
-        <section class="bg-lat-red text-white py-14 lg:py-20">
+        <section class="bg-lat-ink text-white py-14 lg:py-20">
             <div class="container mx-auto px-5 lg:px-10 grid gap-8 lg:grid-cols-[1fr_auto] items-end">
                 <div>
                     <h1 class="font-display text-4xl md:text-5xl lg:text-6xl leading-tight">
@@ -55,7 +55,7 @@
                     <p class="font-display text-2xl">{{ $L('Síguenos', 'Follow us', 'Siga-nos') }}</p>
                     <ul class="mt-3 inline-flex items-center gap-4">
                         @foreach (['Instagram','Facebook','TikTok','Vimeo'] as $sn)
-                            <li><a href="#" aria-label="{{ $sn }}" class="hover:text-lat-ink transition"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg></a></li>
+                            <li><a href="#" aria-label="{{ $sn }}" class="hover:text-lat-red transition"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg></a></li>
                         @endforeach
                     </ul>
                 </div>

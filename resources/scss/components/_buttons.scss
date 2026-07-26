@@ -16,7 +16,8 @@
 .btn--primary {
     @include btn-base;
     @include btn-arrow;
-    @apply bg-lat-red text-white hover:bg-lat-red-deep active:bg-[#7d0a12];
+    // Botón primario en ink; el rojo de marca queda como acento de hover/active.
+    @apply bg-lat-ink text-white hover:bg-lat-red active:bg-lat-red-deep;
 }
 
 .btn--primary-outline {

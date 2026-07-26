@@ -56,7 +56,7 @@
         @keydown.escape.window="open = false">
     <nav class="lat-navbar" aria-label="{{ __('nav.main_navigation') }}">
         <a href="{{ route('home', ['locale' => $locale]) }}" class="lat-brand" aria-label="Lima América Tours — {{ __('nav.home') }}">
-            <img src="{{ asset('assets/logos/logo-america-white.webp') }}" alt="Lima América Tours" width="180" height="40" draggable="false">
+            <img src="{{ asset('assets/logos/logo-america-original.webp') }}" alt="Lima América Tours" width="180" height="40" draggable="false">
         </a>
 
         <div class="lat-nav-links">

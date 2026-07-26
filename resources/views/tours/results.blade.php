@@ -64,7 +64,7 @@
                         </ul>
                     </div>
                     <div class="rounded-lg border border-lat-line-strong overflow-hidden self-center">
-                        <p class="bg-lat-red text-white text-[10px] tracking-[0.2em] uppercase text-center py-1.5">{{ __('ui.price_per_person') }}</p>
+                        <p class="bg-lat-ink text-white text-[10px] tracking-[0.2em] uppercase text-center py-1.5">{{ __('ui.price_per_person') }}</p>
                         <div class="p-4 text-center">
                             <p class="text-sm">
                                 @if ($tour->price_before && $tour->price_before > $tour->price)
