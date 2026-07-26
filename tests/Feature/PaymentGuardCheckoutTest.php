@@ -68,6 +68,18 @@ class PaymentGuardCheckoutTest extends TestCase
         ]);
     }
 
+    /**
+     * PayPal is now paused server-side (routes/web.php disables
+     * checkout.paypal.capture / .create — see the "PayPal EN PAUSA" comment
+     * there, pending the currency decision in docs/pagos/PLAN-PASARELAS.md
+     * §13.2). That route-level block is a strictly stronger guarantee than
+     * the old scenario this test covered (a LIVE-mode leak being caught
+     * inside PayPalService::captureOrder via PaymentGuard): the request
+     * never reaches the controller/gateway at all, so PaymentGuard is not
+     * even exercised. This test now asserts that stronger invariant instead.
+     * PaymentGuard's own coverage for PayPal (isLive/assertChargeAllowed)
+     * remains intact and untouched in tests/Unit/PaymentGuardTest.php.
+     */
     public function test_paypal_live_mode_in_a_non_production_environment_blocks_the_capture_without_calling_paypal(): void
     {
         Mail::fake();
@@ -89,9 +101,9 @@ class PaymentGuardCheckoutTest extends TestCase
             ]
         );
 
-        // Controlled failure: JSON success:false, not an unhandled 500 page.
-        $response->assertStatus(500);
-        $response->assertJson(['success' => false]);
+        // The route itself is disabled while PayPal is paused — 404 before
+        // any controller/gateway/guard code runs.
+        $response->assertStatus(404);
 
         Http::assertNothingSent();
 

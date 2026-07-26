@@ -17,6 +17,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
@@ -34,8 +35,10 @@ class CheckoutController extends Controller
     ) {}
 
     /**
-     * The payment form now lives inside the cart page (3-step flow).
-     * Redirect to cart.index, optionally jumping to the payment step via hash.
+     * Renders the standalone Culqi payment step (resources/views/checkout/payment.blade.php).
+     * This is the "pay now with card" entry point that posts to checkout.process
+     * with a culqi_token once Culqi.js tokenises the card, or with
+     * payment_timing=later for the "book now, pay later" hold.
      */
     public function showPaymentForm(Request $request): View|RedirectResponse
     {
@@ -50,9 +53,17 @@ class CheckoutController extends Controller
                     ->with('error', __('cart.empty_checkout_redirect'));
             }
 
-            return redirect()
-                ->route('cart.index', ['locale' => $locale])
-                ->with('open_step', 'pago');
+            $total = $this->cart->total();
+
+            return view('checkout.payment', [
+                'items' => $items,
+                'subtotal' => $this->cart->subtotal(),
+                'discount' => $this->cart->couponDiscount(),
+                'couponCode' => $this->cart->couponCode(),
+                'total' => $total,
+                'total_centavos' => (int) round($total * 100),
+                'public_key' => config('services.culqi.public_key'),
+            ]);
 
         } catch (\Throwable $e) {
             Log::error('checkout.show_payment_form.error', ['message' => $e->getMessage()]);
@@ -64,10 +75,16 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Process a "pay later" booking: creates pending bookings, sends emails,
-     * clears the cart and redirects to the thanks page.
+     * Single entry point for the checkout form submission.
      *
-     * The "pay now" flow is handled by paypalCreateOrder + paypalCaptureOrder.
+     *  - payment_timing=now  -> charges the cart total via Culqi (PEN,
+     *    céntimos) using the culqi_token tokenised client-side
+     *    (chargeWithCulqi).
+     *  - payment_timing=later -> creates a pending booking, sends emails,
+     *    clears the cart and redirects to the thanks page (unchanged).
+     *
+     * PayPal is on pause server-side (routes disabled) pending the currency
+     * decision — see docs/pagos/PLAN-PASARELAS.md §13.2.
      */
     public function processPayment(ProcessPaymentRequest $request): RedirectResponse
     {
@@ -83,16 +100,6 @@ class CheckoutController extends Controller
             }
 
             $validated = $request->validated();
-            $payingNow = ($validated['payment_timing'] === 'now');
-
-            // "Pay now" via the old form submission is no longer supported.
-            // The PayPal JS flow handles "now"; only "later" should reach here.
-            if ($payingNow) {
-                return redirect()
-                    ->back()
-                    ->withInput()
-                    ->with('error', 'El pago inmediato debe realizarse a través del botón de PayPal.');
-            }
 
             $customer = [
                 'customer_name' => $validated['customer_name'],
@@ -118,6 +125,10 @@ class CheckoutController extends Controller
                 }
             }
 
+            if ($validated['payment_timing'] === 'now') {
+                return $this->chargeWithCulqi($request, $customer, (string) $validated['culqi_token'], $locale);
+            }
+
             $bookings = $this->finalizeBookings($customer, 'pay_later', null, false);
 
             $request->session()->put('last_bookings', $bookings->toArray());
@@ -134,6 +145,97 @@ class CheckoutController extends Controller
                 ->back()
                 ->withInput()
                 ->with('error', 'No pudimos procesar la reserva. Por favor inténtalo de nuevo o contáctanos.');
+        }
+    }
+
+    /**
+     * Culqi "pay now" — charges the cart total in soles (PEN).
+     *
+     * 1. Locks on the session so a double form-submit (double click) can't
+     *    fire two charges for the same cart.
+     * 2. Creates the Bookings first, in the default pending/pending state
+     *    (a hold), so a booking always exists to attach the charge result
+     *    to — including on failure, per docs/qa: the customer/tour-side
+     *    always sees *some* record of the attempt, and can retry without
+     *    losing their cart contents (kept intact until the charge succeeds).
+     * 3. Charges via PaymentService::createCharge(), which already runs the
+     *    guarda anti-cobro-real (PaymentGuard) before touching the network.
+     *    Success -> booking marked paid/confirmed, confirmation email sent,
+     *    cart cleared. Failure (rejected card OR RealChargeBlockedException)
+     *    -> booking marked payment_status=failed, cart is left untouched so
+     *    the customer can retry with another card; NEVER a 500.
+     */
+    private function chargeWithCulqi(Request $request, array $customer, string $token, string $locale): RedirectResponse
+    {
+        $lock = Cache::lock('checkout:culqi-charge:'.session()->getId(), 20);
+
+        if (! $lock->get()) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Tu pago ya se está procesando. Espera unos segundos.');
+        }
+
+        try {
+            $items = $this->cart->items();
+
+            if ($items->isEmpty()) {
+                return redirect()
+                    ->route('cart.index', ['locale' => $locale])
+                    ->with('error', __('cart.empty_checkout_redirect'));
+            }
+
+            $bookings = $this->finalizeBookings($customer, 'culqi', null, false, notify: false);
+
+            $amountCents = (int) round($this->cart->total() * 100);
+
+            try {
+                $charge = $this->payment->createCharge([
+                    'amount' => $amountCents,
+                    'currency' => 'PEN',
+                    'email' => $customer['customer_email'],
+                    'source_id' => $token,
+                    'metadata' => [
+                        'booking_references' => $bookings->pluck('reference')->implode(','),
+                    ],
+                ]);
+            } catch (\RuntimeException $e) {
+                // Covers both a real Culqi rejection and RealChargeBlockedException
+                // (the guarda anti-cobro-real) — either way, no real money moved.
+                Booking::whereIn('id', $bookings->pluck('id'))->update(['payment_status' => 'failed']);
+
+                Log::warning('checkout.culqi_charge.rejected', [
+                    'message' => $e->getMessage(),
+                    'bookings' => $bookings->pluck('reference')->all(),
+                ]);
+
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->with('error', 'El pago con tarjeta no pudo procesarse. Verifica los datos o inténtalo con otro método.');
+            }
+
+            $chargeId = $charge['id'] ?? null;
+
+            Booking::whereIn('id', $bookings->pluck('id'))->update([
+                'payment_status' => 'paid',
+                'status' => 'confirmed',
+                'payment_reference' => $chargeId,
+            ]);
+
+            // Reload so the notifier/email/session snapshot carry the final state.
+            $bookings = Booking::whereIn('id', $bookings->pluck('id'))->get();
+
+            $this->notifier->send($bookings, true, $customer['customer_email']);
+            $this->abandoned->markConverted(session()->getId(), $customer['customer_email']);
+            $this->cart->clear();
+
+            $request->session()->put('last_bookings', $bookings->toArray());
+
+            return redirect()->route('checkout.thanks', ['locale' => $locale]);
+
+        } finally {
+            optional($lock)->release();
         }
     }
 
@@ -263,9 +365,14 @@ class CheckoutController extends Controller
      * @param  array  $customer  Keys: customer_name, customer_email,
      *                           customer_phone, travel_date,
      *                           pickup_point, pickup_detail
-     * @param  string  $method  'paypal' | 'pay_later'
-     * @param  string|null  $paymentReference  PayPal capture ID (null for pay_later)
+     * @param  string  $method  'paypal' | 'pay_later' | 'culqi'
+     * @param  string|null  $paymentReference  PayPal capture ID / Culqi charge id (null while pending)
      * @param  bool  $paid  true = mark as paid & confirmed
+     * @param  bool  $notify  false skips the confirmation emails, abandoned-cart
+     *                        closing and cart clearing — used by chargeWithCulqi()
+     *                        to create the pending hold *before* attempting the
+     *                        charge, without prematurely telling the customer
+     *                        it succeeded or emptying their cart.
      * @return Collection<Booking>
      */
     private function finalizeBookings(
@@ -273,6 +380,7 @@ class CheckoutController extends Controller
         string $method,
         ?string $paymentReference,
         bool $paid,
+        bool $notify = true,
     ): Collection {
         $locale = app()->getLocale();
         $items = $this->cart->items();
@@ -336,14 +444,16 @@ class CheckoutController extends Controller
             'bookings' => $bookings->pluck('reference')->all(),
         ]);
 
-        // Send customer confirmation + internal admin notification (non-blocking).
-        // Shared with the Filament admin "create booking" flow via BookingNotifier.
-        $this->notifier->send($bookings, $paid, $customer['customer_email']);
+        if ($notify) {
+            // Send customer confirmation + internal admin notification (non-blocking).
+            // Shared with the Filament admin "create booking" flow via BookingNotifier.
+            $this->notifier->send($bookings, $paid, $customer['customer_email']);
 
-        // Cierra el carrito abandonado asociado (por sesión y/o email)
-        $this->abandoned->markConverted(session()->getId(), $customer['customer_email']);
+            // Cierra el carrito abandonado asociado (por sesión y/o email)
+            $this->abandoned->markConverted(session()->getId(), $customer['customer_email']);
 
-        $this->cart->clear();
+            $this->cart->clear();
+        }
 
         return $bookings;
     }

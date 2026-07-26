@@ -18,19 +18,24 @@ class TourFactory extends Factory
         $title = $this->faker->sentence(5);
 
         return [
-            'slug'         => Str::slug($title) . '-' . $this->faker->unique()->randomNumber(4),
-            'title_es'     => $title,
-            'title_en'     => $this->faker->sentence(5),
+            'slug' => Str::slug($title).'-'.$this->faker->unique()->randomNumber(4),
+            'title_es' => $title,
+            'title_en' => $this->faker->sentence(5),
             'description_es' => $this->faker->paragraph(),
-            'price'        => $this->faker->randomElement([65, 100, 120, 200, 300, 420]),
+            'price' => $this->faker->randomElement([65, 100, 120, 200, 300, 420]),
             'price_before' => null,
-            'duration'     => $this->faker->randomElement(['Full Day', '2 Días', '4 horas']),
-            'language'     => 'Español / Inglés',
-            'group_type'   => 'Grupal',
+            // Business is 100% PEN (soles) — the 26 real tours imported from
+            // WP all carry currency=PEN. The `currency` column's own DB
+            // default is still 'USD' (legacy), so tests that don't override
+            // it here would otherwise silently charge/store USD.
+            'currency' => 'PEN',
+            'duration' => $this->faker->randomElement(['Full Day', '2 Días', '4 horas']),
+            'language' => 'Español / Inglés',
+            'group_type' => 'Grupal',
             'is_published' => true,
-            'is_featured'  => false,
-            'order'        => 0,
-            'rating'       => $this->faker->randomFloat(1, 4.0, 5.0),
+            'is_featured' => false,
+            'order' => 0,
+            'rating' => $this->faker->randomFloat(1, 4.0, 5.0),
             'reviews_count' => $this->faker->numberBetween(0, 50),
         ];
     }

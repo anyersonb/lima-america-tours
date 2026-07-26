@@ -14,12 +14,24 @@ class ProcessPaymentRequest extends FormRequest
     /**
      * Normalize phone before validation: strip all spaces so both
      * "+51 999 888 777" and "+51999888777" and "999888777" are accepted.
+     *
+     * Also defaults `payment_timing` when the caller omits it: the live
+     * checkout/payment.blade.php form always sends it explicitly (bound to
+     * the Alpine `paymentTiming` radio), but a direct integration (or an
+     * older client) that only sends `culqi_token` clearly means "pay now".
+     * Absent both, it defaults to "later" (book now, pay after).
      */
     protected function prepareForValidation(): void
     {
         if ($this->has('customer_phone')) {
             $this->merge([
                 'customer_phone' => preg_replace('/\s+/', '', $this->input('customer_phone')),
+            ]);
+        }
+
+        if (! $this->filled('payment_timing')) {
+            $this->merge([
+                'payment_timing' => $this->filled('culqi_token') ? 'now' : 'later',
             ]);
         }
     }

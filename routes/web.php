@@ -95,11 +95,16 @@ Route::prefix('{locale}')
             ->middleware('throttle:checkout')
             ->name('checkout.process');
         Route::get('/checkout/gracias', [CheckoutController::class, 'thanks'])->name('checkout.thanks');
-        Route::post('/checkout/paypal/create', [CheckoutController::class, 'paypalCreateOrder'])
-            ->middleware('throttle:checkout')
+
+        // PayPal EN PAUSA pendiente de definición de moneda (ver docs/pagos/PLAN-PASARELAS.md §13.2).
+        // Reactivar cuando se resuelva la moneda. Los métodos del controller
+        // (paypalCreateOrder / paypalCaptureOrder) se conservan intactos —
+        // solo se desactivan las rutas para que un endpoint vivo no pueda
+        // crear/capturar órdenes en USD hardcodeado mientras el negocio cobra
+        // en soles (PEN) vía Culqi.
+        Route::match(['get', 'post'], '/checkout/paypal/create', fn () => abort(404))
             ->name('checkout.paypal.create');
-        Route::post('/checkout/paypal/capture', [CheckoutController::class, 'paypalCaptureOrder'])
-            ->middleware('throttle:checkout')
+        Route::match(['get', 'post'], '/checkout/paypal/capture', fn () => abort(404))
             ->name('checkout.paypal.capture');
 
         Route::get('/contacto', [ContactController::class, 'show'])->name('contact');
