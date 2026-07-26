@@ -52,4 +52,19 @@ class WpTourMapper
 
         return null;
     }
+
+    /**
+     * Extrae la anticipación mínima (en horas) para reservar desde la meta
+     * `agendar` del WordPress ("24", "24 Horas", "  12 ", "abc"). Devuelve
+     * null cuando no hay un entero al inicio del valor.
+     */
+    public static function advanceHours(?string $raw): ?int
+    {
+        $value = trim((string) $raw);
+        if ($value === '' || ! preg_match('/^(\d+)/', $value, $m)) {
+            return null;
+        }
+
+        return (int) $m[1];
+    }
 }

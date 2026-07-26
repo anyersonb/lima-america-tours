@@ -62,10 +62,17 @@ class TourResource extends Resource
                                     Forms\Components\TextInput::make('language')->label('Idiomas')->default('Español / Inglés'),
                                     Forms\Components\TextInput::make('group_type')->label('Tipo de grupo')->default('Grupal'),
                                 ]),
-                                Forms\Components\Grid::make(3)->schema([
+                                Forms\Components\Grid::make(4)->schema([
                                     Forms\Components\TextInput::make('departure_time')->label('Hora salida')->placeholder('05:00 AM'),
                                     Forms\Components\TextInput::make('return_time')->label('Hora retorno')->placeholder('10:30 PM'),
                                     Forms\Components\TextInput::make('max_capacity')->numeric()->label('Capacidad máxima'),
+                                    Forms\Components\TextInput::make('booking_advance_hours')
+                                        ->numeric()
+                                        ->minValue(0)
+                                        ->nullable()
+                                        ->suffix('horas')
+                                        ->label('Anticipación para reservar (horas)')
+                                        ->helperText('Horas mínimas de anticipación con las que el cliente debe reservar. Déjalo vacío si no aplica.'),
                                 ]),
                                 Forms\Components\Section::make('Precios y oferta')
                                     ->description('Configura el precio y, opcionalmente, activa una oferta especial.')

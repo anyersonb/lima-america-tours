@@ -342,6 +342,17 @@
     .lat-tot { font-family: $lat-font-serif; font-size: 1.7rem; font-weight: 700; color: $lat-red; }
 }
 
+// Aviso de anticipación mínima para reservar (tour.booking_advance_hours,
+// meta `agendar` importada del WordPress). Informativo, no es un error.
+.lat-book-advance {
+    display: flex; align-items: flex-start; gap: 9px;
+    background: $lat-surface-2; color: $lat-ink-soft;
+    border: 1px solid $lat-line; border-radius: 12px;
+    padding: 10px 13px; font-size: .82rem; line-height: 1.4;
+
+    svg { width: 16px; height: 16px; flex: none; margin-top: 1px; color: $lat-red; }
+}
+
 .lat-book-secure {
     display: flex; align-items: center; justify-content: center; gap: 8px; color: $lat-muted; font-size: .82rem;
 

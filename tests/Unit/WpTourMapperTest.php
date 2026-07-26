@@ -34,4 +34,20 @@ class WpTourMapperTest extends TestCase
         $this->assertNull(WpTourMapper::regionKeyFromLugar([]));
         $this->assertNull(WpTourMapper::regionKeyFromLugar(['Marte']));
     }
+
+    public function test_advance_hours_extracts_leading_integer(): void
+    {
+        $this->assertSame(24, WpTourMapper::advanceHours('24 Horas'));
+        $this->assertSame(24, WpTourMapper::advanceHours('24'));
+        $this->assertSame(12, WpTourMapper::advanceHours('  12 '));
+        $this->assertSame(18, WpTourMapper::advanceHours('18 horas'));
+        $this->assertSame(4, WpTourMapper::advanceHours('4'));
+    }
+
+    public function test_advance_hours_null_when_empty_or_non_numeric(): void
+    {
+        $this->assertNull(WpTourMapper::advanceHours(''));
+        $this->assertNull(WpTourMapper::advanceHours(null));
+        $this->assertNull(WpTourMapper::advanceHours('abc'));
+    }
 }

@@ -223,7 +223,7 @@
                         <div class="lat-dcard__foot">
                             <div class="lat-dcard__price">
                                 <small>{{ $L('Desde', 'From', 'Desde') }}</small>
-                                <span class="lat-amt">{{ $tour->currency ?? 'US$' }} {{ number_format((float) $tour->price, 0) }}</span>
+                                <span class="lat-amt">{{ \App\Support\Money::format($tour->price, $tour->currency) }}</span>
                             </div>
                             <a href="{{ route('tours.show', ['locale' => $locale, 'slug' => $tour->slug]) }}" class="lat-btn-out">{{ $L('Ver Detalles', 'View Details', 'Ver Detalhes') }}</a>
                         </div>
@@ -332,7 +332,10 @@
                                 @if ($offer->price)
                                     <div class="lat-dcard__price">
                                         <small>{{ $L('Desde', 'From', 'Desde') }}</small>
-                                        <span class="lat-amt">US$ {{ number_format((float) $offer->price, 0) }}</span>
+                                        {{-- Offer no siempre tiene tour_id (promos genéricas); el negocio
+                                             opera en soles (PEN), así que ese es el fallback razonable
+                                             cuando no hay tour vinculado del que heredar la moneda. --}}
+                                        <span class="lat-amt">{{ \App\Support\Money::format($offer->price, optional($offer->tour)->currency ?? 'PEN') }}</span>
                                     </div>
                                 @endif
                                 <a href="{{ $offerHref }}" class="lat-btn-out">{{ $offer->cta_label }}</a>

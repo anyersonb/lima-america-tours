@@ -69,10 +69,10 @@
                             <p class="text-sm">
                                 @if ($tour->price_before && $tour->price_before > $tour->price)
                                     <span class="text-[11px] tracking-[0.2em] uppercase text-lat-ink/60">{{ __('ui.before') }}</span>
-                                    <span class="font-price text-base text-lat-ink/60 line-through ml-1">${{ number_format((float) $tour->price_before, 0) }}</span>
+                                    <span class="font-price text-base text-lat-ink/60 line-through ml-1">{{ \App\Support\Money::format($tour->price_before, $tour->currency) }}</span>
                                     <span class="text-[11px] tracking-[0.2em] uppercase text-lat-ink/60 ml-2">{{ __('ui.now') }}</span>
                                 @endif
-                                <span class="font-price text-2xl text-lat-ink ml-1">${{ number_format((float) $tour->price, 0) }}</span>
+                                <span class="font-price text-2xl text-lat-ink ml-1">{{ \App\Support\Money::format($tour->price, $tour->currency) }}</span>
                             </p>
                             <a href="{{ route('tours.show', ['locale' => $locale, 'slug' => $tour->slug]) }}"
                                class="btn--primary btn--block mt-3">{{ __('ui.book_tour') }}</a>

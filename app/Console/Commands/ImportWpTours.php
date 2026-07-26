@@ -123,6 +123,7 @@ class ImportWpTours extends Command
                 'duration' => trim((string) ($meta['duracion'] ?? '')) ?: null,
                 'language' => $this->normalizeLanguages($meta['idiomas'] ?? ''),
                 'departure_time' => trim((string) ($meta['salidas'] ?? '')) ?: null,
+                'booking_advance_hours' => WpTourMapper::advanceHours($meta['agendar'] ?? null),
                 'cover_image' => $cover,
                 'gallery' => $gallery ?: null,
                 'seo_image' => $seoImg,
