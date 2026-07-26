@@ -37,9 +37,14 @@ class WpTourParser
     }
 
     /**
-     * Itinerario JetEngine: bloques <p><strong>HORA:</strong> Título</p>
-     * seguidos de párrafos de descripción. Devuelve [{time,title,description}].
-     * Si no hay patrón con <strong>, cae a un paso por párrafo/ítem.
+     * Itinerario JetEngine -> [{time,title,description}]. El HTML del WP no es
+     * uniforme entre tours:
+     *  - Unos usan <p><strong>3:00 AM:</strong> Título</p> + párrafos.
+     *  - Otros (multi-día) usan <h4> "Día N" y <b> (no <strong>) para la hora,
+     *    a veces partida en varios <b> seguidos.
+     * Por eso se capturan TODOS los bloques de contenido (p, li, h1-6) y se
+     * detecta la hora por patrón en el texto, no por la etiqueta. Objetivo:
+     * cero pérdida de contenido.
      */
     public static function parseItinerary(?string $html): array
     {
@@ -47,64 +52,87 @@ class WpTourParser
             return [];
         }
 
-        // Extrae bloques <p> y <li> en orden.
-        preg_match_all('#<(p|li)\b[^>]*>(.*?)</\1>#is', $html, $m, PREG_SET_ORDER);
-        $blocks = array_map(fn ($x) => $x[2], $m);
-
-        // Fallback: sin bloques, parte por saltos del texto plano.
+        preg_match_all('#<(p|li|h[1-6])\b[^>]*>(.*?)</\1>#is', $html, $m, PREG_SET_ORDER);
+        $blocks = [];
+        foreach ($m as $x) {
+            $blocks[] = ['tag' => Str::lower($x[1]), 'html' => $x[2]];
+        }
+        // Fallback: sin bloques reconocibles, parte por líneas del texto plano.
         if (empty($blocks)) {
-            $blocks = array_filter(array_map('trim', explode("\n", self::htmlToText($html))));
+            foreach (array_filter(array_map('trim', explode("\n", self::htmlToText($html)))) as $l) {
+                $blocks[] = ['tag' => 'p', 'html' => $l];
+            }
         }
 
         $steps = [];
-        $current = null;
-        $hasStrongPattern = false;
+        $cur = null;
+        $flush = function () use (&$steps, &$cur) {
+            if ($cur === null) {
+                return;
+            }
+            $step = [
+                'time' => trim($cur['time']),
+                'title' => trim($cur['title']),
+                'description' => trim(implode("\n", $cur['desc'])),
+            ];
+            if ($step['time'] !== '' || $step['title'] !== '' || $step['description'] !== '') {
+                $steps[] = $step;
+            }
+            $cur = null;
+        };
 
-        foreach ($blocks as $block) {
-            // ¿Empieza con <strong>...</strong> (la "hora/etiqueta" del paso)?
-            if (preg_match('#<strong>(.*?)</strong>(.*)#is', $block, $sm)) {
-                $hasStrongPattern = true;
-                if ($current) {
-                    $steps[] = self::finishStep($current);
-                }
-                $label = self::dec(strip_tags($sm[1]));
-                $rest = self::dec(strip_tags($sm[2]));
-                // "3:00 AM:" -> time; el resto -> title. Si la etiqueta no parece
-                // hora, se usa como título.
-                $label = rtrim($label, ": \t");
-                $isTime = (bool) preg_match('/\d/', $label) && Str::length($label) <= 20;
-                $current = [
-                    'time' => $isTime ? $label : '',
-                    'title' => $isTime ? $rest : trim($label.' '.$rest),
-                    'desc' => [],
-                ];
-            } else {
-                $text = self::dec(strip_tags($block));
-                if ($text === '') {
-                    continue;
-                }
-                if ($current) {
-                    $current['desc'][] = $text;
+        foreach ($blocks as $b) {
+            $text = self::dec(strip_tags($b['html']));
+            if ($text === '') {
+                continue;
+            }
+
+            // ¿Arranca con una hora? (3:00 AM / 8:00 am / 11:00) — venga en
+            // <strong>, <b> o sin etiqueta.
+            if (preg_match('/^\s*(\d{1,2}[:.]\d{2})\s*(a\.?\s*m\.?|p\.?\s*m\.?)?\s*[:\-\x{2013}]?\s*(.*)$/isu', $text, $mm)) {
+                $flush();
+                $ampm = strtoupper(preg_replace('/[.\s]/', '', $mm[2] ?? ''));
+                $time = trim($mm[1].($ampm ? ' '.$ampm : ''));
+                $rest = trim($mm[3]);
+                // Separa título / descripción en el primer ":".
+                if (str_contains($rest, ':')) {
+                    [$title, $desc] = array_map('trim', explode(':', $rest, 2));
                 } else {
-                    // Párrafo suelto antes de cualquier hora: paso sin hora.
-                    $current = ['time' => '', 'title' => $text, 'desc' => []];
+                    $title = $rest;
+                    $desc = '';
+                }
+                $cur = ['time' => $time, 'title' => $title, 'desc' => $desc !== '' ? [$desc] : []];
+            } elseif (self::looksLikeLabel($b, $text)) {
+                // Encabezado corto ("Día 1") o bloque en negrita corto sin hora.
+                $flush();
+                $cur = ['time' => '', 'title' => $text, 'desc' => []];
+            } else {
+                // Párrafo de descripción del paso actual (o intro sin paso).
+                if ($cur) {
+                    $cur['desc'][] = $text;
+                } else {
+                    $cur = ['time' => '', 'title' => '', 'desc' => [$text]];
                 }
             }
         }
-        if ($current) {
-            $steps[] = self::finishStep($current);
-        }
-
-        // Sin patrón de horas: cada bloque es un paso-título simple.
-        if (! $hasStrongPattern) {
-            $steps = array_values(array_filter(array_map(function ($b) {
-                $text = self::dec(strip_tags($b));
-
-                return $text === '' ? null : ['time' => '', 'title' => $text, 'description' => ''];
-            }, $blocks)));
-        }
+        $flush();
 
         return $steps;
+    }
+
+    /** ¿El bloque es un rótulo (encabezado corto o negrita corta sin hora)? */
+    private static function looksLikeLabel(array $b, string $text): bool
+    {
+        $short = mb_strlen($text) <= 60;
+        if ($short && preg_match('/^h[1-6]$/', $b['tag'])) {
+            return true;
+        }
+        // Bloque que es enteramente <strong>/<b> y corto (p.ej. "<p><b>Día 2</b></p>").
+        if ($short && preg_match('#^\s*(<(strong|b)>.*?</(strong|b)>\s*)+$#is', trim($b['html']))) {
+            return true;
+        }
+
+        return false;
     }
 
     /** Decodifica entidades, normaliza &nbsp;/zero-width y recorta. */
@@ -114,15 +142,6 @@ class WpTourParser
         $s = str_replace(["\xc2\xa0", "\xe2\x80\x8b"], ' ', $s);
 
         return trim(preg_replace('/[ \t]+/', ' ', $s));
-    }
-
-    private static function finishStep(array $s): array
-    {
-        return [
-            'time' => $s['time'],
-            'title' => $s['title'],
-            'description' => trim(implode("\n", $s['desc'])),
-        ];
     }
 
     /**

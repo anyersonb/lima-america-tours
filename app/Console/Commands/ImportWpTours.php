@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Category;
 use App\Models\Region;
 use App\Models\Tour;
+use App\Support\WpTourMapper;
 use App\Support\WpTourParser;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
@@ -98,9 +99,17 @@ class ImportWpTours extends Command
                 $notes[] = 'Pasajeros mínimos: '.trim(strip_tags((string) $meta['pasajeros-minimos']));
             }
 
+            // Región: prioriza la TAXONOMÍA `lugar` de WP (dato real); si no
+            // hay término conocido, cae a la inferencia por título.
+            $lugarTerms = $w['taxonomies']['lugar'] ?? [];
+            $regionKey = WpTourMapper::regionKeyFromLugar($lugarTerms);
+            $regionId = $regionKey ? ($regions[$regionKey] ?? null)
+                : $this->inferRegion($meta['lugar'] ?? '', $w['title'], $regions);
+
             $attrs = [
-                'region_id' => $this->inferRegion($meta['lugar'] ?? '', $w['title'], $regions),
+                'region_id' => $regionId,
                 'category_id' => $this->inferCategory($w['title'], $categories),
+                'is_featured' => WpTourMapper::isFeatured($w['taxonomies']['viaje-destacado'] ?? []),
                 'title_es' => $w['title'],
                 'subtitle_es' => Str::limit(WpTourParser::htmlToText($meta['frase-inicial'] ?? ''), 250, ''),
                 'description_es' => WpTourParser::htmlToText($meta['acerca-del-tour'] ?? ''),
@@ -145,9 +154,11 @@ class ImportWpTours extends Command
         // Despublicar tours demo previos (los que no vinieron del WP) ------
         $demoUnpublished = 0;
         if (! $dry && ! $this->option('keep-demo')) {
+            // Los tours demo previos (no vinieron del WP): despublicar y quitar
+            // destacado para que no contaminen el home ni el conteo de featured.
             $demoUnpublished = Tour::whereNotIn('slug', $imported)
-                ->where('is_published', true)
-                ->update(['is_published' => false]);
+                ->where(fn ($q) => $q->where('is_published', true)->orWhere('is_featured', true))
+                ->update(['is_published' => false, 'is_featured' => false]);
         }
 
         $this->newLine();

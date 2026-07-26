@@ -355,6 +355,27 @@ Diseñar sin decidir:
 
 ---
 
+### 13. 🚩 BLOQUEO DE MONEDA — PayPal NO admite PEN (2026-07-26)
+
+Al traer la data real, se confirmó que **los precios de los tours están en soles (PEN)**. Verificado contra la **documentación oficial de PayPal** (`developer.paypal.com/api/rest/reference/currency-codes/`): la lista de monedas soportadas es AUD, BRL, CAD, CNY, CZK, DKK, EUR, HKD, HUF, ILS, JPY, MYR, MXN, TWD, NZD, NOK, PHP, PLN, GBP, RUB, SGD, SEK, CHF, THB, USD. **PEN no aparece.** PayPal **no puede cobrar en soles.**
+
+- **Culqi en PEN: SÍ funciona** (procesa soles nativamente).
+- **PayPal: NO puede** cobrar en PEN. Solo cobraría en una moneda soportada (p.ej. USD).
+
+**Impacto en el checkout completo** (por eso es un bloqueo, no un detalle):
+1. **Conversión:** si se quiere PayPal, hay que fijar precio en USD o convertir PEN→USD a una tasa (y decidir quién asume la diferencia de tipo de cambio).
+2. **Monto mostrado:** hoy el front **hardcodea el símbolo `$`** (`resources/views/tours/show.blade.php` líneas ~356/399: `${{ number_format($tour->price) }}` y `{{ $tour->currency ?: 'USD' }} $...`). Con precios en PEN, muestra "**$360**" (parece dólares) y "**PEN $720**" (incoherente). **Bug de presentación a corregir sí o sí.**
+3. **Conciliación:** si Culqi cobra en PEN y PayPal en USD, los montos y reportes quedan en dos monedas → conciliación doble.
+
+**Opciones (decide Anyerson — hay conflicto de costo):**
+- **A) Culqi-only en soles.** El sitio cobra en PEN por Culqi; se retira PayPal (o se deja solo para extranjeros, en USD aparte). Más simple, coherente con el mercado local. *Costo: se pierde PayPal como opción general.*
+- **B) Doble moneda.** Culqi cobra en PEN; PayPal cobra el equivalente en USD con tasa configurable. *Costo: complejidad de conversión, conciliación en dos monedas, riesgo de tipo de cambio.*
+- **C) Todo en USD.** Se re-tarifan los 26 tours en dólares; ambas pasarelas cobran USD. *Costo: cambia el precio percibido por el cliente peruano.*
+
+**Estado:** hasta que Anyerson decida, la **moneda del checkout queda sin cerrar**. La data se importó con `currency = 'PEN'` (valor real). El guarda anti-cobro-real y la Fase 0 no se ven afectados; esto es de Fase 2 (cobro en vivo).
+
+---
+
 ### Anexo — Archivos críticos para la implementación
 - `app/Http/Controllers/CheckoutController.php`
 - `app/Http/Controllers/WebhookController.php`
