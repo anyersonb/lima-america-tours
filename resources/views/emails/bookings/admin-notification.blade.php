@@ -2,8 +2,8 @@
     $first      = $bookings->first();
     $payingNow  = ($paymentTiming === 'now') || ($first?->payment_status === 'paid');
     $grandTotal = (float) $bookings->sum('total_price');
-    $currency   = $first?->currency ?? 'USD';
-    $cur        = $currency === 'USD' ? 'US$' : $currency . ' ';
+    $currency   = $first?->currency ?? 'PEN';
+    $cur        = \App\Support\Money::prefix($currency);
     $payLabel   = $payingNow ? 'Pago inmediato (PayPal)' : 'Reservar y pagar después';
     $wa         = preg_replace('/\D/', '', $first?->customer_phone ?? '');
     $adminUrl   = rtrim(config('app.url'), '/') . '/admin/bookings';

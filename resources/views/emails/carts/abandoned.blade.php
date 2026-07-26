@@ -6,7 +6,9 @@
     };
 
     $items    = collect($cart->items ?? []);
-    $currency = 'US$';
+    // El negocio es 100% PEN; el snapshot del carrito abandonado no guarda
+    // moneda por ítem, así que se usa el prefijo de soles directamente.
+    $currency = \App\Support\Money::prefix('PEN');
     $total    = (float) $cart->total;
 
     $contactPhone = \App\Models\Setting::get('contact_phone') ?: '+51 925 886 725';

@@ -76,8 +76,7 @@
                         </div>
                         <div class="text-right shrink-0">
                             <p class="font-price text-2xl text-lat-ink leading-none">
-                                ${{ number_format($booking['total_price'], 2) }}
-                                <span class="text-[10px] uppercase tracking-[0.15em] text-lat-ink/55 font-sans block mt-1">{{ $booking['currency'] ?? 'USD' }}</span>
+                                {{ \App\Support\Money::format($booking['total_price'], $booking['currency'] ?? 'PEN', 2) }}
                             </p>
                         </div>
                     </div>

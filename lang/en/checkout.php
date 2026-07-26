@@ -36,7 +36,7 @@ return [
     'order_summary' => 'Order summary',
     'other_details' => 'Other details',
     'pay_button' => 'Pay by card',
-    'pay_later_desc' => 'No extra charges. You will be charged $:amount USD on :date.',
+    'pay_later_desc' => 'No extra charges. You will be charged :amount on :date.',
     'pay_now' => 'Pay now',
     'pay_now_desc' => 'Confirm your booking instantly by card.',
     'pay_with' => 'Pay with',

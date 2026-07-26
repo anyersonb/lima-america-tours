@@ -36,7 +36,7 @@ return [
     'order_summary' => 'Resumen del pedido',
     'other_details' => 'Otros detalles',
     'pay_button' => 'Pagar con tarjeta',
-    'pay_later_desc' => 'Sin cargos adicionales. Se te cobrará $:amount USD el :date.',
+    'pay_later_desc' => 'Sin cargos adicionales. Se te cobrará :amount el :date.',
     'pay_now' => 'Pagar ahora',
     'pay_now_desc' => 'Confirma tu reserva al instante con tarjeta.',
     'pay_with' => 'Pagar con',

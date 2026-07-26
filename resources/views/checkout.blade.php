@@ -883,13 +883,13 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
                                             <div class="cart-price-box">
                                                 @if ($hasDiscount)
                                                     <div class="cart-price-tag">{{ __('ui.price_before') }}</div>
-                                                    <div class="cart-price-before" data-item-before>US${{ number_format($beforeTotal, 0) }}</div>
+                                                    <div class="cart-price-before" data-item-before>{{ \App\Support\Money::format($beforeTotal, 'PEN', 0) }}</div>
                                                     <div class="cart-price-tag">{{ __('ui.price_now') }}</div>
-                                                    <div class="cart-price-now" data-item-now>US${{ number_format($item['subtotal'], 0) }}</div>
-                                                    <div class="cart-price-saved" data-item-saved>{{ __('ui.saving') }} US${{ number_format($savedTotal, 0) }}</div>
+                                                    <div class="cart-price-now" data-item-now>{{ \App\Support\Money::format($item['subtotal'], 'PEN', 0) }}</div>
+                                                    <div class="cart-price-saved" data-item-saved>{{ __('ui.saving') }} {{ \App\Support\Money::format($savedTotal, 'PEN', 0) }}</div>
                                                 @else
                                                     <div class="cart-price-tag">{{ __('ui.regular_price') }}</div>
-                                                    <div class="cart-price-regular" data-item-regular>US${{ number_format($item['subtotal'], 0) }}</div>
+                                                    <div class="cart-price-regular" data-item-regular>{{ \App\Support\Money::format($item['subtotal'], 'PEN', 0) }}</div>
                                                 @endif
                                                 <button type="button"
                                                         class="cart-remove-btn"
@@ -1018,7 +1018,7 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
                                                 <div class="cart-more-tag">{{ $relTour->region->name_es }}</div>
                                             @endif
                                             <h4>{{ $relTour->title }}</h4>
-                                            <div class="cart-more-price">US${{ number_format($relTour->price, 0) }}</div>
+                                            <div class="cart-more-price">{{ \App\Support\Money::format($relTour->price, $relTour->currency ?: 'PEN', 0) }}</div>
                                             <div class="mt-auto">
                                                 <a href="{{ route('tours.show', ['locale' => $locale, 'slug' => $relTour->slug]) }}"
                                                    class="cart-add-btn" data-add-tour>
@@ -1049,7 +1049,7 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
                                             {{ \Illuminate\Support\Str::limit($item['title_snapshot'], 38) }}
                                             <span class="cart-aside-item-sub" data-aside-pax>x {{ $item['quantity'] }} {{ __('ui.persons') }}</span>
                                         </div>
-                                        <span class="cart-aside-item-price" data-aside-price>US${{ number_format($item['subtotal'], 0) }}</span>
+                                        <span class="cart-aside-item-price" data-aside-price>{{ \App\Support\Money::format($item['subtotal'], 'PEN', 0) }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -1068,29 +1068,28 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
                                 @if ($asPromo > 0)
                                     <div class="cart-aside-row">
                                         <dt class="cart-aside-label">{{ __('ui.regular_price') }}</dt>
-                                        <dd class="cart-aside-value" data-aside-before><s>US${{ number_format($asBefore, 0) }}</s></dd>
+                                        <dd class="cart-aside-value" data-aside-before><s>{{ \App\Support\Money::format($asBefore, 'PEN', 0) }}</s></dd>
                                     </div>
                                     <div class="cart-aside-row">
                                         <dt class="cart-aside-label">{{ __('ui.promo_discount') }}</dt>
-                                        <dd class="cart-aside-value ok" data-aside-promo>−US${{ number_format($asPromo, 0) }}</dd>
+                                        <dd class="cart-aside-value ok" data-aside-promo>−{{ \App\Support\Money::format($asPromo, 'PEN', 0) }}</dd>
                                     </div>
                                 @endif
                                 <div class="cart-aside-row">
                                     <dt class="cart-aside-label">{{ __('checkout.subtotal') }} ({{ $items->count() }} {{ $items->count() === 1 ? 'tour' : 'tours' }})</dt>
-                                    <dd class="cart-aside-value" data-aside-subtotal>US${{ number_format($subtotal, 0) }}</dd>
+                                    <dd class="cart-aside-value" data-aside-subtotal>{{ \App\Support\Money::format($subtotal, 'PEN', 0) }}</dd>
                                 </div>
                                 @if ($discount > 0)
                                     <div class="cart-aside-row">
                                         <dt class="cart-aside-label">{{ __('checkout.coupon_code') }}{{ $couponCode ? ' (' . $couponCode . ')' : '' }}</dt>
-                                        <dd class="cart-aside-value ok" data-aside-discount>−US${{ number_format($discount, 0) }}</dd>
+                                        <dd class="cart-aside-value ok" data-aside-discount>−{{ \App\Support\Money::format($discount, 'PEN', 0) }}</dd>
                                     </div>
                                 @endif
                             </dl>
                             <div class="cart-aside-total">
                                 <span class="cart-aside-total-label">{{ __('checkout.total') }}</span>
                                 <span>
-                                    <span class="cart-aside-total-price" data-aside-total>US${{ number_format($total, 0) }}</span>
-                                    <span class="cart-aside-total-usd">USD</span>
+                                    <span class="cart-aside-total-price" data-aside-total>{{ \App\Support\Money::format($total, 'PEN', 0) }}</span>
                                 </span>
                             </div>
                             <button type="button" class="cart-step-btn primary cart-aside-cta" data-step-next>
@@ -1300,7 +1299,7 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
                                             <p class="lat-checkout-item__title">{{ $item['title_snapshot'] }}</p>
                                             <span class="lat-checkout-item__meta">{{ $L('Fecha por confirmar', 'Date to be confirmed', 'Data a confirmar') }} @if($item['duration'] ?? null) &middot; {{ $item['duration'] }} @endif</span>
                                         </div>
-                                        <div class="lat-checkout-item__price">US${{ number_format($item['unit_price'], 0) }}</div>
+                                        <div class="lat-checkout-item__price">{{ \App\Support\Money::format($item['unit_price'], 'PEN', 0) }}</div>
                                     </div>
                                 @endforeach
 
@@ -1308,14 +1307,14 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
                                     @php $paxD = $item['adults'] + $item['children']; @endphp
                                     <div class="lat-checkout-row">
                                         <span>{{ \Illuminate\Support\Str::limit($item['title_snapshot'], 42) }} × {{ $paxD }} pax</span>
-                                        <b>US${{ number_format($item['subtotal'], 2) }}</b>
+                                        <b>{{ \App\Support\Money::format($item['subtotal'], 'PEN', 2) }}</b>
                                     </div>
                                 @endforeach
 
                                 @if ($discount > 0)
                                     <div class="lat-checkout-row">
                                         <span>{{ __('checkout.discount') }}{{ $couponCode ? ' (' . $couponCode . ')' : '' }}</span>
-                                        <b>−US${{ number_format($discount, 2) }}</b>
+                                        <b>−{{ \App\Support\Money::format($discount, 'PEN', 2) }}</b>
                                     </div>
                                 @endif
 
@@ -1328,7 +1327,7 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
 
                                 <div class="lat-checkout-total">
                                     <span>{{ __('checkout.total') }}</span>
-                                    <b data-total="usd2">USD ${{ number_format($total, 2) }}</b>
+                                    <b data-total="usd2">{{ \App\Support\Money::format($total, 'PEN', 2) }}</b>
                                 </div>
 
                                 <div class="lat-checkout-notice">
@@ -1414,7 +1413,7 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
                     <div class="cart-summary-row"><span>{{ __('ui.paid_bookings') }}</span><b>0 tours</b></div>
                     <div class="cart-summary-row"><span>{{ __('ui.payment_method') }}</span><b>—</b></div>
                     <div class="cart-summary-row"><span>{{ __('ui.status') }}</span><b>{{ __('customer.status_pending') }}</b></div>
-                    <div class="cart-summary-row cart-total-row"><span>{{ __('ui.total_paid') }}</span><b>US$0</b></div>
+                    <div class="cart-summary-row cart-total-row"><span>{{ __('ui.total_paid') }}</span><b>{{ \App\Support\Money::format(0, 'PEN', 0) }}</b></div>
                 </div>
             </div>
         </div>{{-- /screen reservas --}}
@@ -1432,7 +1431,7 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
     <div class="cart-sticky-inner">
         <div>
             <div class="cart-total-label">{{ __('checkout.total') }}</div>
-            <div class="cart-total-price" data-total>US${{ number_format($total, 0) }}</div>
+            <div class="cart-total-price" data-total>{{ \App\Support\Money::format($total, 'PEN', 0) }}</div>
         </div>
         <button type="button"
                 class="cart-cta-btn"
@@ -1456,6 +1455,9 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
     const locale  = '{{ $locale }}';
     const cartBase = @json(route('cart.index', ['locale' => $locale]));
     const toursUrl = @json(route('tours.index', ['locale' => $locale]));
+    // Prefijo de moneda inyectado desde el backend (mismo patrón que tours/show.blade.php)
+    // para no volver a hardcodear el símbolo de dólar en el total dinámico.
+    const moneyPrefix = @json(\App\Support\Money::prefix('PEN'));
 
     // ── Estado en memoria ───────────────────────────────────────
     const cartState = new Map();
@@ -1504,8 +1506,8 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
         });
         return b;
     }
-    function fmt(v) { return 'US$' + Math.round(v); }
-    function fmtUsd2(v) { return 'USD $' + v.toFixed(2); }
+    function fmt(v) { return moneyPrefix + Math.round(v); }
+    function fmtUsd2(v) { return moneyPrefix + v.toFixed(2); }
     function updateTotalUI() {
         const sub    = calcSubtotal();
         const before = calcBeforeTotal();

@@ -31,7 +31,7 @@
                 "name": "Lima América Tours",
                 "logo": {
                     "@type": "ImageObject",
-                    "url": "{{ asset('assets/logos/logo.png') }}"
+                    "url": "{{ asset('assets/logos/logo-america-original.webp') }}"
                 }
             },
             "mainEntityOfPage": {

@@ -6,8 +6,6 @@
     $firstTravelDate = optional(collect($items)->first())['travel_date'] ?? now()->addDays(7)->toDateString();
     $cancelDeadline = \Carbon\Carbon::parse($firstTravelDate)->subDay()->setTime(9, 0);
     $isPast = $cancelDeadline->isPast();
-
-    $totalPen = round($total * 3.70, 2); // USD → PEN aprox para mostrar como Viator
 @endphp
 
 @section('title', __('checkout.title') . ' — ' . __('seo.site_name'))
@@ -212,7 +210,7 @@
                                     <p class="font-semibold text-teal-800 text-sm">{{ __('checkout.pay_now') }}</p>
                                     <p class="text-xs text-teal-800/65 mt-0.5">{{ __('checkout.pay_now_desc') }}</p>
                                 </div>
-                                <span class="font-price text-lg text-teal-800 whitespace-nowrap">${{ number_format($total, 2) }} <span class="text-xs text-teal-800/55">USD</span></span>
+                                <span class="font-price text-lg text-teal-800 whitespace-nowrap">{{ \App\Support\Money::format($total, 'PEN', 2) }}</span>
                             </label>
 
                             <label class="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
@@ -221,9 +219,9 @@
                                        class="mt-1 text-orange-500 focus:ring-orange-400">
                                 <div class="flex-1">
                                     <p class="font-semibold text-teal-800 text-sm">{{ __('checkout.book_now_pay_later') }}</p>
-                                    <p class="text-xs text-teal-800/65 mt-0.5">{{ __('checkout.pay_later_desc', ['amount' => number_format($total, 2), 'date' => $cancelDeadline->locale($locale)->isoFormat('D [de] MMM')]) }}</p>
+                                    <p class="text-xs text-teal-800/65 mt-0.5">{{ __('checkout.pay_later_desc', ['amount' => \App\Support\Money::format($total, 'PEN', 2), 'date' => $cancelDeadline->locale($locale)->isoFormat('D [de] MMM')]) }}</p>
                                 </div>
-                                <span class="font-price text-lg text-state-success whitespace-nowrap">$0,00 <span class="text-xs text-teal-800/55">{{ __('checkout.now') }}</span></span>
+                                <span class="font-price text-lg text-state-success whitespace-nowrap">{{ \App\Support\Money::format(0, 'PEN', 2) }} <span class="text-xs text-teal-800/55">{{ __('checkout.now') }}</span></span>
                             </label>
                         </div>
                     </div>
@@ -272,7 +270,7 @@
                         <button type="button"
                                 id="btn-culqi-open"
                                 class="btn--primary btn--block mt-5 text-base py-4">
-                            <span x-show="paymentTiming === 'now'">{{ __('checkout.pay_now') }} — ${{ number_format($total, 2) }} USD</span>
+                            <span x-show="paymentTiming === 'now'">{{ __('checkout.pay_now') }} — {{ \App\Support\Money::format($total, 'PEN', 2) }}</span>
                             <span x-show="paymentTiming === 'later'">{{ __('checkout.book_now_pay_later') }}</span>
                         </button>
 
@@ -298,7 +296,7 @@
                                     {{ \Carbon\Carbon::parse($item['travel_date'])->format('d M Y') }}
                                 </span>
                             </span>
-                            <span class="font-semibold whitespace-nowrap">${{ number_format($item['subtotal'], 2) }}</span>
+                            <span class="font-semibold whitespace-nowrap">{{ \App\Support\Money::format($item['subtotal'], 'PEN', 2) }}</span>
                         </li>
                     @endforeach
                 </ul>
@@ -306,12 +304,12 @@
                 <dl class="mt-5 space-y-3 text-sm">
                     <div class="flex justify-between">
                         <dt class="text-teal-800/70">{{ __('checkout.subtotal') }}</dt>
-                        <dd class="font-semibold text-teal-800">${{ number_format($subtotal, 2) }}</dd>
+                        <dd class="font-semibold text-teal-800">{{ \App\Support\Money::format($subtotal, 'PEN', 2) }}</dd>
                     </div>
                     @if ($discount > 0)
                         <div class="flex justify-between">
                             <dt class="text-teal-800/70">{{ __('checkout.discount') }}{{ $couponCode ? ' (' . $couponCode . ')' : '' }}</dt>
-                            <dd class="font-semibold text-state-success">−${{ number_format($discount, 2) }}</dd>
+                            <dd class="font-semibold text-state-success">−{{ \App\Support\Money::format($discount, 'PEN', 2) }}</dd>
                         </div>
                     @endif
                 </dl>
@@ -319,7 +317,7 @@
                 <div class="mt-5 pt-5 border-t border-teal-800/10 flex justify-between items-baseline">
                     <span class="text-sm uppercase tracking-wide text-teal-800/70 font-semibold">{{ __('checkout.total') }}</span>
                     <span class="font-price text-3xl text-teal-800">
-                        ${{ number_format($total, 2) }}<span class="text-xs text-teal-800/55 ml-1">USD</span>
+                        {{ \App\Support\Money::format($total, 'PEN', 2) }}
                     </span>
                 </div>
 
@@ -341,7 +339,7 @@
 
     Culqi.settings({
         title:    'Lima América Tours',
-        currency: 'USD',
+        currency: 'PEN',
         amount:   {{ $total_centavos }},
         order:    '',
     });

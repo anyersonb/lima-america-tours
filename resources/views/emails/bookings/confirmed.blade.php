@@ -8,8 +8,8 @@
     $first      = $bookings->first();
     $payingNow  = ($first?->payment_status === 'paid');
     $grandTotal = (float) $bookings->sum('total_price');
-    $currency   = $first?->currency ?? 'USD';
-    $cur        = $currency === 'USD' ? 'US$' : $currency . ' ';
+    $currency   = $first?->currency ?? 'PEN';
+    $cur        = \App\Support\Money::prefix($currency);
     $contactPhone = \App\Models\Setting::get('contact_phone') ?: '+51 925 886 725';
     $wa  = preg_replace('/\D/', '', \App\Models\Setting::get('whatsapp') ?: $contactPhone);
     $contactEmail = \App\Models\Setting::get('contact_email') ?: 'reservas@limaamericatours.com';

@@ -116,7 +116,7 @@
         'offers' => array_filter([
             '@type'         => 'Offer',
             'price'         => (float) $tour->price,
-            'priceCurrency' => $tour->currency ?: 'USD',
+            'priceCurrency' => $tour->currency ?: 'PEN',
             'availability'  => 'https://schema.org/InStock',
             'url'           => $canonicalUrl,
         ]),

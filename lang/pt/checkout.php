@@ -36,7 +36,7 @@ return [
     'order_summary' => 'Resumo do pedido',
     'other_details' => 'Outros detalhes',
     'pay_button' => 'Pagar com cartão',
-    'pay_later_desc' => 'Sem custos adicionais. Você será cobrado $:amount USD em :date.',
+    'pay_later_desc' => 'Sem custos adicionais. Você será cobrado :amount em :date.',
     'pay_now' => 'Pagar agora',
     'pay_now_desc' => 'Confirme sua reserva instantaneamente com cartão.',
     'pay_with' => 'Pagar com',
