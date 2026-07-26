@@ -46,7 +46,7 @@
     @media (max-width: 620px) { display: none; }
 }
 
-// ── Header shell (sticky, blanco sólido) ──────────────────────────────
+// ── Header shell (sticky, ink oscuro — un solo bloque con el topbar) ──
 .lat-header-shell {
     position: sticky;
     top: 0;
@@ -55,8 +55,11 @@
     // dentro de ese contexto y el FAB global de WhatsApp (z-index:9000, fuera del
     // header) terminaría pintándose por encima del drawer al abrir el menú móvil.
     z-index: 9200;
-    background: $lat-surface;
-    box-shadow: 0 1px 0 $lat-line, 0 6px 22px rgba(0, 0, 0, .06);
+    background: $lat-ink;
+    // Línea sutil que separa del topbar (mismo tono) cuando ambos están visibles,
+    // y da un remate elegante propio cuando el topbar se oculta al hacer scroll.
+    border-top: 1px solid rgba(255, 255, 255, .08);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .28);
 }
 
 .lat-navbar {
@@ -71,51 +74,67 @@
     @media (max-width: 640px) { padding: 10px 16px; }
 }
 
-// ── Brand (plate ink + logo original) ───────────────────────────────────
+// ── Brand (logo original blanco, directo sobre el header oscuro) ───────
 // Nota rebrand: el logo original del cliente (logo-america-original.webp)
 // viene en variante monocromo blanco (artwork blanco sobre transparente,
-// sin versión a color entregada) — invisible sobre el header blanco. En
-// vez de un chip rojo a sangre (versión anterior), se usa una placa ink
-// (mismo tono que el topbar) del tamaño justo del logo para darle
-// contraste sin reintroducir rojo en el header.
+// sin versión a color entregada). Con el header ahora en ink oscuro no
+// hace falta ninguna placa/caja detrás: el logo blanco queda legible y
+// limpio directamente sobre el fondo del header.
 .lat-brand {
     display: flex;
     align-items: center;
-    background: $lat-ink;
-    padding: 8px 16px;
-    border-radius: 14px;
     flex: none;
-    transition: transform .15s ease, background .15s ease;
+    padding: 2px 0;
+    transition: opacity .15s ease, transform .15s ease;
 
-    &:hover { background: $lat-ink-soft; transform: translateY(-1px); }
+    &:hover { opacity: .85; }
+    &:focus-visible { outline: 2px solid #fff; outline-offset: 4px; border-radius: 4px; }
 
     img {
         display: block;
-        height: 40px;
+        height: 42px;
         width: auto;
 
-        @media (max-width: 640px) { height: 32px; }
+        @media (max-width: 640px) { height: 34px; }
     }
 }
 
-// ── Navegación horizontal ──────────────────────────────────────────────
+// ── Navegación horizontal (texto claro sobre ink, acento rojo) ─────────
 .lat-nav-links {
     display: flex;
     align-items: center;
     gap: 2px;
 
     a {
+        position: relative;
         font-family: $lat-font-sans;
         font-size: .92rem;
         font-weight: 500;
-        color: $lat-ink-soft;
+        color: rgba(255, 255, 255, .72);
         padding: 9px 14px;
         border-radius: $lat-r-pill;
         transition: color .2s, background .2s;
         white-space: nowrap;
 
-        &:hover { color: $lat-red; background: $lat-surface-2; }
-        &.is-active { color: $lat-red; }
+        &:hover { color: #fff; background: rgba(255, 255, 255, .08); }
+
+        // Ítem activo: texto blanco + punto rojo como único acento de color.
+        &.is-active {
+            color: #fff;
+            font-weight: 600;
+
+            &::after {
+                content: "";
+                position: absolute;
+                left: 50%;
+                bottom: 3px;
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                background: $lat-red;
+                transform: translateX(-50%);
+            }
+        }
     }
 
     @media (max-width: 1040px) { display: none; }
@@ -134,17 +153,21 @@
     font-size: .9rem;
     padding: 11px 20px;
     border-radius: $lat-r-pill;
-    background: $lat-ink;
-    color: #fff;
+    background: #fff;
+    color: $lat-ink;
     white-space: nowrap;
-    transition: background .2s, transform .2s, box-shadow .2s;
+    transition: background .2s, color .2s, transform .2s, box-shadow .2s;
 
-    // Botón primario del header en ink; el rojo queda solo como acento de hover.
+    // Blanco sólido, elegante y de máximo contraste sobre el header ink;
+    // el rojo aparece solo como detalle en el hover.
     &:hover {
         background: $lat-red;
+        color: #fff;
         transform: translateY(-2px);
-        box-shadow: 0 10px 24px rgba(203, 16, 30, .3);
+        box-shadow: 0 10px 24px rgba(203, 16, 30, .35);
     }
+
+    &:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
     @media (max-width: 520px) { padding: 10px 14px; font-size: .85rem; }
 }
@@ -154,16 +177,17 @@
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    border: 1px solid $lat-line-strong;
+    border: 1px solid rgba(255, 255, 255, .28);
     background: transparent;
-    color: $lat-ink;
+    color: #fff;
     cursor: pointer;
     flex: none;
     align-items: center;
     justify-content: center;
     transition: background .2s, border-color .2s;
 
-    &:hover { background: $lat-surface-2; border-color: $lat-red; }
+    &:hover { background: rgba(255, 255, 255, .1); border-color: $lat-red; }
+    &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
     svg { width: 22px; height: 22px; }
 
@@ -194,37 +218,41 @@
     overflow-y: auto;
     overscroll-behavior: contain;
 
+    // Cabecera del drawer en ink oscuro: mismo tratamiento que el header
+    // desktop, así el logo blanco original queda visible también aquí.
     &__head {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 22px 22px 16px;
-        border-bottom: 1px solid $lat-line;
+        padding: 20px 22px;
+        background: $lat-ink;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, .18);
     }
 
     &__brand {
-        font-family: $lat-font-serif;
-        font-weight: 800;
-        font-size: 1.3rem;
-        color: $lat-ink;
-        letter-spacing: -.01em;
+        display: flex;
+        align-items: center;
+        transition: opacity .15s ease;
 
-        em { font-style: normal; color: $lat-red; }
+        &:hover { opacity: .85; }
+
+        img { display: block; height: 34px; width: auto; }
     }
 
     &__close {
         width: 40px;
         height: 40px;
         border-radius: 10px;
-        border: 1px solid $lat-line;
+        border: 1px solid rgba(255, 255, 255, .28);
         background: transparent;
-        color: $lat-ink;
+        color: #fff;
         cursor: pointer;
         display: grid;
         place-items: center;
         transition: background .15s, border-color .15s;
 
-        &:hover { background: $lat-surface-2; border-color: $lat-red; }
+        &:hover { background: rgba(255, 255, 255, .1); border-color: $lat-red; }
+        &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
         svg { width: 18px; height: 18px; }
     }
 

@@ -12,13 +12,13 @@
     $norm = fn ($u) => $u ? (\Illuminate\Support\Str::startsWith($u, ['http://', 'https://']) ? $u : 'https://' . ltrim($u, '/')) : null;
 
     $navItems = [
-        ['label' => __('nav.home'),       'url' => route('home', ['locale' => $locale])],
-        ['label' => __('nav.about'),      'url' => route('about', ['locale' => $locale])],
-        ['label' => __('nav.tours'),      'url' => route('tours.index', ['locale' => $locale])],
-        ['label' => __('nav.free_tours'), 'url' => route('tours.results', ['locale' => $locale, 'q' => 'free'])],
-        ['label' => __('nav.services'),   'url' => route('home', ['locale' => $locale]) . '#servicios'],
-        ['label' => 'Blog',               'url' => route('blog.index', ['locale' => $locale])],
-        ['label' => __('nav.contact'),    'url' => route('contact', ['locale' => $locale])],
+        ['label' => __('nav.home'),       'url' => route('home', ['locale' => $locale]),                          'active' => request()->routeIs('home')],
+        ['label' => __('nav.about'),      'url' => route('about', ['locale' => $locale]),                         'active' => request()->routeIs('about')],
+        ['label' => __('nav.tours'),      'url' => route('tours.index', ['locale' => $locale]),                   'active' => request()->routeIs('tours.index', 'tours.category', 'tours.show')],
+        ['label' => __('nav.free_tours'), 'url' => route('tours.results', ['locale' => $locale, 'q' => 'free']),  'active' => request()->routeIs('tours.results') && request('q') === 'free'],
+        ['label' => __('nav.services'),   'url' => route('home', ['locale' => $locale]) . '#servicios',            'active' => false],
+        ['label' => 'Blog',               'url' => route('blog.index', ['locale' => $locale]),                    'active' => request()->routeIs('blog.index', 'blog.show')],
+        ['label' => __('nav.contact'),    'url' => route('contact', ['locale' => $locale]),                       'active' => request()->routeIs('contact')],
     ];
 @endphp
 
@@ -56,12 +56,12 @@
         @keydown.escape.window="open = false">
     <nav class="lat-navbar" aria-label="{{ __('nav.main_navigation') }}">
         <a href="{{ route('home', ['locale' => $locale]) }}" class="lat-brand" aria-label="Lima América Tours — {{ __('nav.home') }}">
-            <img src="{{ asset('assets/logos/logo-america-original.webp') }}" alt="Lima América Tours" width="180" height="40" draggable="false">
+            <img src="{{ asset('assets/logos/logo-america-original.webp') }}" alt="Lima América Tours" width="190" height="42" draggable="false">
         </a>
 
         <div class="lat-nav-links">
             @foreach ($navItems as $item)
-                <a href="{{ $item['url'] }}">{{ $item['label'] }}</a>
+                <a href="{{ $item['url'] }}" @class(['is-active' => $item['active']])>{{ $item['label'] }}</a>
             @endforeach
         </div>
 
@@ -102,8 +102,8 @@
          aria-label="{{ __('nav.main_menu') }}">
 
         <div class="lat-drawer__head">
-            <a href="{{ route('home', ['locale' => $locale]) }}" class="lat-drawer__brand" @click="open = false">
-                Lima <em>América</em>
+            <a href="{{ route('home', ['locale' => $locale]) }}" class="lat-drawer__brand" @click="open = false" aria-label="Lima América Tours — {{ __('nav.home') }}">
+                <img src="{{ asset('assets/logos/logo-america-original.webp') }}" alt="Lima América Tours" width="160" height="34" draggable="false">
             </a>
             <button type="button" class="lat-drawer__close" @click="open = false" aria-label="{{ __('nav.close_menu') }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 18L18 6M6 6l12 12"/></svg>

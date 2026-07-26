@@ -203,12 +203,15 @@
 .lat-hf {
     display: flex; align-items: center; gap: 14px; color: #fff;
 
+    // Neutralizado: círculo ink/outline (antes rojo sólido) para que el
+    // rojo de marca quede exclusivamente como acento en otros elementos.
     &__ic {
         width: 50px; height: 50px; border-radius: 50%;
-        background: $lat-red; display: grid; place-items: center; flex: none;
-        box-shadow: 0 8px 20px rgba(203, 16, 30, .4);
+        background: rgba(23, 20, 18, .55);
+        border: 1px solid rgba(255, 255, 255, .28);
+        display: grid; place-items: center; flex: none;
 
-        svg { width: 23px; height: 23px; color: #fff; }
+        svg { width: 22px; height: 22px; color: #fff; }
     }
 
     b { display: block; font-family: $lat-font-serif; font-size: 1.05rem; }
