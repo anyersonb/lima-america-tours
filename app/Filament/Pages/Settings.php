@@ -21,9 +21,13 @@ class Settings extends Page implements HasForms
     use InteractsWithForms;
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
+
     protected static ?string $navigationGroup = 'Sistema';
+
     protected static ?string $navigationLabel = 'Configuración';
+
     protected static ?string $title = 'Configuración del sitio';
+
     protected static ?int $navigationSort = 99;
 
     protected static string $view = 'filament.pages.settings';
@@ -35,18 +39,18 @@ class Settings extends Page implements HasForms
         $rows = Setting::all()->pluck('value', 'key')->toArray();
         // Pre-rellenar credenciales de PayPal desde el .env si aún no están en la BD
         $rows['paypal_client_id'] = $rows['paypal_client_id'] ?? config('services.paypal.client_id');
-        $rows['paypal_secret']    = $rows['paypal_secret']    ?? config('services.paypal.secret');
-        $rows['paypal_mode']      = $rows['paypal_mode']      ?? config('services.paypal.mode', 'sandbox');
+        $rows['paypal_secret'] = $rows['paypal_secret'] ?? config('services.paypal.secret');
+        $rows['paypal_mode'] = $rows['paypal_mode'] ?? config('services.paypal.mode', 'sandbox');
         $rows['paypal_webhook_id'] = $rows['paypal_webhook_id'] ?? config('services.paypal.webhook_id');
 
         // Pre-rellenar keys de Google y Tripadvisor desde .env si aún no están en la BD
-        $rows['google_maps_api_key']        = $rows['google_maps_api_key']        ?? config('services.google.maps_api_key');
-        $rows['google_place_id']            = $rows['google_place_id']            ?? config('services.google.place_id');
-        $rows['google_reviews_enabled']     = isset($rows['google_reviews_enabled'])
+        $rows['google_maps_api_key'] = $rows['google_maps_api_key'] ?? config('services.google.maps_api_key');
+        $rows['google_place_id'] = $rows['google_place_id'] ?? config('services.google.place_id');
+        $rows['google_reviews_enabled'] = isset($rows['google_reviews_enabled'])
             ? filter_var($rows['google_reviews_enabled'], FILTER_VALIDATE_BOOLEAN)
             : false;
-        $rows['tripadvisor_api_key']        = $rows['tripadvisor_api_key']        ?? config('services.tripadvisor.api_key');
-        $rows['tripadvisor_location_id']    = $rows['tripadvisor_location_id']    ?? config('services.tripadvisor.location_id');
+        $rows['tripadvisor_api_key'] = $rows['tripadvisor_api_key'] ?? config('services.tripadvisor.api_key');
+        $rows['tripadvisor_location_id'] = $rows['tripadvisor_location_id'] ?? config('services.tripadvisor.location_id');
         $rows['tripadvisor_reviews_enabled'] = isset($rows['tripadvisor_reviews_enabled'])
             ? filter_var($rows['tripadvisor_reviews_enabled'], FILTER_VALIDATE_BOOLEAN)
             : false;
@@ -57,13 +61,13 @@ class Settings extends Page implements HasForms
             : false;
 
         // Pre-rellenar reCAPTCHA desde .env si aún no están en la BD
-        $rows['recaptcha_enabled']  = isset($rows['recaptcha_enabled'])
+        $rows['recaptcha_enabled'] = isset($rows['recaptcha_enabled'])
             ? filter_var($rows['recaptcha_enabled'], FILTER_VALIDATE_BOOLEAN)
             : (bool) config('services.recaptcha.enabled', false);
-        $rows['recaptcha_version']     = $rows['recaptcha_version']     ?? config('services.recaptcha.version', 'v3');
-        $rows['recaptcha_site_key']    = $rows['recaptcha_site_key']    ?? config('services.recaptcha.site_key');
-        $rows['recaptcha_secret_key']  = $rows['recaptcha_secret_key']  ?? config('services.recaptcha.secret_key');
-        $rows['recaptcha_v3_threshold']= $rows['recaptcha_v3_threshold']?? config('services.recaptcha.threshold', 0.5);
+        $rows['recaptcha_version'] = $rows['recaptcha_version'] ?? config('services.recaptcha.version', 'v3');
+        $rows['recaptcha_site_key'] = $rows['recaptcha_site_key'] ?? config('services.recaptcha.site_key');
+        $rows['recaptcha_secret_key'] = $rows['recaptcha_secret_key'] ?? config('services.recaptcha.secret_key');
+        $rows['recaptcha_v3_threshold'] = $rows['recaptcha_v3_threshold'] ?? config('services.recaptcha.threshold', 0.5);
 
         // Pre-fill cookie banner settings with defaults if not yet stored
         $rows['cookie_banner_enabled'] = isset($rows['cookie_banner_enabled'])
@@ -106,13 +110,13 @@ class Settings extends Page implements HasForms
                 Tabs::make('settings')->columnSpanFull()->tabs([
                     Tabs\Tab::make('General')->icon('heroicon-o-globe-alt')->schema([
                         TextInput::make('site_name')->label('Nombre del sitio'),
-                        TextInput::make('site_tagline_es')->label('Tagline (ES)'),
-                        TextInput::make('site_tagline_en')->label('Tagline (EN)'),
+                        TextInput::make('site_tagline_es')->label('Frase corta / Eslogan (ES)'),
+                        TextInput::make('site_tagline_en')->label('Frase corta / Eslogan (EN)'),
                         Textarea::make('site_description_es')->rows(2)->label('Descripción (ES)'),
                         Textarea::make('site_description_en')->rows(2)->label('Descripción (EN)'),
                     ]),
                     Tabs\Tab::make('Contacto')->icon('heroicon-o-phone')->schema([
-                        TextInput::make('contact_email')->email(),
+                        TextInput::make('contact_email')->email()->label('Correo de contacto'),
                         TextInput::make('contact_phone')->label('Teléfono principal'),
                         TextInput::make('contact_phone_secondary')->label('Teléfono secundario'),
                         TextInput::make('whatsapp')->label('WhatsApp (sin +)')->placeholder('51935542384'),
@@ -660,7 +664,7 @@ class Settings extends Page implements HasForms
                                         Textarea::make('desc_pt')->label('Descripción (PT)')->rows(2)->columnSpanFull(),
                                         Select::make('icon')
                                             ->label('Icono')
-                                            ->options(['shield'=>'Escudo (shield)','star'=>'Estrella (star)','headset'=>'Auriculares (headset)','medal'=>'Medalla (medal)'])
+                                            ->options(['shield' => 'Escudo (shield)', 'star' => 'Estrella (star)', 'headset' => 'Auriculares (headset)', 'medal' => 'Medalla (medal)'])
                                             ->native(false),
                                     ])
                                     ->columns(3)
@@ -671,6 +675,14 @@ class Settings extends Page implements HasForms
                             ]),
                     ]),
                     Tabs\Tab::make('GEO')->icon('heroicon-o-map-pin')->schema([
+                        // docs/qa/F7-personas.md §labels #2 / §e: esta pestaña es puramente
+                        // técnica para un usuario no experto; se agrega una explicación en
+                        // lenguaje llano en vez de reordenar/ocultar (sigue siendo útil para
+                        // quien la necesite editar).
+                        \Filament\Forms\Components\Placeholder::make('geo_help')
+                            ->label('¿Qué es esto?')
+                            ->content('Estos datos ayudan a que Google Maps y los buscadores muestren correctamente la ubicación de tu negocio (Ubicación en el mapa). Si no sabes qué poner, puedes dejarlo como está.')
+                            ->columnSpanFull(),
                         TextInput::make('geo_business_name')
                             ->label('Nombre del negocio')
                             ->default('Lima América Tours')
@@ -709,6 +721,10 @@ class Settings extends Page implements HasForms
                             ->helperText('Símbolo para schema.org. Ej: $ = económico, $$$$ = lujo.'),
                     ]),
                     Tabs\Tab::make('AEO / FAQ')->icon('heroicon-o-question-mark-circle')->schema([
+                        \Filament\Forms\Components\Placeholder::make('aeo_help')
+                            ->label('¿Qué es esto?')
+                            ->content('Aquí escribes las Preguntas frecuentes que Google puede mostrar directamente en los resultados de búsqueda (lo técnico se llama "AEO"/schema FAQ, pero para ti es simplemente: preguntas y respuestas).')
+                            ->columnSpanFull(),
                         Repeater::make('faqs')
                             ->label('Preguntas Frecuentes (FAQs)')
                             ->helperText('Estas FAQs se muestran en el sitio como acordeón y se incluyen en el schema FAQ (AEO).')
@@ -727,6 +743,10 @@ class Settings extends Page implements HasForms
                             ->columnSpanFull(),
                     ]),
                     Tabs\Tab::make('APIs')->icon('heroicon-o-key')->schema([
+                        \Filament\Forms\Components\Placeholder::make('apis_help')
+                            ->label('¿Qué es esto?')
+                            ->content('Conexiones externas: claves técnicas para conectar el sitio con Google Maps, Google Reseñas y Tripadvisor. Si no las tienes a mano, puedes dejar esta pestaña vacía y pedírselas a quien administre esas cuentas.')
+                            ->columnSpanFull(),
                         TextInput::make('google_maps_api_key')
                             ->label('Google Maps API Key')
                             ->password()
@@ -828,7 +848,7 @@ class Settings extends Page implements HasForms
                                         Select::make('type')
                                             ->label('Tipo de recogida')
                                             ->options([
-                                                'all'    => 'Todas las ubicaciones',
+                                                'all' => 'Todas las ubicaciones',
                                                 'hotels' => 'Solo hoteles',
                                             ])
                                             ->default('all')
@@ -845,6 +865,10 @@ class Settings extends Page implements HasForms
                             ]),
                     ]),
                     Tabs\Tab::make('reCAPTCHA')->icon('heroicon-o-shield-check')->schema([
+                        \Filament\Forms\Components\Placeholder::make('recaptcha_help')
+                            ->label('¿Qué es esto?')
+                            ->content('reCAPTCHA es la protección anti-robots en los formularios del sitio (contacto, reservas): evita que bots automatizados los llenen con spam.')
+                            ->columnSpanFull(),
                         Toggle::make('recaptcha_enabled')
                             ->label('Activar reCAPTCHA')
                             ->helperText('Protege los formularios públicos contra bots. Requiere las claves de Google configuradas abajo.')
@@ -934,16 +958,18 @@ class Settings extends Page implements HasForms
 
         foreach ($data as $key => $value) {
             // Serialize Repeater fields as JSON string
-            $jsonRepeaterKeys = ['faqs','home_destinos','home_why_items','home_tour_type_tabs',
-                                 'home_footer_features','home_exp_tours','home_reco_items','home_faqs',
-                                 'pickup_zones'];
+            $jsonRepeaterKeys = ['faqs', 'home_destinos', 'home_why_items', 'home_tour_type_tabs',
+                'home_footer_features', 'home_exp_tours', 'home_reco_items', 'home_faqs',
+                'pickup_zones'];
             if (in_array($key, $jsonRepeaterKeys, true)) {
                 Setting::set($key, json_encode(is_array($value) ? $value : []));
+
                 continue;
             }
             // Store boolean toggle fields with the correct type so castValue works
             if (in_array($key, self::BOOLEAN_KEYS, true)) {
                 Setting::set($key, $value ? '1' : '0', 'boolean');
+
                 continue;
             }
             Setting::set($key, $value);

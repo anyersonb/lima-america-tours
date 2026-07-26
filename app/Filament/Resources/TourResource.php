@@ -72,20 +72,13 @@ class TourResource extends Resource
                                     ->icon('heroicon-o-tag')
                                     ->schema([
                                         Forms\Components\Grid::make(3)->schema([
-                                            Forms\Components\TextInput::make('price')
+                                            static::priceField('price')
                                                 ->required()
-                                                ->numeric()
-                                                ->minValue(0.01)
-                                                ->prefix('$')
                                                 ->label('Precio actual (AHORA)')
-                                                ->helperText('Es el precio que paga el cliente. Debe ser mayor que 0.')
-                                                ->reactive(),
-                                            Forms\Components\TextInput::make('price_before')
-                                                ->numeric()
-                                                ->prefix('$')
+                                                ->helperText('Es el precio que paga el cliente. Debe ser mayor que 0. Puedes escribir los decimales con punto o coma (ej. 120.50 o 120,50).'),
+                                            static::priceField('price_before')
                                                 ->label('Precio antes (oferta)')
-                                                ->helperText('Escribe aquí el precio original (más alto que el actual) para activar la OFERTA ESPECIAL con su % de descuento automático. Déjalo VACÍO si el tour NO tiene oferta.')
-                                                ->reactive(),
+                                                ->helperText('Escribe aquí el precio original (más alto que el actual) para activar la OFERTA ESPECIAL con su % de descuento automático. Déjalo VACÍO si el tour NO tiene oferta.'),
                                             Forms\Components\TextInput::make('currency')
                                                 ->required()
                                                 ->maxLength(3)
@@ -95,8 +88,11 @@ class TourResource extends Resource
                                         Forms\Components\Placeholder::make('discount_preview')
                                             ->label('Vista previa del descuento')
                                             ->content(function (Forms\Get $get): string {
-                                                $price = (float) $get('price');
-                                                $priceBefore = (float) $get('price_before');
+                                                // Normalizado (no un simple (float) cast) para que la vista previa
+                                                // razone sobre el mismo valor "120,50" → 120.50 que terminará
+                                                // guardándose (docs/qa/F7-personas.md §g #2).
+                                                $price = Tour::normalizePriceInput($get('price')) ?? 0.0;
+                                                $priceBefore = Tour::normalizePriceInput($get('price_before')) ?? 0.0;
 
                                                 // Cada rama tiene su propio copy porque cada una es una causa
                                                 // distinta de "sin oferta" (docs/qa/ficha-tour.md hallazgo #8:
@@ -141,7 +137,15 @@ class TourResource extends Resource
                                         ->helperText('Posición manual en la sección "Tours más Comprados" del home (1 = primero). Vacío = se ordena solo por número de reservas. Aplica a tours con "Destacado" activo.'),
                                 ]),
                                 Forms\Components\Grid::make(2)->schema([
-                                    Forms\Components\Toggle::make('is_published')->label('Publicado')->default(true),
+                                    // docs/qa/F7-personas.md §labels #7 / §g #11: Tours venía en `true` por
+                                    // defecto y Blog en `false`, un criterio inconsistente entre recursos del
+                                    // mismo panel. Se unifica al criterio "seguro" (apagado = borrador): evita
+                                    // que un Tour a medio llenar quede visible en la web sin que el usuario lo
+                                    // note, igual que ya pasaba con Blog.
+                                    Forms\Components\Toggle::make('is_published')
+                                        ->label('Publicado')
+                                        ->default(false)
+                                        ->helperText('Actívalo para que se vea en la web.'),
                                     Forms\Components\Toggle::make('is_featured')->label('Destacado'),
                                     Forms\Components\Toggle::make('show_best_seller')
                                         ->label('Badge "BEST SELLER"')
@@ -265,8 +269,9 @@ class TourResource extends Resource
                                     ->disk('public')
                                     ->directory('tours/covers')
                                     ->imageEditor()
+                                    ->maxSize(4096)
                                     ->saveUploadedFileUsing(ImageOptimizer::saver('tours/covers', 1600, deletePrevious: true))
-                                    ->helperText('Se optimiza automáticamente a WebP (máx. 1600px de ancho).')
+                                    ->helperText('Se optimiza automáticamente a WebP (máx. 1600px de ancho). Tamaño máximo por archivo: 4 MB.')
                                     ->label('Imagen de portada'),
                                 Forms\Components\FileUpload::make('gallery')
                                     ->multiple()
@@ -275,8 +280,9 @@ class TourResource extends Resource
                                     ->directory('tours/gallery')
                                     ->reorderable()
                                     ->panelLayout('grid')
+                                    ->maxSize(4096)
                                     ->saveUploadedFileUsing(ImageOptimizer::saver('tours/gallery', 1920))
-                                    ->helperText('Cada imagen se optimiza a WebP (máx. 1920px de ancho).')
+                                    ->helperText('Cada imagen se optimiza a WebP (máx. 1920px de ancho). Tamaño máximo por archivo: 4 MB.')
                                     ->label('Galería'),
                             ]),
 
@@ -304,6 +310,47 @@ class TourResource extends Resource
                             ]),
                     ]),
             ]);
+    }
+
+    /**
+     * Campo de precio "comma-safe" (docs/qa/F7-personas.md §g #2).
+     *
+     * Antes usaba ->numeric(), que Filament renderiza como <input type="number">.
+     * Ese tipo de input descarta la coma en cuanto se teclea (no es un carácter
+     * válido para un number input en navegadores en-US), así que "120,50"
+     * llegaba al servidor ya mutilado como "12050" — nunca hubo oportunidad de
+     * normalizarlo después, porque la información ya se había perdido en el
+     * navegador. La solución es dejar de usar type="number" para este campo:
+     * un <input type="text"> con inputmode="decimal" no bloquea la coma,
+     * mantiene el teclado numérico en móvil, y delega la validación de formato
+     * a la regla explícita de abajo (Tour::normalizePriceInput) en vez de al
+     * navegador.
+     */
+    protected static function priceField(string $name): Forms\Components\TextInput
+    {
+        return Forms\Components\TextInput::make($name)
+            ->type('text')
+            ->inputMode('decimal')
+            ->prefix('$')
+            ->rule(function () use ($name) {
+                return function (string $attribute, $value, \Closure $fail) use ($name) {
+                    if ($value === null || $value === '') {
+                        return; // "required" (cuando aplica) ya cubre el campo vacío
+                    }
+
+                    if (Tour::normalizePriceInput($value) === null) {
+                        $fail('El precio debe ser un número válido. Usa punto o coma para los decimales (ej. 120.50 o 120,50).');
+
+                        return;
+                    }
+
+                    if ($name === 'price' && Tour::normalizePriceInput($value) <= 0) {
+                        $fail('El precio debe ser mayor que 0.');
+                    }
+                };
+            })
+            ->dehydrateStateUsing(fn ($state) => Tour::normalizePriceInput($state))
+            ->reactive();
     }
 
     /**

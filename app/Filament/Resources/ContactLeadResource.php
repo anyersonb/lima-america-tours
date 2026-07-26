@@ -6,6 +6,10 @@ use App\Filament\Resources\ContactLeadResource\Pages;
 use App\Models\ContactLead;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\Section as InfolistSection;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -85,6 +89,43 @@ class ContactLeadResource extends Resource
             ]);
     }
 
+    /**
+     * Vista de solo lectura para "leer" un mensaje (docs/qa/F7-personas.md
+     * §labels #1): antes la única pantalla disponible era el formulario de
+     * EDICIÓN completo, con IP/Navegador/Origen como campos de texto
+     * editables — se sentía como "editar la computadora del cliente" en vez
+     * de leer una carta. Aquí el mensaje del cliente va primero y en texto
+     * plano; los datos técnicos quedan aparte, colapsados y claramente
+     * etiquetados como informativos.
+     */
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist->schema([
+            InfolistSection::make('Mensaje del cliente')
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('full_name')->label('Nombre completo'),
+                    TextEntry::make('email')->label('Correo')->copyable(),
+                    TextEntry::make('phone')->label('Teléfono')->copyable()->placeholder('—'),
+                    TextEntry::make('created_at')->label('Recibido')->dateTime('d/m/Y H:i'),
+                    TextEntry::make('message')->label('Mensaje')->columnSpanFull(),
+                ]),
+            InfolistSection::make('Información técnica (solo informativa)')
+                ->description('Datos de contexto capturados automáticamente; no forman parte del mensaje y no se pueden editar aquí.')
+                ->collapsible()
+                ->collapsed()
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('source')->label('Origen'),
+                    TextEntry::make('locale')->label('Idioma'),
+                    TextEntry::make('ip')->label('IP')->placeholder('—'),
+                    TextEntry::make('user_agent')->label('Navegador')->placeholder('—')->columnSpanFull(),
+                    IconEntry::make('is_read')->label('Leído')->boolean(),
+                    IconEntry::make('is_archived')->label('Archivado')->boolean(),
+                ]),
+        ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -134,7 +175,7 @@ class ContactLeadResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -155,7 +196,7 @@ class ContactLeadResource extends Resource
         return [
             'index' => Pages\ListContactLeads::route('/'),
             'create' => Pages\CreateContactLead::route('/create'),
-            'edit' => Pages\EditContactLead::route('/{record}/edit'),
+            'view' => Pages\ViewContactLead::route('/{record}'),
         ];
     }
 }

@@ -156,9 +156,12 @@ class BlogPostResource extends Resource
                         Tabs\Tab::make('Publicación')
                             ->icon('heroicon-o-calendar')
                             ->schema([
+                                // docs/qa/F7-personas.md §labels #7 / §g #11: mismo criterio que ahora usa
+                                // TourResource (apagado = borrador por defecto), con el mismo texto de ayuda.
                                 Forms\Components\Toggle::make('is_published')
                                     ->label('Publicado')
-                                    ->default(false),
+                                    ->default(false)
+                                    ->helperText('Actívalo para que se vea en la web.'),
                                 Forms\Components\DateTimePicker::make('published_at')
                                     ->nullable()
                                     ->helperText('Deja vacío para publicar inmediatamente al activar el toggle.')

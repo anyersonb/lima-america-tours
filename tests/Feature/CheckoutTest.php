@@ -6,11 +6,9 @@ use App\Mail\BookingConfirmed;
 use App\Models\Booking;
 use App\Models\Tour;
 use App\Services\CartService;
-use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
-use Mockery;
 use Tests\TestCase;
 
 class CheckoutTest extends TestCase
@@ -26,7 +24,7 @@ class CheckoutTest extends TestCase
     private function tour(array $overrides = []): Tour
     {
         return Tour::factory()->create(array_merge([
-            'price'        => 150.00,
+            'price' => 150.00,
             'is_published' => true,
         ], $overrides));
     }
@@ -44,11 +42,11 @@ class CheckoutTest extends TestCase
     private function validPaymentPayload(array $overrides = []): array
     {
         return array_merge([
-            'customer_name'  => 'Juan Pérez García',
+            'customer_name' => 'Juan Pérez García',
             'customer_email' => 'juan@example.com',
             'customer_phone' => '987654321',
-            'travel_date'    => now()->addDays(15)->format('Y-m-d'),
-            'culqi_token'    => 'tkn_test_abc123',
+            'travel_date' => now()->addDays(15)->format('Y-m-d'),
+            'culqi_token' => 'tkn_test_abc123',
         ], $overrides);
     }
 
@@ -89,11 +87,11 @@ class CheckoutTest extends TestCase
         // Mock Culqi HTTP response
         Http::fake([
             'api.culqi.com/v2/charges' => Http::response([
-                'id'              => 'chr_test_abc123',
-                'amount'          => 45000,
-                'currency_code'   => 'USD',
-                'object'          => 'charge',
-                'outcome'         => ['type' => 'venta_exitosa'],
+                'id' => 'chr_test_abc123',
+                'amount' => 45000,
+                'currency_code' => 'USD',
+                'object' => 'charge',
+                'outcome' => ['type' => 'venta_exitosa'],
             ], 201),
         ]);
 
@@ -106,11 +104,11 @@ class CheckoutTest extends TestCase
 
         // Booking was created and marked paid
         $this->assertDatabaseHas('bookings', [
-            'customer_email'    => 'juan@example.com',
-            'payment_status'    => 'paid',
-            'status'            => 'confirmed',
+            'customer_email' => 'juan@example.com',
+            'payment_status' => 'paid',
+            'status' => 'confirmed',
             'payment_reference' => 'chr_test_abc123',
-            'payment_method'    => 'culqi',
+            'payment_method' => 'culqi',
         ]);
     }
 
@@ -124,8 +122,8 @@ class CheckoutTest extends TestCase
         // Mock Culqi returning a 422 / error
         Http::fake([
             'api.culqi.com/v2/charges' => Http::response([
-                'object'       => 'error',
-                'type'         => 'card_error',
+                'object' => 'error',
+                'type' => 'card_error',
                 'user_message' => 'La tarjeta fue rechazada.',
             ], 422),
         ]);
@@ -153,15 +151,49 @@ class CheckoutTest extends TestCase
         $response = $this->post(
             route('checkout.process', ['locale' => self::LOCALE]),
             [
-                'customer_name'  => 'Test User',
+                'customer_name' => 'Test User',
                 'customer_email' => 'not-an-email',
                 'customer_phone' => '12345',          // invalid format
-                'travel_date'    => now()->subDay()->format('Y-m-d'), // past date
-                'culqi_token'    => 'tkn_test',
+                'travel_date' => now()->subDay()->format('Y-m-d'), // past date
+                'culqi_token' => 'tkn_test',
             ]
         );
 
         $response->assertSessionHasErrors(['customer_email', 'customer_phone', 'travel_date']);
+    }
+
+    /**
+     * Defecto #7/§e de docs/qa/F7-personas.md §g (F7, cro-validator):
+     * "el campo customer name es obligatorio" (así, en inglés a medias).
+     * ProcessPaymentRequest::attributes() ahora mapea cada campo a su
+     * etiqueta en español, así el mensaje genérico de Laravel usa "nombre",
+     * "correo electrónico" y "teléfono" en vez del nombre técnico del campo.
+     */
+    public function test_validation_errors_use_spanish_field_names_not_technical_english(): void
+    {
+        $tour = $this->tour();
+        $this->addTourToCart($tour);
+
+        $response = $this->post(
+            route('checkout.process', ['locale' => self::LOCALE]),
+            [
+                'payment_timing' => 'later',
+                'travel_date' => now()->addDays(15)->format('Y-m-d'),
+                // customer_name, customer_email, customer_phone omitidos a propósito
+            ]
+        );
+
+        $response->assertSessionHasErrors(['customer_name', 'customer_email', 'customer_phone']);
+
+        $errors = session('errors');
+
+        $this->assertSame('El campo nombre es obligatorio.', $errors->first('customer_name'));
+        $this->assertSame('El campo correo electrónico es obligatorio.', $errors->first('customer_email'));
+        $this->assertSame('El campo teléfono es obligatorio.', $errors->first('customer_phone'));
+
+        $this->assertStringNotContainsString('customer name', $errors->first('customer_name'));
+        $this->assertStringNotContainsString('customer email', $errors->first('customer_email'));
+        $this->assertStringNotContainsString('customer phone', $errors->first('customer_phone'));
     }
 
     public function test_thanks_page_renders_after_successful_payment(): void
@@ -170,22 +202,22 @@ class CheckoutTest extends TestCase
 
         // Simulate session with last_bookings
         $booking = Booking::create([
-            'tour_id'             => $tour->id,
+            'tour_id' => $tour->id,
             'tour_title_snapshot' => $tour->title_es,
-            'customer_name'       => 'Ana López',
-            'customer_email'      => 'ana@example.com',
-            'customer_phone'      => '987000001',
-            'travel_date'         => now()->addDays(10)->format('Y-m-d'),
-            'adults'              => 2,
-            'children'            => 0,
-            'unit_price'          => 150.00,
-            'total_price'         => 300.00,
-            'currency'            => 'USD',
-            'status'              => 'confirmed',
-            'payment_status'      => 'paid',
-            'payment_method'      => 'culqi',
-            'payment_reference'   => 'chr_test_xxx',
-            'locale'              => 'es',
+            'customer_name' => 'Ana López',
+            'customer_email' => 'ana@example.com',
+            'customer_phone' => '987000001',
+            'travel_date' => now()->addDays(10)->format('Y-m-d'),
+            'adults' => 2,
+            'children' => 0,
+            'unit_price' => 150.00,
+            'total_price' => 300.00,
+            'currency' => 'USD',
+            'status' => 'confirmed',
+            'payment_status' => 'paid',
+            'payment_method' => 'culqi',
+            'payment_reference' => 'chr_test_xxx',
+            'locale' => 'es',
         ]);
 
         $response = $this->withSession(['last_bookings' => [$booking->toArray()]])
@@ -205,10 +237,10 @@ class CheckoutTest extends TestCase
 
         Http::fake([
             'api.culqi.com/v2/charges' => Http::response([
-                'id'            => 'chr_test_mail_check',
-                'amount'        => 45000,
+                'id' => 'chr_test_mail_check',
+                'amount' => 45000,
                 'currency_code' => 'USD',
-                'object'        => 'charge',
+                'object' => 'charge',
             ], 201),
         ]);
 

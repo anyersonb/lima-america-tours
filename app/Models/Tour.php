@@ -177,6 +177,42 @@ class Tour extends Model
         return static::offerDiscountPercent((float) $this->price, (float) ($this->price_before ?? 0)) !== null;
     }
 
+    /**
+     * Normalizes a human-typed price into a float safe to store in the
+     * `price`/`price_before` decimal columns.
+     *
+     * docs/qa/F7-personas.md §g #2: both fields used to render as a raw
+     * `type="number"` input. That HTML input type silently swallows any
+     * comma keystroke (it's not a valid character for a numeric input in
+     * en-US locale browsers), so a user typing "120,50" the way prices are
+     * commonly written in Peru ends up with "12050" in the field — a price
+     * 100x too high — with zero feedback. The TourResource form now renders
+     * these as plain text inputs (comma-safe) and calls this method both to
+     * validate the raw input and to normalize it before it reaches the DB,
+     * so "120,50" and "120.50" are treated as the same value: 120.50.
+     *
+     * Returns null when the value cannot be parsed as a valid amount (e.g.
+     * letters, more than one separator), letting the caller fail validation
+     * with a clear message instead of silently truncating/guessing.
+     */
+    public static function normalizePriceInput(mixed $value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        // Only a single decimal separator (comma OR dot) followed by 1-2
+        // digits is accepted — thousands separators are out of scope here,
+        // the QA finding is specifically about the decimal comma.
+        if (! preg_match('/^\d+([.,]\d{1,2})?$/', $value)) {
+            return null;
+        }
+
+        return round((float) str_replace(',', '.', $value), 2);
+    }
+
     public function discountPercent(): ?int
     {
         return static::offerDiscountPercent((float) $this->price, (float) ($this->price_before ?? 0));
