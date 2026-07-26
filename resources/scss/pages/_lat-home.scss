@@ -220,7 +220,20 @@
 }
 
 // ── Tarjeta blanca superpuesta bajo el hero ─────────────────────────────
-.lat-hero-card-wrap { position: relative; z-index: 6; margin-top: -42px; margin-bottom: 20px; }
+// El solape (margin-top negativo) debe quedar siempre dentro del padding-bottom
+// vacío de .lat-hero-features (nunca comerse el contenido/texto de la última
+// fila). En desktop ese padding-bottom es 52px con un pull de 42px (10px de
+// aire). En <=520px el padding-bottom baja a 34px (1 columna, filas apiladas),
+// así que el pull debe reducirse a 24px para conservar ese mismo margen de
+// seguridad de ~10px y no cortar el texto de "Atención 24/7".
+.lat-hero-card-wrap {
+    position: relative;
+    z-index: 6;
+    margin-top: -42px;
+    margin-bottom: 20px;
+
+    @media (max-width: 520px) { margin-top: -24px; }
+}
 
 .lat-hero-card {
     background: $lat-surface;

@@ -194,6 +194,12 @@
     @media (max-width: 1040px) { display: flex; }
 }
 
+// ── Bloqueo de scroll de fondo mientras el drawer móvil está abierto ────
+// Alpine alterna esta clase en <body> vía x-effect (header.blade.php) al
+// cambiar `open`; se quita sola al cerrar (click en X, backdrop, Escape o
+// al navegar), así nunca queda "colgada".
+body.lat-drawer-open { overflow: hidden; }
+
 // ── Drawer (menú móvil) ─────────────────────────────────────────────────
 .lat-drawer-backdrop {
     position: fixed;

@@ -53,6 +53,7 @@
 
 <header class="lat-header-shell" role="banner"
         x-data="{ open: false }"
+        x-effect="document.body.classList.toggle('lat-drawer-open', open)"
         @keydown.escape.window="open = false">
     <nav class="lat-navbar" aria-label="{{ __('nav.main_navigation') }}">
         <a href="{{ route('home', ['locale' => $locale]) }}" class="lat-brand" aria-label="Lima América Tours — {{ __('nav.home') }}">
