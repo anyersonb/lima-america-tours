@@ -72,4 +72,44 @@ class ImportWpBlogTest extends TestCase
         // duplicate the known post.
         $this->assertSame(1, BlogPost::where('slug', self::KNOWN_SLUG)->count());
     }
+
+    public function test_import_unpublishes_demo_posts_not_present_in_the_export(): void
+    {
+        $demo = $this->makeDemoPost('post-demo-no-existe-en-wp', true);
+
+        Artisan::call('blog:import-wp');
+
+        // The demo post must be unpublished but NOT deleted (reversible from the panel).
+        $this->assertDatabaseHas('blog_posts', [
+            'id' => $demo->id,
+            'is_published' => false,
+        ]);
+        $this->assertNotNull(BlogPost::find($demo->id));
+
+        // The real posts imported from the export must stay published.
+        $this->assertSame(10, BlogPost::where('is_published', true)->count());
+    }
+
+    public function test_keep_demo_option_leaves_demo_posts_published(): void
+    {
+        $demo = $this->makeDemoPost('otro-post-demo-no-existe-en-wp', true);
+
+        Artisan::call('blog:import-wp', ['--keep-demo' => true]);
+
+        $this->assertDatabaseHas('blog_posts', [
+            'id' => $demo->id,
+            'is_published' => true,
+        ]);
+    }
+
+    private function makeDemoPost(string $slug, bool $published): BlogPost
+    {
+        return BlogPost::create([
+            'slug' => $slug,
+            'is_published' => $published,
+            'title_es' => 'Post demo',
+            'excerpt_es' => 'Excerpt demo',
+            'body_es' => '<p>Body demo</p>',
+        ]);
+    }
 }

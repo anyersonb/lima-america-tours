@@ -20,6 +20,7 @@ class ImportWpBlog extends Command
     protected $signature = 'blog:import-wp
         {--json=wp-import/blog.json : Ruta del JSON dentro de storage/app}
         {--images=wp-import/prod-dump/uploads-extract/uploads : Carpeta con las imágenes dentro de storage/app}
+        {--keep-demo : No despublicar los posts demo previos}
         {--dry-run : Solo muestra lo que haría, sin escribir}';
 
     protected $description = 'Importa los posts reales del blog de WordPress (limaamericatours.com) a la BD';
@@ -50,6 +51,7 @@ class ImportWpBlog extends Command
             File::ensureDirectoryExists($destDir);
         }
 
+        $imported = [];
         $created = 0;
         $updated = 0;
         $imgCopied = 0;
@@ -92,6 +94,7 @@ class ImportWpBlog extends Command
             if ($dry) {
                 $this->line(sprintf('[dry] %-55s pub=%s img=%s',
                     Str::limit($w['title'], 52), $attrs['is_published'] ? 'si' : 'no', $cover ?: '-'));
+                $imported[] = $slug;
 
                 continue;
             }
@@ -99,11 +102,26 @@ class ImportWpBlog extends Command
             $existing = BlogPost::where('slug', $slug)->first();
             BlogPost::updateOrCreate(['slug' => $slug], $attrs);
             $existing ? $updated++ : $created++;
+            $imported[] = $slug;
+        }
+
+        // Despublicar posts demo previos (los que no vinieron del WP) ------
+        $demoUnpublished = 0;
+        if (! $dry && ! $this->option('keep-demo')) {
+            // Los posts demo previos (no vinieron del WP): despublicar para
+            // que no contaminen el blog público. No se borran (reversible
+            // desde el panel).
+            $demoUnpublished = BlogPost::whereNotIn('slug', $imported)
+                ->where('is_published', true)
+                ->update(['is_published' => false]);
         }
 
         $this->newLine();
         $this->info("Posts importados: creados=$created, actualizados=$updated (total ".count($data).')');
         $this->info("Imágenes copiadas: $imgCopied");
+        if (! $this->option('keep-demo')) {
+            $this->info("Posts demo despublicados: $demoUnpublished (reversibles desde el panel)");
+        }
 
         return self::SUCCESS;
     }
