@@ -343,6 +343,16 @@ Diseñar sin decidir:
 
 **Qué queda BLOQUEADO sin credenciales:** pruebas reales de cobro/captura, registro de webhooks en los paneles, verificación de firma PayPal en vivo, y decisión de moneda. **Todo lo demás (Fase 0)** avanza con mocks.
 
+### 12.4 Manejo de secretos — REGLA (jefe, 2026-07-25)
+
+**Las llaves _live_ de Culqi y PayPal van SIEMPRE en variables de entorno del hosting, NUNCA al repositorio.**
+
+- Ningún valor real (`pk_live_*`, `sk_live_*`, `PAYPAL_CLIENT_ID`/`PAYPAL_SECRET` de producción, `PAYPAL_MODE=live`, webhook IDs/secrets) se escribe en archivos versionados. Se cargan en el `.env` del servidor de producción (o en el panel de variables de entorno del hosting), fuera de git.
+- El repo solo contiene **placeholders** en `.env.example` (`pk_test_REPLACE_ME`, `PAYPAL_SECRET=`, etc.), como confirmó la auditoría `docs/qa/seguridad-secretos.md`.
+- `config/services.php` lee todo por `env()`; nunca hardcodear una llave, ni en config, ni en Settings del CMS con valor por defecto commiteado.
+- `.env`, `.env.qa`, `.env.prod` permanecen en `.gitignore` (ya verificado: no trackeados).
+- Al pasar a Fase 2, las llaves live se cargan directo en el entorno del hosting; si en algún momento una llave real toca un commit, se **rota** en el panel del proveedor y se purga del historial antes de exponer el repo.
+
 ---
 
 ### Anexo — Archivos críticos para la implementación
