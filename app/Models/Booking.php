@@ -20,6 +20,9 @@ class Booking extends Model
         'discount_value' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'payment_reminder_sent_at' => 'datetime',
+        'expires_at' => 'datetime',
+        'refunded_at' => 'datetime',
+        'refund_amount' => 'decimal:2',
     ];
 
     public function hasDiscount(): bool
@@ -31,7 +34,7 @@ class Booking extends Model
     {
         static::creating(function (self $b) {
             if (empty($b->reference)) {
-                $b->reference = 'LVT-' . strtoupper(Str::random(8));
+                $b->reference = 'LVT-'.strtoupper(Str::random(8));
             }
         });
     }

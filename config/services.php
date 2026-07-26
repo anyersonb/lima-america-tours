@@ -32,36 +32,39 @@ return [
     ],
 
     'culqi' => [
-        'public_key'     => env('CULQI_PUBLIC_KEY'),
-        'secret_key'     => env('CULQI_SECRET_KEY'),
+        'public_key' => env('CULQI_PUBLIC_KEY'),
+        'secret_key' => env('CULQI_SECRET_KEY'),
         'webhook_secret' => env('CULQI_WEBHOOK_SECRET'),
-        'api_url'        => env('CULQI_API_URL', 'https://api.culqi.com/v2'),
-        'env'            => env('CULQI_ENV', 'sandbox'),
+        'api_url' => env('CULQI_API_URL', 'https://api.culqi.com/v2'),
+        'env' => env('CULQI_ENV', 'sandbox'),
+        // Moneda del cargo (docs/pagos/PLAN-PASARELAS.md §3.4): USD por
+        // defecto, coherente con el total mostrado en el carrito y con PayPal.
+        'currency' => env('CULQI_CURRENCY', 'USD'),
     ],
 
     'paypal' => [
-        'client_id'  => env('PAYPAL_CLIENT_ID'),
-        'secret'     => env('PAYPAL_SECRET'),
-        'mode'       => env('PAYPAL_MODE', 'sandbox'), // sandbox|live
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'secret' => env('PAYPAL_SECRET'),
+        'mode' => env('PAYPAL_MODE', 'sandbox'), // sandbox|live
         'webhook_id' => env('PAYPAL_WEBHOOK_ID'),
     ],
 
     'google' => [
         'maps_api_key' => env('GOOGLE_MAPS_API_KEY'),
-        'place_id'     => env('GOOGLE_PLACE_ID'),
+        'place_id' => env('GOOGLE_PLACE_ID'),
     ],
 
     'tripadvisor' => [
-        'api_key'     => env('TRIPADVISOR_API_KEY'),
+        'api_key' => env('TRIPADVISOR_API_KEY'),
         'location_id' => env('TRIPADVISOR_LOCATION_ID'),
     ],
 
     'recaptcha' => [
-        'site_key'   => env('RECAPTCHA_SITE_KEY'),
+        'site_key' => env('RECAPTCHA_SITE_KEY'),
         'secret_key' => env('RECAPTCHA_SECRET_KEY'),
-        'version'    => env('RECAPTCHA_VERSION', 'v3'),   // v2 | v3
-        'threshold'  => env('RECAPTCHA_V3_THRESHOLD', 0.5),
-        'enabled'    => env('RECAPTCHA_ENABLED', false),
+        'version' => env('RECAPTCHA_VERSION', 'v3'),   // v2 | v3
+        'threshold' => env('RECAPTCHA_V3_THRESHOLD', 0.5),
+        'enabled' => env('RECAPTCHA_ENABLED', false),
     ],
 
 ];

@@ -176,3 +176,8 @@ Route::prefix('{locale}')
 Route::post('/webhooks/culqi', [WebhookController::class, 'culqi'])
     ->name('webhooks.culqi')
     ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+
+// PayPal Webhook — outside locale group, CSRF exempt (docs/pagos/PLAN-PASARELAS.md §5.2)
+Route::post('/webhooks/paypal', [WebhookController::class, 'paypal'])
+    ->name('webhooks.paypal')
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);

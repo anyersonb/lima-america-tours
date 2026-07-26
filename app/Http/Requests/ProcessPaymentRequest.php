@@ -27,8 +27,12 @@ class ProcessPaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // payment_timing controls whether the charge is processed now or deferred
-            'payment_timing' => ['required', 'string', 'in:now,later'],
+            // docs/pagos/PLAN-PASARELAS.md §3.2/§10.1: este endpoint (checkout.process)
+            // ahora resuelve el método por la PRESENCIA de culqi_token, no por
+            // payment_timing. payment_timing sigue aceptándose (el wizard vivo lo
+            // manda siempre en 'later' para el cierre por WhatsApp/correo) pero ya
+            // no es obligatorio ni condiciona la validación de culqi_token.
+            'payment_timing' => ['nullable', 'string', 'in:now,later'],
 
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_email' => ['required', 'email', 'max:255'],
@@ -40,19 +44,19 @@ class ProcessPaymentRequest extends FormRequest
             'pickup_point' => ['nullable', 'string', 'max:100'],
             'pickup_detail' => ['nullable', 'string', 'max:255'],
 
-            // Only required when the customer is paying now with a card
-            'culqi_token' => ['nullable', 'string', 'required_if:payment_timing,now'],
+            // Culqi.js token — when present, CheckoutController::processPayment()
+            // charges it via PaymentService::createCharge() instead of creating a
+            // "pay later" hold.
+            'culqi_token' => ['nullable', 'string', 'max:191'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'payment_timing.required' => 'Debe indicar si pagará ahora o después.',
             'payment_timing.in' => 'Opción de pago no válida.',
             'customer_phone.regex' => 'Ingresa un teléfono válido con su prefijo de país.',
             'travel_date.after' => 'La fecha de viaje debe ser posterior a hoy.',
-            'culqi_token.required_if' => 'No se recibió el token de pago. Intente nuevamente.',
         ];
     }
 

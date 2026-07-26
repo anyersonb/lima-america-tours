@@ -10,13 +10,13 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
 
-class BookingConfirmed extends Mailable
+class BookingConfirmed extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     /**
-     * @param Collection $bookings  Collection of Booking model instances
-     * @param string     $toEmail   Customer email address
+     * @param  Collection  $bookings  Collection of Booking model instances
+     * @param  string  $toEmail  Customer email address
      */
     public function __construct(
         public readonly Collection $bookings,
@@ -29,8 +29,8 @@ class BookingConfirmed extends Mailable
         $locale = $this->bookings->first()?->locale ?? app()->getLocale();
 
         $subject = match ($locale) {
-            'en'    => 'Booking Confirmation — Lima América Tours',
-            'pt'    => 'Confirmação de reserva — Lima América Tours',
+            'en' => 'Booking Confirmation — Lima América Tours',
+            'pt' => 'Confirmação de reserva — Lima América Tours',
             default => 'Confirmación de reserva — Lima América Tours',
         };
 
@@ -43,7 +43,7 @@ class BookingConfirmed extends Mailable
             view: 'emails.bookings.confirmed',
             with: [
                 'bookings' => $this->bookings,
-                'locale'   => $this->bookings->first()?->locale ?? app()->getLocale(),
+                'locale' => $this->bookings->first()?->locale ?? app()->getLocale(),
             ]
         );
     }

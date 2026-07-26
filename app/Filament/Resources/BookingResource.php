@@ -210,6 +210,7 @@ class BookingResource extends Resource
                                 'confirmed' => 'Confirmada',
                                 'cancelled' => 'Cancelada',
                                 'completed' => 'Completada',
+                                'refunded' => 'Reembolsada',
                             ])
                             ->default('pending')
                             ->required()
@@ -219,6 +220,9 @@ class BookingResource extends Resource
                             ->options([
                                 'pending' => 'Por pagar',
                                 'paid' => 'Pagado',
+                                'failed' => 'Rechazado',
+                                'partially_paid' => 'Pagado parcial (seña)',
+                                'expired' => 'Expirado (hold vencido)',
                                 'refunded' => 'Reembolsado',
                             ])
                             ->default('pending')
@@ -227,8 +231,10 @@ class BookingResource extends Resource
                             ->live()
                             ->afterStateUpdated(function ($state, Forms\Set $set) {
                                 // Al marcar pagado, confirma la reserva automáticamente.
-                                if ($state === 'paid') {
+                                if (in_array($state, ['paid', 'partially_paid'], true)) {
                                     $set('status', 'confirmed');
+                                } elseif ($state === 'refunded') {
+                                    $set('status', 'refunded');
                                 }
                             }),
                         Forms\Components\Select::make('payment_method')
@@ -236,7 +242,8 @@ class BookingResource extends Resource
                             ->options([
                                 'pay_later' => 'Pagar luego',
                                 'paypal' => 'PayPal',
-                                'card' => 'Pago con tarjeta',
+                                'culqi' => 'Culqi (tarjeta)',
+                                'card' => 'Pago con tarjeta (legado)',
                                 'payment_link' => 'Link de pago',
                                 'cash' => 'Efectivo',
                                 'transfer' => 'Transferencia',
@@ -374,11 +381,12 @@ class BookingResource extends Resource
                         'confirmed' => 'Confirmada',
                         'cancelled' => 'Cancelada',
                         'completed' => 'Completada',
+                        'refunded' => 'Reembolsada',
                         default => $state,
                     })
                     ->color(fn (string $state) => match ($state) {
                         'confirmed', 'completed' => 'success',
-                        'cancelled' => 'danger',
+                        'cancelled', 'refunded' => 'danger',
                         default => 'warning',
                     }),
                 Tables\Columns\TextColumn::make('payment_status')
@@ -387,12 +395,16 @@ class BookingResource extends Resource
                     ->formatStateUsing(fn (string $state) => match ($state) {
                         'paid' => 'Pagado',
                         'pending' => 'Por pagar',
+                        'failed' => 'Rechazado',
+                        'partially_paid' => 'Parcial (seña)',
+                        'expired' => 'Expirado',
                         'refunded' => 'Reembolsado',
                         default => $state,
                     })
                     ->color(fn (string $state) => match ($state) {
-                        'paid' => 'success',
-                        'refunded' => 'gray',
+                        'paid', 'partially_paid' => 'success',
+                        'failed' => 'danger',
+                        'refunded', 'expired' => 'gray',
                         default => 'warning',
                     }),
                 Tables\Columns\TextColumn::make('payment_method')
@@ -400,7 +412,8 @@ class BookingResource extends Resource
                     ->formatStateUsing(fn (?string $state) => match ($state) {
                         'pay_later' => 'Pagar luego',
                         'paypal' => 'PayPal',
-                        'card' => 'Pago con tarjeta',
+                        'culqi' => 'Culqi (tarjeta)',
+                        'card' => 'Pago con tarjeta (legado)',
                         'payment_link' => 'Link de pago',
                         'cash' => 'Efectivo',
                         'transfer' => 'Transferencia',
