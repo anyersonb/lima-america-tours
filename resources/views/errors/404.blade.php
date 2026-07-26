@@ -4,13 +4,19 @@
 
     // Redes reales tomadas de Settings (mismas que el footer/topbar); solo se
     // pintan las que tienen URL. Antes eran círculos placeholder con href="#".
+    // La 404 NUNCA debe reventar por la BD (se sirve incluso si la BD falla):
+    // si Setting falla, se degrada a sin-redes.
     $norm = fn ($u) => $u ? (\Illuminate\Support\Str::startsWith($u, ['http://', 'https://']) ? $u : 'https://' . ltrim($u, '/')) : null;
-    $socials = array_filter([
-        'facebook'  => $norm(\App\Models\Setting::get('social_facebook')),
-        'instagram' => $norm(\App\Models\Setting::get('social_instagram')),
-        'tiktok'    => $norm(\App\Models\Setting::get('social_tiktok')),
-        'youtube'   => $norm(\App\Models\Setting::get('social_youtube')),
-    ]);
+    try {
+        $socials = array_filter([
+            'facebook'  => $norm(\App\Models\Setting::get('social_facebook')),
+            'instagram' => $norm(\App\Models\Setting::get('social_instagram')),
+            'tiktok'    => $norm(\App\Models\Setting::get('social_tiktok')),
+            'youtube'   => $norm(\App\Models\Setting::get('social_youtube')),
+        ]);
+    } catch (\Throwable $e) {
+        $socials = [];
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="ltr">
