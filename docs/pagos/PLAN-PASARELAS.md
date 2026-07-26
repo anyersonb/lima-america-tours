@@ -268,6 +268,18 @@ No existe **ningún** test del camino real de checkout (grep de `payment_timing`
 
 > Solo inventario. WhatsApp permitido **únicamente** como contacto/soporte (FAB + Contacto).
 
+> **⚠️ DECISIÓN DEL JEFE (2026-07-25) — CUÁNDO se toca este copy.**
+> Nada de esta tabla se reescribe todavía. Motivo: **hoy WhatsApp es el ÚNICO camino de
+> conversión del sitio** (no hay pasarela en vivo), no un placeholder por falta de credenciales.
+> Retirar los CTA de "Reservar por WhatsApp" antes de tener Culqi/PayPal cobrando dejaría al
+> sitio **sin ninguna vía de cierre**.
+>
+> Regla de disparo: **el copy de las filas 1-8, 10, 13, 15, 16 cambia el MISMO DÍA en que la
+> pasarela entra en producción y queda verificada cobrando — ni un día antes.** Es el último
+> paso del despliegue de pagos (§12), no una tarea previa ni independiente.
+>
+> Filas 9, 12 y 14 (WhatsApp como **contacto/soporte**) se **conservan siempre**, con o sin pasarela.
+
 | # | Ubicación | Elemento | Naturaleza actual |
 |---|---|---|---|
 | 1 | `resources/views/checkout.blade.php:1345-1348` | Botón **`btn-whatsapp-confirm`** "Confirmar reserva por WhatsApp" | **Cierra reserva** → retirar |

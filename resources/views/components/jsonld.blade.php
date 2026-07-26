@@ -48,7 +48,7 @@
         '@type'    => ['TravelAgency', 'LocalBusiness'],
         'name'     => $geoName,
         'url'      => url('/' . $locale),
-        'logo'     => asset('assets/logos/logo-america-red.png'),
+        'logo'     => asset('assets/logos/logo-america-original.webp'),
         'image'    => asset('assets/banners/banner-hero.jpg'),
         'description' => $description,
         'email'    => $email,
