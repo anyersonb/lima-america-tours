@@ -199,12 +199,38 @@ La app clasifica en Culturales / Aventura / Culinarias / Otros; **WP no tiene es
 /tours/{slug}/   →   /es/tours/detalle/{slug}   (301)
 ```
 
-**Acción SEO obligatoria al lanzar:** implementar ese 301 (y su equivalente para las URLs de listado/categoría si las hubiera). Mapa completo de los 26 (todos cambian de path, mismo slug):
+**Acción SEO obligatoria al lanzar:** implementar ese 301 (y su equivalente para las URLs de listado/categoría si las hubiera). Los 26 están **`publish` en WP** (los 2 que en la app quedaron borrador es solo porque tienen precio 0; en WP están vivos e indexables), así que **los 26 necesitan 301**. Mapa completo (mismo slug en ambos, cambia el path):
 
-| slug (igual en ambos) | URL vieja | URL nueva |
+| slug (igual en ambos) | URL vieja (WP) | URL nueva (app) |
 |---|---|---|
-| full-day-nazca-e-islas-ballestas-desde-lima | /tours/…/ | /es/tours/detalle/…/ |
-| *(idéntico patrón para los 26)* | | |
+| city-tour-centro-historico-de-lima | /tours/city-tour-centro-historico-de-lima/ | /es/tours/detalle/city-tour-centro-historico-de-lima |
+| city-tour-cusco | /tours/city-tour-cusco/ | /es/tours/detalle/city-tour-cusco |
+| city-tour-en-lima-con-clases-de-pisco | /tours/city-tour-en-lima-con-clases-de-pisco/ | /es/tours/detalle/city-tour-en-lima-con-clases-de-pisco |
+| city-tour-en-lima-con-visita-a-la-huaca-pucllana-de-noche | /tours/city-tour-en-lima-con-visita-a-la-huaca-pucllana-de-noche/ | /es/tours/detalle/city-tour-en-lima-con-visita-a-la-huaca-pucllana-de-noche |
+| conoce-machu-picchu-si-no-tienes-entrada | /tours/conoce-machu-picchu-si-no-tienes-entrada/ | /es/tours/detalle/conoce-machu-picchu-si-no-tienes-entrada |
+| full-day-nazca-e-islas-ballestas-desde-lima | /tours/full-day-nazca-e-islas-ballestas-desde-lima/ | /es/tours/detalle/full-day-nazca-e-islas-ballestas-desde-lima |
+| laguna-humantay | /tours/laguna-humantay/ | /es/tours/detalle/laguna-humantay |
+| lima-con-sabor-de-city-tour-con-pisco-sour-y-ceviche | /tours/lima-con-sabor-de-city-tour-con-pisco-sour-y-ceviche/ | /es/tours/detalle/lima-con-sabor-de-city-tour-con-pisco-sour-y-ceviche |
+| lima-highlights-tour-miraflores-barranco-surquillo-y-centro-de-lima | /tours/lima-highlights-tour-miraflores-barranco-surquillo-y-centro-de-lima/ | /es/tours/detalle/lima-highlights-tour-miraflores-barranco-surquillo-y-centro-de-lima |
+| machu-picchu | /tours/machu-picchu/ | /es/tours/detalle/machu-picchu |
+| maras-moray-y-minas-de-sal-cuatrimotos | /tours/maras-moray-y-minas-de-sal-cuatrimotos/ | /es/tours/detalle/maras-moray-y-minas-de-sal-cuatrimotos |
+| montana-arcoiris-de-7-colores | /tours/montana-arcoiris-de-7-colores/ | /es/tours/detalle/montana-arcoiris-de-7-colores |
+| recorrido-por-el-casco-historico-de-lima-degustaciones-de-pisco-sour | /tours/recorrido-por-el-casco-historico-de-lima-degustaciones-de-pisco-sour/ | /es/tours/detalle/recorrido-por-el-casco-historico-de-lima-degustaciones-de-pisco-sour |
+| ruta-gastronomica-de-barrio-por-lima-street-food-prepara-anticucho-y-degusta-el-pisco-sour | /tours/ruta-gastronomica-de-barrio-por-lima-street-food-prepara-anticucho-y-degusta-el-pisco-sour/ | /es/tours/detalle/ruta-gastronomica-de-barrio-por-lima-street-food-prepara-anticucho-y-degusta-el-pisco-sour |
+| ruta-gastronomica-por-lima | /tours/ruta-gastronomica-por-lima/ | /es/tours/detalle/ruta-gastronomica-por-lima |
+| tour-a-miraflores-y-barranco-la-lima-moderna-y-bohemia | /tours/tour-a-miraflores-y-barranco-la-lima-moderna-y-bohemia/ | /es/tours/detalle/tour-a-miraflores-y-barranco-la-lima-moderna-y-bohemia |
+| tour-callao | /tours/tour-callao/ | /es/tours/detalle/tour-callao |
+| tour-casa-aliaga-y-catacumbas-en-lima | /tours/tour-casa-aliaga-y-catacumbas-en-lima/ | /es/tours/detalle/tour-casa-aliaga-y-catacumbas-en-lima |
+| tour-huaca-pucllana | /tours/tour-huaca-pucllana/ | /es/tours/detalle/tour-huaca-pucllana |
+| tour-islas-palomino | /tours/tour-islas-palomino/ | /es/tours/detalle/tour-islas-palomino |
+| tour-museo-larco | /tours/tour-museo-larco/ | /es/tours/detalle/tour-museo-larco |
+| tour-pachacamac | /tours/tour-pachacamac/ | /es/tours/detalle/tour-pachacamac |
+| tour-paracas-ica-huacachina | /tours/tour-paracas-ica-huacachina/ | /es/tours/detalle/tour-paracas-ica-huacachina |
+| tour-parque-de-aguas-cena-show | /tours/tour-parque-de-aguas-cena-show/ | /es/tours/detalle/tour-parque-de-aguas-cena-show |
+| traslado-en-auto-desde-el-aeropuerto-al-hotel | /tours/traslado-en-auto-desde-el-aeropuerto-al-hotel/ | /es/tours/detalle/traslado-en-auto-desde-el-aeropuerto-al-hotel |
+| valle-sagrado-de-los-incas | /tours/valle-sagrado-de-los-incas/ | /es/tours/detalle/valle-sagrado-de-los-incas |
+
+> **Sin resolver todavía (necesito de ti):** ¿el sitio nuevo vive en el **mismo dominio** `limaamericatours.com` reemplazando al WP, o en otro dominio/subdominio? De eso depende si el 301 se hace en el WP saliente, en el `.htaccess`/OLS del server, o en `Route::fallback` de la app. También hace falta el **listado de URLs de categoría/`lugar`** (`/tours/lugar/{term}/`, etc.) que WP también indexa. Eso lo cierro cuando me confirmes el dominio de destino.
 
 ---
 

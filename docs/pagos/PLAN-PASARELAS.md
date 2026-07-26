@@ -372,7 +372,37 @@ Al traer la data real, se confirmó que **los precios de los tours están en sol
 - **B) Doble moneda.** Culqi cobra en PEN; PayPal cobra el equivalente en USD con tasa configurable. *Costo: complejidad de conversión, conciliación en dos monedas, riesgo de tipo de cambio.*
 - **C) Todo en USD.** Se re-tarifan los 26 tours en dólares; ambas pasarelas cobran USD. *Costo: cambia el precio percibido por el cliente peruano.*
 
-**Estado:** hasta que Anyerson decida, la **moneda del checkout queda sin cerrar**. La data se importó con `currency = 'PEN'` (valor real). El guarda anti-cobro-real y la Fase 0 no se ven afectados; esto es de Fase 2 (cobro en vivo).
+**DECISIÓN DE ANYERSON (2026-07-26):** el **cobro inicial es Culqi en soles (PEN)**. **PayPal NO está descartado: queda EN PAUSA pendiente de definición de moneda.** La meta final sigue siendo **ambas pasarelas (Culqi + PayPal)**. La data se importó con `currency = 'PEN'`.
+
+#### 13.1 🔴 Hallazgo de la auditoría de moneda (2026-07-26)
+
+La ficha ya muestra `S/` (helper `Money`), pero **el cobro seguía en USD**. Puntos donde el número viajaba sin su moneda correcta:
+
+| Punto | Mostraba | Cobraba/guardaba | ¿Coincide? |
+|---|---|---|---|
+| Payload Culqi (`checkout.blade.php` L344) | — | `currency: 'USD'`, `amount = total*100` | 🔴 **cobra USD sobre un total en PEN → ~3.7× de sobrecobro** |
+| Booking guardado (`CheckoutController.php` L298) | — | `'currency' => 'USD'` hardcode | 🔴 booking en PEN se guarda como USD |
+| `checkout.blade.php` (subtotal, total, "pagar ahora") | `$720 USD` | — | 🔴 símbolo y código equivocados |
+| `checkout/payment.blade.php` (L10) | `$totalPen = total*3.70` | — | 🔴 doble conversión: el total YA es PEN |
+| `checkout/thanks.blade.php` (L79-80) | `$720` + `USD` | — | 🔴 |
+| JSON-LD ficha (`show.blade.php` L119) | `priceCurrency = tour->currency` | — | 🟡 ya da PEN, pero con fallback `'USD'` frágil |
+| JSON-LD blog (`blog/show.blade.php` L34) | logo `logo.png` (equivocado) | — | 🟡 logo, no moneda |
+
+**Corrección (Opción A):** todo el checkout pasa a PEN, símbolo `S/` vía `Money`, se elimina el hack `*3.70`. Con test que falla antes / pasa después.
+
+#### 13.2 ⏸️ PayPal — EN PAUSA (no descartado). Pendiente de definición de moneda
+
+PayPal es parte del objetivo final (Culqi + PayPal). Está **en pausa**, no cancelado. Por instrucción de Anyerson, **no se decide ni implementa** hasta responder por escrito (Anyerson decide, no el equipo):
+
+1. **¿En qué moneda se crea la orden PayPal?** (PayPal no admite PEN → tendría que ser USD u otra soportada).
+2. **¿De dónde sale el tipo de cambio PEN→USD?** (tasa fija manual, API de un banco/SUNAT, markup propio). ¿Se refresca cada cuánto?
+3. **¿Quién absorbe la diferencia de tipo de cambio** entre el momento de mostrar el precio y el de la captura? (el cliente, la agencia, o se fija un colchón).
+4. **¿Qué monto EXACTO ve el cliente antes de confirmar** en PayPal? ¿"S/ 720 (≈ USD 195)"? ¿solo USD? Debe quedar sin ambigüedad para no generar disputas.
+5. **¿Cómo se concilia** un booking registrado en PEN pero cobrado en USD? (qué moneda manda en el reporte, qué se guarda en `bookings.currency`, cómo cuadra con Culqi que sí cobra PEN).
+
+Hasta tener esas 5 respuestas, PayPal se deja **en pausa del lado del servidor**: la ruta `paypalCreateOrder` queda desactivada (un endpoint vivo que crea órdenes en USD hardcodeado es un 🔴 aunque no haya botón). El código se conserva para retomarlo; se reactiva la ruta cuando se resuelva la moneda.
+
+**Estado:** moneda del checkout = **PEN (Culqi)**, CERRADA por decisión. PayPal = **EN PAUSA por moneda (no descartado)**; ruta de creación de orden desactivada con test.
 
 ---
 
