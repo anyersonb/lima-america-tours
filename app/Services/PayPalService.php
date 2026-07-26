@@ -166,6 +166,11 @@ class PayPalService
     public function captureOrder(string $orderId): array
     {
         try {
+            // Guarda anti-cobro-real: aborta ANTES de golpear la API de PayPal
+            // si el modo configurado es "live" fuera de un contexto productivo
+            // autorizado (App\Services\PaymentGuard).
+            PaymentGuard::assertChargeAllowed('paypal', $this->mode);
+
             $token = $this->accessToken();
 
             // PayPal exige un objeto JSON ({} o vacío) en el capture; un array []
