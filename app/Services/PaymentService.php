@@ -8,16 +8,19 @@ use Illuminate\Support\Facades\Log;
 class PaymentService
 {
     private string $secretKey;
+
     private string $publicKey;
+
     private string $webhookSecret;
+
     private string $apiUrl;
 
     public function __construct()
     {
-        $this->secretKey     = config('services.culqi.secret_key', '');
-        $this->publicKey     = config('services.culqi.public_key', '');
+        $this->secretKey = config('services.culqi.secret_key', '');
+        $this->publicKey = config('services.culqi.public_key', '');
         $this->webhookSecret = config('services.culqi.webhook_secret', '');
-        $this->apiUrl        = rtrim(config('services.culqi.api_url', 'https://api.culqi.com/v2'), '/');
+        $this->apiUrl = rtrim(config('services.culqi.api_url', 'https://api.culqi.com/v2'), '/');
     }
 
     /**
@@ -31,32 +34,36 @@ class PaymentService
      *   antifraud_details?: array,
      *   metadata?: array
      * } $data
-     * @return array
      *
      * @throws \RuntimeException on non-2xx response
      */
     public function createCharge(array $data): array
     {
         try {
+            // Guarda anti-cobro-real: aborta ANTES de golpear la API de Culqi
+            // si se detectan credenciales LIVE fuera de un contexto productivo
+            // autorizado (App\Services\PaymentGuard).
+            PaymentGuard::assertChargeAllowed('culqi', $this->secretKey);
+
             $response = Http::withToken($this->secretKey)
                 ->acceptJson()
                 ->post("{$this->apiUrl}/charges", $data);
 
             if ($response->failed()) {
                 Log::error('culqi.create_charge.failed', [
-                    'status'   => $response->status(),
-                    'body'     => $response->body(),
+                    'status' => $response->status(),
+                    'body' => $response->body(),
                     'metadata' => $data['metadata'] ?? [],
                 ]);
 
                 throw new \RuntimeException(
-                    'Culqi charge failed: ' . ($response->json('user_message') ?? $response->body())
+                    'Culqi charge failed: '.($response->json('user_message') ?? $response->body())
                 );
             }
 
             Log::info('culqi.create_charge.success', [
                 'charge_id' => $response->json('id'),
-                'metadata'  => $data['metadata'] ?? [],
+                'metadata' => $data['metadata'] ?? [],
             ]);
 
             return $response->json();
@@ -64,11 +71,11 @@ class PaymentService
             throw $e;
         } catch (\Throwable $e) {
             Log::error('culqi.create_charge.exception', [
-                'message'  => $e->getMessage(),
+                'message' => $e->getMessage(),
                 'metadata' => $data['metadata'] ?? [],
             ]);
 
-            throw new \RuntimeException('Culqi connection error: ' . $e->getMessage(), 0, $e);
+            throw new \RuntimeException('Culqi connection error: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -87,11 +94,11 @@ class PaymentService
             if ($response->failed()) {
                 Log::error('culqi.retrieve_charge.failed', [
                     'charge_id' => $id,
-                    'status'    => $response->status(),
-                    'body'      => $response->body(),
+                    'status' => $response->status(),
+                    'body' => $response->body(),
                 ]);
 
-                throw new \RuntimeException('Culqi retrieve charge failed: ' . $response->body());
+                throw new \RuntimeException('Culqi retrieve charge failed: '.$response->body());
             }
 
             return $response->json();
@@ -100,10 +107,10 @@ class PaymentService
         } catch (\Throwable $e) {
             Log::error('culqi.retrieve_charge.exception', [
                 'charge_id' => $id,
-                'message'   => $e->getMessage(),
+                'message' => $e->getMessage(),
             ]);
 
-            throw new \RuntimeException('Culqi connection error: ' . $e->getMessage(), 0, $e);
+            throw new \RuntimeException('Culqi connection error: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -116,6 +123,7 @@ class PaymentService
     {
         if (empty($this->webhookSecret)) {
             Log::warning('culqi.webhook.secret_not_configured');
+
             return false;
         }
 
