@@ -87,8 +87,8 @@ body:has(.site-header[data-variant="solid"]) {
     height: 18px;
     padding: 0 4px;
     border-radius: 9999px;
-    background-color: #c8944a; // dorado
-    color: #171412;             // teal-800 / $lat-ink (texto oscuro sobre dorado)
+    background-color: #cb101e; // $lat-red (marca)
+    color: #fff;                // texto blanco sobre rojo
     font-size: 10px;
     font-weight: 700;
     line-height: 18px;

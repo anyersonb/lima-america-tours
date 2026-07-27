@@ -25,11 +25,11 @@
 }
 
 .lat-btn--red {
-    // Botón primario en ink; el rojo de marca queda como acento de hover.
-    background: $lat-ink;
+    // CTA principal en el ROJO de marca (branding), no en ink.
+    background: $lat-red;
     color: #fff;
 
-    &:hover { background: $lat-red; transform: translateY(-2px); box-shadow: 0 10px 24px rgba(203, 16, 30, .32); }
+    &:hover { background: $lat-red-deep; transform: translateY(-2px); box-shadow: 0 10px 24px rgba(203, 16, 30, .32); }
 }
 
 // Variante outline blanco — para usar sobre fondos de color sólido (p. ej. bandas rojas)
@@ -64,10 +64,10 @@
 .lat-hero {
     position: relative;
     isolation: isolate;
-    min-height: 720px;
+    min-height: 75vh;
     display: flex;
     align-items: stretch;
-    padding: 40px 0 40px;
+    padding: 40px 0;
     overflow: hidden;
     color: #fff;
 

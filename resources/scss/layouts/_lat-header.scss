@@ -153,15 +153,14 @@
     font-size: .9rem;
     padding: 11px 20px;
     border-radius: $lat-r-pill;
-    background: #fff;
-    color: $lat-ink;
+    background: $lat-red;
+    color: #fff;
     white-space: nowrap;
     transition: background .2s, color .2s, transform .2s, box-shadow .2s;
 
-    // Blanco sólido, elegante y de máximo contraste sobre el header ink;
-    // el rojo aparece solo como detalle en el hover.
+    // CTA principal del header en el ROJO de marca (branding).
     &:hover {
-        background: $lat-red;
+        background: $lat-red-deep;
         color: #fff;
         transform: translateY(-2px);
         box-shadow: 0 10px 24px rgba(203, 16, 30, .35);
