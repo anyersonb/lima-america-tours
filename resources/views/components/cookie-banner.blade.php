@@ -59,7 +59,7 @@
         left: 0;
         right: 0;
         z-index: 9500;
-        background-color: #15474B;
+        background-color: #171412;
         color: #fff;
         padding: 16px 20px;
         box-shadow: 0 -4px 24px rgba(0,0,0,0.25);
@@ -83,7 +83,7 @@
         ">
             {{ $bannerText }}
             <a href="{{ $privacyUrl }}"
-               style="color: #f0a04b; text-decoration: underline; white-space: nowrap; margin-left: 4px;"
+               style="color: #ff6b6b; text-decoration: underline; white-space: nowrap; margin-left: 4px;"
                aria-label="{{ __('common.cookie_privacy') }}">
                 {{ __('common.cookie_privacy') }}
             </a>
@@ -125,7 +125,7 @@
                     padding: 8px 22px;
                     border-radius: 6px;
                     border: none;
-                    background-color: #E8823A;
+                    background-color: #cb101e;
                     color: #fff;
                     font-size: 0.875rem;
                     font-weight: 600;
@@ -133,8 +133,8 @@
                     transition: background 0.15s ease, transform 0.1s ease;
                     white-space: nowrap;
                 "
-                onmouseover="this.style.background='#d06e2a'"
-                onmouseout="this.style.background='#E8823A'">
+                onmouseover="this.style.background='#9d0c16'"
+                onmouseout="this.style.background='#cb101e'">
                 {{ __('common.cookie_accept') }}
             </button>
         </div>

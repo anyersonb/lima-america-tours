@@ -18,37 +18,46 @@ export default {
                 price: ['"Instrument Serif"', 'serif'],
             },
             colors: {
+                // "teal" — remapeado a neutros oscuros ("ink") de Lima América.
+                // Antes era la escala teal de Lima View (#15474b/#0f3438); ahora
+                // cubre texto/superficies oscuras (header, footer, CTAs oscuros).
+                // Mismos nombres de utilidad para no reescribir cada Blade.
                 teal: {
-                    50:  '#f0f7f7',
-                    100: '#dcecec',
-                    200: '#b9d9da',
-                    300: '#8ebdbf',
-                    400: '#5e9b9e',
-                    500: '#357277',
-                    600: '#1f5b5f',
-                    700: '#15474b',
-                    800: '#0f3438',
-                    900: '#0a2326',
+                    50:  '#f6f4f2',
+                    100: '#ece7e2',
+                    200: '#d6cec3',
+                    300: '#b3a89a',
+                    400: '#8c8073',
+                    500: '#6f6a63', // = $lat-muted
+                    600: '#524d47',
+                    700: '#3a352f', // = $lat-ink-soft
+                    800: '#171412', // = $lat-ink (antes "color principal" teal; ahora neutro)
+                    900: '#100d0b',
+                    950: '#0a0807',
                 },
+                // "orange" — remapeado al rojo de marca de Lima América
+                // (antes acento naranja #e29347; ahora #cb101e / #9d0c16).
                 orange: {
-                    50:  '#fdf6ee',
-                    100: '#faead2',
-                    200: '#f4d2a4',
-                    300: '#edb56d',
-                    400: '#e8a05a',
-                    500: '#e29347',
-                    600: '#c87530',
-                    700: '#9f5a26',
-                    800: '#7d4720',
-                    900: '#623820',
+                    50:  '#fbeaea', // = $lat-red-tint
+                    100: '#f5cbcc',
+                    200: '#eb9ea1',
+                    300: '#de6d72',
+                    400: '#d43e46',
+                    500: '#cb101e', // = $lat-red (acento / CTA principal)
+                    600: '#9d0c16', // = $lat-red-deep
+                    700: '#82060f',
+                    800: '#660208',
+                    900: '#4a0106',
                 },
+                // "cream" — remapeado a paper/líneas neutras de Lima América
+                // (antes cream cálido; ahora paper #faf7f2 / línea #e9e3da).
                 cream: {
                     50:  '#ffffff',
-                    100: '#f5f0ed',
-                    200: '#ece6e2',
-                    300: '#ddd2cb',
-                    400: '#c5b6ac',
-                    500: '#a89588',
+                    100: '#faf7f2', // = $lat-paper
+                    200: '#e9e3da', // = $lat-line
+                    300: '#dcd4c8', // = $lat-line-strong
+                    400: '#c9bfae',
+                    500: '#ab9f8c',
                 },
                 state: {
                     error: '#c81f21',

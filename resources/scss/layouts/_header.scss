@@ -1,17 +1,17 @@
-// ── Tokens de referencia ──────────────────────────────────────────────────
-// teal-800  : #0f3438
-// teal-700  : #15474b
-// teal-900  : #0a2326
+// ── Tokens de referencia (Lima América) ────────────────────────────────────
+// teal-800 (= $lat-ink)      : #171412
+// teal-700 (= $lat-ink-soft) : #3a352f
+// teal-900                   : #100d0b
 // dorado    : #c8944a
 // amber-400 : #fbbf24
-// orange-500: #e29347
+// orange-500 (= $lat-red): #cb101e
 
 .site-header {
     @apply fixed top-0 inset-x-0 z-50 transition-all duration-300;
 
-    // Variante sólida: fondo teal oscuro
+    // Variante sólida: fondo ink oscuro (marca Lima América)
     &[data-variant="solid"] {
-        background-color: #0f3438; // teal-800
+        background-color: #171412; // teal-800 / $lat-ink
         @apply text-white shadow-md;
     }
 
@@ -20,7 +20,7 @@
         @apply bg-transparent text-white;
 
         &.is-scrolled {
-            background-color: rgba(15, 52, 56, 0.95); // teal-800/95
+            background-color: rgba(23, 20, 18, 0.95); // teal-800/95 ($lat-ink)
             @apply shadow-lg;
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
@@ -42,7 +42,7 @@ body:has(.site-header[data-variant="solid"]) {
 .site-header__wordmark {
     color: #c8944a; // dorado
     // Visible en ambas variantes (sólida y transparente) porque el fondo
-    // siempre es oscuro (teal) cuando hay texto.
+    // siempre es oscuro (ink) cuando hay texto.
 }
 
 // ── Divisores verticales delgados ─────────────────────────────────────────
@@ -88,7 +88,7 @@ body:has(.site-header[data-variant="solid"]) {
     padding: 0 4px;
     border-radius: 9999px;
     background-color: #c8944a; // dorado
-    color: #0f3438;             // teal-800 (texto oscuro sobre dorado)
+    color: #171412;             // teal-800 / $lat-ink (texto oscuro sobre dorado)
     font-size: 10px;
     font-weight: 700;
     line-height: 18px;
@@ -132,7 +132,7 @@ body:has(.site-header[data-variant="solid"]) {
         @apply flex-1 min-w-0 leading-tight;
 
         b     { @apply block text-[15px] font-bold; }
-        small { @apply block text-[12px] mt-0.5; color: rgba(15, 52, 56, .55); }
+        small { @apply block text-[12px] mt-0.5; color: rgba(23, 20, 18, .55); }
     }
 
     &__chev {
@@ -142,7 +142,7 @@ body:has(.site-header[data-variant="solid"]) {
 
     &__sub {
         @apply block rounded-xl px-3 py-2.5 text-[13.5px] font-semibold transition-colors;
-        color: rgba(15, 52, 56, .8);
+        color: rgba(23, 20, 18, .8);
 
         &:hover {
             background: theme('colors.cream.100');

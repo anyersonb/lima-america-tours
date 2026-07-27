@@ -1,11 +1,14 @@
 // Brand tokens — sync con tailwind.config.js y guía de marca
-$teal-700: #15474b;   // Color principal de marca
-$teal-800: #0f3438;
-$orange-500: #e29347; // Acento / CTA
-$orange-600: #c87530;
+// Lima AMÉRICA Tours: "teal"/"orange"/"cream" quedan remapeados a los
+// neutros ink / rojo / paper de América (ver bloque $lat-* más abajo).
+// Se conservan los nombres para no romper referencias existentes.
+$teal-700: #3a352f;   // = $lat-ink-soft (antes teal #15474b)
+$teal-800: #171412;   // = $lat-ink (antes teal #0f3438; ya NO es "color principal")
+$orange-500: #cb101e; // = $lat-red — Acento / CTA principal (antes naranja #e29347)
+$orange-600: #9d0c16; // = $lat-red-deep (antes naranja #c87530)
 
-$cream-100: #f5f0ed;  // Primario del brand guide (fondo cream claro)
-$cream-200: #ece6e2;  // Primario oscuro
+$cream-100: #faf7f2;  // = $lat-paper (antes cream cálido #f5f0ed)
+$cream-200: #e9e3da;  // = $lat-line (antes cream cálido #ece6e2)
 
 $state-error: #c81f21;
 $state-success: #145212;
