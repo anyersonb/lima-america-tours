@@ -31,7 +31,7 @@ class Booking extends Model
     {
         static::creating(function (self $b) {
             if (empty($b->reference)) {
-                $b->reference = 'LVT-' . strtoupper(Str::random(8));
+                $b->reference = 'LAT-'.strtoupper(Str::random(8));
             }
         });
     }

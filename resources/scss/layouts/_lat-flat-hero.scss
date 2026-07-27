@@ -21,7 +21,10 @@
 
     .lat-eyebrow { margin: 0 0 14px; }
 
-    h1 {
+    // h2 se usa cuando este hero no es el <h1> principal de la pantalla
+    // (p.ej. checkout paso 2, que convive con el <h1> del paso 1 en el mismo
+    // DOM) — mismo estilo visual, solo cambia el nivel semántico.
+    h1, h2 {
         font-family: $lat-font-serif;
         font-weight: 800;
         font-size: clamp(2rem, 4.2vw, 2.9rem);

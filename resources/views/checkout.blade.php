@@ -713,7 +713,7 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
             <a href="{{ route('tours.index', ['locale' => $locale]) }}">{{ __('nav.tours') }}</a> &middot;
             <span>{{ $L('Reserva', 'Booking', 'Reserva') }}</span>
         </nav>
-        <h1>{{ $L('Detalles de la Reserva', 'Booking Details', 'Detalhes da Reserva') }}</h1>
+        <h2>{{ $L('Detalles de la Reserva', 'Booking Details', 'Detalhes da Reserva') }}</h2>
         <p class="lat-flat-hero__sub">
             🔒 {{ $L('Tus datos están protegidos y serán usados solo para tu reserva.', 'Your data is protected and will only be used for your booking.', 'Seus dados estão protegidos e serão usados apenas para sua reserva.') }}
         </p>
