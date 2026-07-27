@@ -99,6 +99,24 @@ class CheckoutController extends Controller
                     ->with('error', __('cart.empty_checkout_redirect'));
             }
 
+            // CRO #1: el cobro es 100% PEN vía Culqi. Hoy los 26 tours
+            // públicos son PEN, pero ya hay 7 tours USD en borrador en la
+            // BD — si alguno llegara al carrito (publicación futura o error
+            // de captura), abortamos ANTES de calcular/cobrar nada, en vez
+            // de sumar soles y dólares como si fueran la misma moneda.
+            // Se relajará cuando se reactive PayPal/cobro multimoneda.
+            if (! $this->cart->isPenOnly()) {
+                Log::warning('checkout.process_payment: non-PEN currency in cart, aborting', [
+                    'currencies' => $this->cart->currencies()->all(),
+                    'tour_ids' => $items->pluck('tour_id')->all(),
+                    'email' => $request->input('customer_email'),
+                ]);
+
+                return redirect()
+                    ->route('cart.index', ['locale' => $locale])
+                    ->with('error', 'No pudimos procesar tu reserva: uno de los tours de tu carrito aún no está habilitado para cobro en soles. Contáctanos por WhatsApp para completarla manualmente.');
+            }
+
             $validated = $request->validated();
 
             $customer = [

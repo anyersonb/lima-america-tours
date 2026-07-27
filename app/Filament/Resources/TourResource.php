@@ -87,10 +87,23 @@ class TourResource extends Resource
                                             static::priceField('price_before')
                                                 ->label('Precio antes (oferta)')
                                                 ->helperText('Escribe aquí el precio original (más alto que el actual) para activar la OFERTA ESPECIAL con su % de descuento automático. Déjalo VACÍO si el tour NO tiene oferta.'),
-                                            Forms\Components\TextInput::make('currency')
+                                            // CRO #2: era un TextInput libre — un editor podía escribir
+                                            // cualquier cosa (o "USD" por error) y el panel lo aceptaba
+                                            // sin avisar, aunque el negocio cobra 100% en soles (PEN)
+                                            // vía Culqi. Un Select con opciones fijas hace el error
+                                            // imposible de cometer por tipeo.
+                                            Forms\Components\Select::make('currency')
                                                 ->required()
-                                                ->maxLength(3)
+                                                ->options([
+                                                    'PEN' => 'PEN (Soles)',
+                                                    'USD' => 'USD (Dólares)',
+                                                ])
+                                                // Filament's Select doesn't reject an out-of-list value
+                                                // server-side on its own — the `in:` rule is what actually
+                                                // blocks it (the UI dropdown only restricts real browser use).
+                                                ->rules(['in:PEN,USD'])
                                                 ->default('PEN')
+                                                ->native(false)
                                                 ->label('Moneda'),
                                         ]),
                                         Forms\Components\Placeholder::make('discount_preview')

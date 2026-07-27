@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Session;
 
 class CartService
 {
-    private const SESSION_ITEMS  = 'cart.items';
+    private const SESSION_ITEMS = 'cart.items';
+
     private const SESSION_COUPON = 'cart.coupon';
 
     // ─────────────────────────────────────────────────────────────
@@ -25,26 +26,30 @@ class CartService
         $items = $this->rawItems();
 
         if (isset($items[$rowId])) {
-            $items[$rowId]['adults']   = $adults;
+            $items[$rowId]['adults'] = $adults;
             $items[$rowId]['children'] = $children;
             $items[$rowId]['quantity'] = $adults + $children;
             $items[$rowId]['subtotal'] = round($items[$rowId]['unit_price'] * ($adults + $children), 2);
         } else {
             $locale = app()->getLocale();
             $items[$rowId] = [
-                'row_id'           => $rowId,
-                'tour_id'          => $tour->id,
-                'title_snapshot'   => $tour->{"title_{$locale}"} ?: $tour->title_es,
-                'cover_image'      => $tour->cover_image,
-                'duration'         => $tour->duration,
-                'language'         => $tour->language,
-                'group_type'       => $tour->group_type,
-                'unit_price'       => (float) $tour->price,
-                'adults'           => $adults,
-                'children'         => $children,
-                'quantity'         => $adults + $children,
-                'subtotal'         => round((float) $tour->price * ($adults + $children), 2),
-                'travel_date'      => $travelDate,
+                'row_id' => $rowId,
+                'tour_id' => $tour->id,
+                'title_snapshot' => $tour->{"title_{$locale}"} ?: $tour->title_es,
+                'cover_image' => $tour->cover_image,
+                'duration' => $tour->duration,
+                'language' => $tour->language,
+                'group_type' => $tour->group_type,
+                'unit_price' => (float) $tour->price,
+                // Snapshot the tour's currency at add-time — used by
+                // currencies()/isPenOnly() to block a mixed-currency
+                // checkout without needing to re-query the DB per item.
+                'currency' => $tour->currency ?: 'PEN',
+                'adults' => $adults,
+                'children' => $children,
+                'quantity' => $adults + $children,
+                'subtotal' => round((float) $tour->price * ($adults + $children), 2),
+                'travel_date' => $travelDate,
             ];
         }
 
@@ -62,8 +67,12 @@ class CartService
             return;
         }
 
-        if (isset($data['adults']))   $items[$rowId]['adults']   = (int) $data['adults'];
-        if (isset($data['children'])) $items[$rowId]['children'] = (int) $data['children'];
+        if (isset($data['adults'])) {
+            $items[$rowId]['adults'] = (int) $data['adults'];
+        }
+        if (isset($data['children'])) {
+            $items[$rowId]['children'] = (int) $data['children'];
+        }
 
         $items[$rowId]['quantity'] = $items[$rowId]['adults'] + $items[$rowId]['children'];
         $items[$rowId]['subtotal'] = round($items[$rowId]['unit_price'] * $items[$rowId]['quantity'], 2);
@@ -108,7 +117,7 @@ class CartService
                 ?? $this->buildRowId($item['tour_id'], $item['travel_date'] ?? '');
 
             $item['row_id'] = $rowId;
-            $keyed[$rowId]  = $item;
+            $keyed[$rowId] = $item;
         }
 
         Session::put(self::SESSION_ITEMS, $keyed);
@@ -125,30 +134,30 @@ class CartService
      */
     public function applyCoupon(string $code): array
     {
-        $code    = strtoupper(trim($code));
+        $code = strtoupper(trim($code));
         $coupons = config('cart.coupons', []);
 
         if (! isset($coupons[$code])) {
             return [
-                'success'  => false,
-                'message'  => __('cart.coupon_invalid'),
+                'success' => false,
+                'message' => __('cart.coupon_invalid'),
                 'discount' => 0.0,
             ];
         }
 
-        $coupon   = $coupons[$code];
+        $coupon = $coupons[$code];
         $discount = $this->calculateDiscount($coupon, $this->subtotal());
 
         Session::put(self::SESSION_COUPON, [
-            'code'     => $code,
-            'type'     => $coupon['type'],
-            'value'    => $coupon['value'],
+            'code' => $code,
+            'type' => $coupon['type'],
+            'value' => $coupon['value'],
             'discount' => $discount,
         ]);
 
         return [
-            'success'  => true,
-            'message'  => __('cart.coupon_applied'),
+            'success' => true,
+            'message' => __('cart.coupon_applied'),
             'discount' => $discount,
         ];
     }
@@ -175,9 +184,45 @@ class CartService
         return round(collect($this->rawItems())->sum('subtotal'), 2);
     }
 
+    /**
+     * Distinct currencies of the tours currently in the cart. Prefers the
+     * 'currency' snapshotted on the item by add() (see above); falls back to
+     * the live Tour record for older/legacy session items that predate the
+     * snapshot (e.g. an abandoned cart restored via replace()), and finally
+     * to 'PEN' if the tour was deleted in the meantime.
+     *
+     * @return Collection<int, string>
+     */
+    public function currencies(): Collection
+    {
+        return $this->items()
+            ->map(function (array $item): string {
+                if (! empty($item['currency'])) {
+                    return $item['currency'];
+                }
+
+                return Tour::find($item['tour_id'] ?? null)?->currency ?: 'PEN';
+            })
+            ->unique()
+            ->values();
+    }
+
+    /**
+     * The business charges exclusively in soles (PEN) through Culqi — see
+     * docs/pagos/PLAN-PASARELAS.md §13. This is false the moment a single
+     * non-PEN tour (e.g. one of the USD drafts already sitting in the DB,
+     * currently unpublished) makes it into the cart, which CheckoutController
+     * uses to abort the payment flow before any total is calculated or
+     * charged. Relax this only when multi-currency / PayPal is reactivated.
+     */
+    public function isPenOnly(): bool
+    {
+        return $this->currencies()->reject(fn (string $currency): bool => $currency === 'PEN')->isEmpty();
+    }
+
     public function couponCode(): ?string
     {
-        return Session::get(self::SESSION_COUPON . '.code');
+        return Session::get(self::SESSION_COUPON.'.code');
     }
 
     public function couponDiscount(): float
@@ -190,7 +235,7 @@ class CartService
 
         // Recalculate each time subtotal may have changed
         $coupons = config('cart.coupons', []);
-        $code    = $stored['code'] ?? null;
+        $code = $stored['code'] ?? null;
 
         if (! $code || ! isset($coupons[$code])) {
             return 0.0;
@@ -199,7 +244,7 @@ class CartService
         $discount = $this->calculateDiscount($coupons[$code], $this->subtotal());
 
         // Keep stored value in sync
-        Session::put(self::SESSION_COUPON . '.discount', $discount);
+        Session::put(self::SESSION_COUPON.'.discount', $discount);
 
         return $discount;
     }
@@ -215,7 +260,7 @@ class CartService
 
     private function buildRowId(int|string $tourId, string $travelDate): string
     {
-        return md5($tourId . $travelDate);
+        return md5($tourId.$travelDate);
     }
 
     /** @return array<string, array<string, mixed>> */
