@@ -9,10 +9,7 @@
 
 @section('title', __('checkout.thank_you_title') . ' — ' . __('seo.site_name'))
 @section('description', 'Tu reserva en Lima América Tours ha sido confirmada. Recibirás un email con los detalles.')
-
-@push('head')
-<meta name="robots" content="noindex,nofollow">
-@endpush
+@section('robots', 'noindex,nofollow')
 
 @section('content')
 

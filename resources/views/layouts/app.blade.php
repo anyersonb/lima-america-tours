@@ -53,7 +53,16 @@
 
     <title>{{ $title }}</title>
     <meta name="description" content="{{ $description }}">
-    @if (env('NOINDEX', false))
+    @php
+        // Some views (checkout/*.blade.php) need to force noindex,nofollow
+        // regardless of the global NOINDEX env — they set @section('robots', ...)
+        // instead of printing their own <meta name="robots"> tag, which used to
+        // duplicate this one (SEO S-06: 2 <meta name="robots"> in the same <head>).
+        $robotsOverride = trim($__env->yieldContent('robots'));
+    @endphp
+    @if ($robotsOverride !== '')
+        <meta name="robots" content="{{ $robotsOverride }}">
+    @elseif (env('NOINDEX', false))
         <meta name="robots" content="noindex,nofollow">
     @else
         <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">

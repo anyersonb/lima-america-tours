@@ -13,6 +13,20 @@
     ];
     $sectionTitle = $regionTitles[$cat ?? null] ?? $regionTitles[null];
 
+    // Etiqueta corta usada SOLO para interpolar ":section" en la meta
+    // description (ui.tours_meta_description). $sectionTitle de arriba es una
+    // frase completa para el <h1> ("Descubre las mejores experiencias en
+    // Lima") — usarla ahí también producía un duplicado tipo "Descubre
+    // nuestros tours por Descubre las mejores experiencias en Lima." (SEO
+    // S-04). Esta lleva solo el nombre de la región.
+    $sectionMetaLabels = [
+        'lima'  => $L('Lima', 'Lima', 'Lima'),
+        'ica'   => $L('Ica', 'Ica', 'Ica'),
+        'cusco' => $L('Cusco', 'Cusco', 'Cusco'),
+        null    => $L('Perú', 'Peru', 'Peru'),
+    ];
+    $sectionMetaLabel = $sectionMetaLabels[$cat ?? null] ?? $sectionMetaLabels[null];
+
     $tours = $tours ?? collect();
     $categories = $categories ?? collect();
 
@@ -34,7 +48,7 @@
 @endphp
 
 @section('title', $sectionTitle . ' — ' . __('seo.site_name'))
-@section('description', __('ui.tours_meta_description', ['section' => $sectionTitle]))
+@section('description', __('ui.tours_meta_description', ['section' => $sectionMetaLabel]))
 @section('header_variant', 'solid')
 
 @section('content')

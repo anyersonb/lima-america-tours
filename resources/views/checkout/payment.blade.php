@@ -10,10 +10,7 @@
 
 @section('title', __('checkout.title') . ' — ' . __('seo.site_name'))
 @section('description', __('checkout.meta_description'))
-
-@push('head')
-<meta name="robots" content="noindex,nofollow">
-@endpush
+@section('robots', 'noindex,nofollow')
 
 @section('content')
 

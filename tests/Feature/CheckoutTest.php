@@ -279,6 +279,27 @@ class CheckoutTest extends TestCase
     }
 
     /**
+     * CRO #5: el nodo del total dinámico (recalculado en JS al cambiar
+     * adultos/niños) llevaba `data-total="usd2"` + una función `fmtUsd2()`
+     * que formateaba con 2 decimales — residuo del nombre/formato de cuando
+     * el sitio cotizaba en dólares. No se mostraba al usuario como texto,
+     * pero es exactamente el tipo de residuo que un futuro mantenimiento
+     * puede reactivar por error. El total dinámico ahora es siempre soles
+     * vía la misma fmt() que el resto del carrito.
+     */
+    public function test_checkout_page_html_has_no_usd2_residue(): void
+    {
+        $tour = $this->tour();
+        $this->addTourToCart($tour);
+
+        $response = $this->get(route('cart.index', ['locale' => self::LOCALE]));
+
+        $response->assertOk();
+        $response->assertDontSee('usd2', false);
+        $response->assertDontSee('fmtUsd2', false);
+    }
+
+    /**
      * Verifica que el payload enviado a Culqi (api.culqi.com/v2/charges) se
      * construya con currency=PEN. Se prueba PaymentService::createCharge()
      * directamente —el servicio ya existente que centraliza la llamada HTTP—

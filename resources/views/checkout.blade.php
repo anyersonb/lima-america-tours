@@ -15,9 +15,9 @@
 
 @section('title', __('ui.cart_title') . ' — ' . __('seo.site_name'))
 @section('description', __('ui.cart_subtitle'))
+@section('robots', 'noindex,nofollow')
 
 @push('head')
-<meta name="robots" content="noindex,nofollow">
 <style>
 /* ════════════════════════════════════════════════════════════
    CARRITO — 3 pasos en una sola pantalla
@@ -1327,7 +1327,7 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
 
                                 <div class="lat-checkout-total">
                                     <span>{{ __('checkout.total') }}</span>
-                                    <b data-total="usd2">{{ \App\Support\Money::format($total, 'PEN', 2) }}</b>
+                                    <b data-total>{{ \App\Support\Money::format($total, 'PEN', 2) }}</b>
                                 </div>
 
                                 <div class="lat-checkout-notice">
@@ -1507,14 +1507,15 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
         return b;
     }
     function fmt(v) { return moneyPrefix + Math.round(v); }
-    function fmtUsd2(v) { return moneyPrefix + v.toFixed(2); }
     function updateTotalUI() {
         const sub    = calcSubtotal();
         const before = calcBeforeTotal();
         const promo  = Math.max(0, before - sub);
         const total  = Math.max(0, sub - serverDiscount);
+        // Total dinámico siempre en soles (moneyPrefix = "S/ ") — el negocio
+        // es 100% PEN vía Culqi, sin la rama en dólares que existía antes (CRO #5).
         document.querySelectorAll('[data-total]').forEach(el => {
-            el.textContent = el.dataset.total === 'usd2' ? fmtUsd2(total) : fmt(total);
+            el.textContent = fmt(total);
         });
         const asSub = document.querySelector('[data-aside-subtotal]');
         const asTot = document.querySelector('[data-aside-total]');
@@ -1822,7 +1823,7 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
     function buildWhatsAppSummary() {
         const d = collectCustomerData();
         const titles = Array.from(document.querySelectorAll('.lat-checkout-item__title')).map(el => el.textContent.trim()).join(', ');
-        const totalEl = document.querySelector('[data-total="usd2"]');
+        const totalEl = document.querySelector('[data-total]');
         const lines = [
             'Hola, quiero confirmar mi reserva en Lima América Tours:',
             titles ? ('Tour(s): ' + titles) : null,

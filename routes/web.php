@@ -61,9 +61,12 @@ Route::prefix('{locale}')
         Route::get('/tours/categoria/{categoria}', [TourController::class, 'category'])
             ->where('categoria', 'lima|ica|cusco')
             ->name('tours.category');
-        // Slug legacy (título renombrado antes del blindaje de slug) → 301 al slug vigente
+        // Slug legacy (título renombrado antes del blindaje de slug) → 301 al slug vigente.
+        // El destino anterior ("tour-privado-huacachina-islas-ballestas-atardecer-buggy-can-am")
+        // no existe en la BD (301→404, SEO S-02) — el tour equivalente vivo es
+        // "tour-paracas-ica-huacachina" ("Full Day Paracas - Ica - Huacachina").
         Route::get('/tours/detalle/tour-de-dia-completo-al-oasis-de-huacachina-con-buggie-privado-canam-islas-ballestas-en-paracas',
-            fn (string $locale) => redirect("/{$locale}/tours/detalle/tour-privado-huacachina-islas-ballestas-atardecer-buggy-can-am", 301));
+            fn (string $locale) => redirect("/{$locale}/tours/detalle/tour-paracas-ica-huacachina", 301));
         Route::get('/tours/detalle/{slug}', [TourController::class, 'show'])->name('tours.show');
         Route::post('/tours/detalle/{slug}/resena', [TourController::class, 'storeReview'])
             ->middleware('throttle:6,1')
