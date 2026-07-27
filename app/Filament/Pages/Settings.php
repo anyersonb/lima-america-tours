@@ -488,7 +488,7 @@ class Settings extends Page implements HasForms
                                         Textarea::make('desc_es')->label('Descripción (ES)')->rows(2)->columnSpanFull(),
                                         Textarea::make('desc_en')->label('Descripción (EN)')->rows(2)->columnSpanFull(),
                                         Textarea::make('desc_pt')->label('Descripción (PT)')->rows(2)->columnSpanFull(),
-                                        TextInput::make('price')->label('Precio desde (USD)')->numeric(),
+                                        TextInput::make('price')->label('Precio desde (S/)')->numeric(),
                                     ])
                                     ->columns(3)
                                     ->collapsible()

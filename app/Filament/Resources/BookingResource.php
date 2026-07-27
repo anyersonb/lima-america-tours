@@ -354,17 +354,17 @@ class BookingResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('unit_price')
                     ->label('P. unitario')
-                    ->money('PEN')
+                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, 'PEN', 2))
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('discount_amount')
                     ->label('Descuento')
-                    ->money('PEN')
+                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, 'PEN', 2))
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('total_price')
                     ->label('Total')
-                    ->money('PEN')
+                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, 'PEN', 2))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')

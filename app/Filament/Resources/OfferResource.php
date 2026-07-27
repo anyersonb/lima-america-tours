@@ -56,7 +56,7 @@ class OfferResource extends Resource
                 Forms\Components\TextInput::make('price')
                     ->label('Precio')
                     ->numeric()
-                    ->prefix('$'),
+                    ->prefix('S/'),
                 Forms\Components\TextInput::make('cta_label_es')
                     ->required()
                     ->maxLength(255)
@@ -104,7 +104,7 @@ class OfferResource extends Resource
                     ->getStateUsing(fn ($record) => ImagePath::url($record->image)),
                 Tables\Columns\TextColumn::make('price')
                     ->label('Precio')
-                    ->money()
+                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, 'PEN', 2))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('cta_label_es')
                     ->label('CTA (ES)')

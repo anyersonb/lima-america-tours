@@ -6,6 +6,7 @@ use App\Filament\Resources\TourResource\Pages;
 use App\Models\Tour;
 use App\Support\ImageOptimizer;
 use App\Support\ImagePath;
+use App\Support\Money;
 use Filament\Forms;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Form;
@@ -89,7 +90,7 @@ class TourResource extends Resource
                                             Forms\Components\TextInput::make('currency')
                                                 ->required()
                                                 ->maxLength(3)
-                                                ->default('USD')
+                                                ->default('PEN')
                                                 ->label('Moneda'),
                                         ]),
                                         Forms\Components\Placeholder::make('discount_preview')
@@ -120,8 +121,11 @@ class TourResource extends Resource
                                                 // Misma fórmula que usan la tabla y (a futuro) el front:
                                                 // Tour::offerDiscountPercent() es la única fuente de verdad.
                                                 $discount = Tour::offerDiscountPercent($price, $priceBefore);
+                                                $currency = (string) ($get('currency') ?: 'PEN');
+                                                $before = Money::format($priceBefore, $currency, 2);
+                                                $now = Money::format($price, $currency, 2);
 
-                                                return "✔ OFERTA ESPECIAL -{$discount}% activa — el card mostrará \"ANTES US\${$priceBefore}\" tachado y \"AHORA US\${$price}\".";
+                                                return "✔ OFERTA ESPECIAL -{$discount}% activa — el card mostrará \"ANTES {$before}\" tachado y \"AHORA {$now}\".";
                                             }),
                                     ]),
                                 Forms\Components\Grid::make(2)->schema([
@@ -338,7 +342,7 @@ class TourResource extends Resource
         return Forms\Components\TextInput::make($name)
             ->type('text')
             ->inputMode('decimal')
-            ->prefix('$')
+            ->prefix('S/')
             ->rule(function () use ($name) {
                 return function (string $attribute, $value, \Closure $fail) use ($name) {
                     if ($value === null || $value === '') {
@@ -435,7 +439,7 @@ class TourResource extends Resource
                     ->badge()->color('gray')
                     ->label('Categoría'),
                 Tables\Columns\TextColumn::make('price')
-                    ->money('USD')->sortable()
+                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, 'PEN', 2))->sortable()
                     ->label('Precio'),
                 Tables\Columns\IconColumn::make('has_offer')
                     ->label('Oferta')

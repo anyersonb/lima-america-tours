@@ -16,12 +16,17 @@ class AbandonedCartResource extends Resource
 {
     protected static ?string $model = AbandonedCart::class;
 
-    protected static ?string $navigationIcon  = 'heroicon-o-archive-box-x-mark';
-    protected static ?string $navigationGroup  = 'Marketing';
-    protected static ?string $navigationLabel  = 'Carritos abandonados';
-    protected static ?string $modelLabel       = 'Carrito abandonado';
+    protected static ?string $navigationIcon = 'heroicon-o-archive-box-x-mark';
+
+    protected static ?string $navigationGroup = 'Marketing';
+
+    protected static ?string $navigationLabel = 'Carritos abandonados';
+
+    protected static ?string $modelLabel = 'Carrito abandonado';
+
     protected static ?string $pluralModelLabel = 'Carritos abandonados';
-    protected static ?int $navigationSort       = 9;
+
+    protected static ?int $navigationSort = 9;
 
     public static function getNavigationBadge(): ?string
     {
@@ -70,21 +75,21 @@ class AbandonedCartResource extends Resource
                     ->badge(),
                 Tables\Columns\TextColumn::make('total')
                     ->label('Total')
-                    ->money('USD')
+                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, 'PEN', 2))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
                     ->formatStateUsing(fn (string $state) => match ($state) {
-                        'active'    => 'Activo',
+                        'active' => 'Activo',
                         'converted' => 'Convertido',
-                        'expired'   => 'Caducado',
-                        default     => $state,
+                        'expired' => 'Caducado',
+                        default => $state,
                     })
                     ->color(fn (string $state) => match ($state) {
                         'converted' => 'success',
-                        'expired'   => 'gray',
-                        default     => 'warning',
+                        'expired' => 'gray',
+                        default => 'warning',
                     }),
                 Tables\Columns\TextColumn::make('reminders_sent')
                     ->label('Recordatorios')
@@ -106,9 +111,9 @@ class AbandonedCartResource extends Resource
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Estado')
                     ->options([
-                        'active'    => 'Activo',
+                        'active' => 'Activo',
                         'converted' => 'Convertido',
-                        'expired'   => 'Caducado',
+                        'expired' => 'Caducado',
                     ]),
             ])
             ->actions([
@@ -122,12 +127,12 @@ class AbandonedCartResource extends Resource
                         $next = min($r->reminders_sent + 1, 2);
                         Mail::to($r->email)->send(new AbandonedCartReminder($r, $next));
                         $r->forceFill([
-                            'reminders_sent'   => $next,
+                            'reminders_sent' => $next,
                             'last_reminder_at' => now(),
                         ])->save();
 
                         \Filament\Notifications\Notification::make()
-                            ->title('Recordatorio enviado a ' . $r->email)
+                            ->title('Recordatorio enviado a '.$r->email)
                             ->success()
                             ->send();
                     }),
