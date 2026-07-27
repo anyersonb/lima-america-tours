@@ -1,0 +1,62 @@
+// ═══════════════════════════════════════════════════════════════════════
+// LIMA AMÉRICA TOURS — Galería "Descubre la belleza del Perú" (home)
+// Tira horizontal edge-to-edge de fotos de destinos. Reutiliza .lat-wrap,
+// .lat-eyebrow y .lat-sec-head (ver pages/lat-home); tokens $lat-* (rojo/
+// ink/paper), nada de teal.
+// ═══════════════════════════════════════════════════════════════════════
+@use '../abstracts/variables' as *;
+
+.lat-gallery {
+    padding: 70px 0;
+    background: $lat-paper;
+    overflow: hidden;
+
+    .lat-sec-head { margin-bottom: 32px; }
+
+    &__strip {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(72%, 1fr);
+        gap: 4px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar { display: none; }
+
+        @media (min-width: $bp-sm) { grid-auto-columns: minmax(46%, 1fr); gap: 6px; }
+        @media (min-width: $bp-md) { grid-auto-columns: minmax(31%, 1fr); gap: 6px; }
+        @media (min-width: $bp-lg) { grid-auto-columns: minmax(0, 1fr); gap: 8px; overflow-x: visible; scroll-snap-type: none; }
+    }
+
+    &__item {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        aspect-ratio: 3 / 4;
+        scroll-snap-align: start;
+
+        @media (min-width: $bp-lg) { aspect-ratio: 4 / 5; }
+
+        img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform .6s ease;
+        }
+
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background: linear-gradient(to top, rgba(23, 20, 18, .5) 0%, transparent 42%);
+            pointer-events: none;
+            transition: opacity .3s ease;
+        }
+
+        &:hover img { transform: scale(1.08); }
+    }
+}

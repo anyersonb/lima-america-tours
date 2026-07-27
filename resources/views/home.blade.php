@@ -64,6 +64,47 @@
     } catch (\Throwable $e) {
         $categories = collect();
     }
+
+    // ── Galería "Descubre la belleza del Perú" — editable en Settings → Home,
+    // fallback a fotos de destinos reales ya presentes en storage/app/public/tours
+    // para que la sección nunca salga vacía. ──
+    $galleryResolve = function (string $settingKey, string $fallbackUrl) {
+        $val = \App\Models\Setting::get($settingKey);
+        if (is_array($val)) { $val = $val[0] ?? ''; }
+        $val = trim((string) $val);
+
+        return ($val !== '' && $val !== '[]' && $val !== '""')
+            ? \Illuminate\Support\Facades\Storage::disk('media')->url($val)
+            : $fallbackUrl;
+    };
+
+    $gallerySlots = [
+        ['key' => 'home_gallery_img_1', 'fallback' => 'tours/OASIS-DE-HUACACHINA-ISLAS-BALLESTAS-EN-PARACAS-1.jpg', 'alt' => [
+            'es' => 'Islas Ballestas y costa de Paracas, Perú', 'en' => 'Ballestas Islands and Paracas coastline, Peru', 'pt' => 'Ilhas Ballestas e litoral de Paracas, Peru',
+        ]],
+        ['key' => 'home_gallery_img_2', 'fallback' => 'tours/machu-picchu-paquete-de-4-dias-lima-view-tours.jpg', 'alt' => [
+            'es' => 'Machu Picchu, Cusco', 'en' => 'Machu Picchu, Cusco', 'pt' => 'Machu Picchu, Cusco',
+        ]],
+        ['key' => 'home_gallery_img_3', 'fallback' => 'tours/2024-12-MONTANA-1-1.png', 'alt' => [
+            'es' => 'Montaña de 7 Colores, Cusco', 'en' => 'Rainbow Mountain, Cusco', 'pt' => 'Montanha de 7 Cores, Cusco',
+        ]],
+        ['key' => 'home_gallery_img_4', 'fallback' => 'tours/2024-02-Centro-Historico-Lima-01-1.webp', 'alt' => [
+            'es' => 'Arquitectura colonial del Centro Histórico de Lima', 'en' => 'Colonial architecture in Lima\'s Historic Center', 'pt' => 'Arquitetura colonial do Centro Histórico de Lima',
+        ]],
+        ['key' => 'home_gallery_img_5', 'fallback' => 'tours/2024-12-laguna-de-humantay-750x536-1.jpg', 'alt' => [
+            'es' => 'Laguna Humantay, Cusco', 'en' => 'Humantay Lagoon, Cusco', 'pt' => 'Lagoa Humantay, Cusco',
+        ]],
+        ['key' => 'home_gallery_img_6', 'fallback' => 'tours/2024-02-Nazca-02.webp', 'alt' => [
+            'es' => 'Líneas de Nazca, Perú', 'en' => 'Nazca Lines, Peru', 'pt' => 'Linhas de Nazca, Peru',
+        ]],
+    ];
+
+    $galleryImages = collect($gallerySlots)->map(function ($slot) use ($galleryResolve, $locale) {
+        return [
+            'url' => $galleryResolve($slot['key'], asset('storage/'.$slot['fallback'])),
+            'alt' => $slot['alt'][$locale] ?? $slot['alt']['es'],
+        ];
+    });
 @endphp
 
 @section('content')
@@ -260,6 +301,32 @@
             </div>
         </div>
     </div>
+
+    {{-- ============================================================
+         GALERÍA — "Descubre la belleza del Perú"
+         Tira horizontal edge-to-edge de fotos de destinos, editable en
+         Settings → Home → Imágenes del Home → Galería. Fallback a fotos
+         reales de storage/app/public/tours si el admin no sube nada
+         (nunca sale vacía). Existe en producción (limaamericatours.com,
+         sección "Nuestra Galería"); aquí va justo después de la tira de
+         garantías y antes de "Explora por categoría".
+         ============================================================ --}}
+    <section class="lat-gallery" aria-labelledby="gallery-title">
+        <div class="lat-wrap">
+            <div class="lat-sec-head">
+                <span class="lat-eyebrow is-center">{{ $L('Galería', 'Gallery', 'Galeria') }}</span>
+                <h2 id="gallery-title">{{ $L('Descubre la belleza del Perú', 'Discover the beauty of Peru', 'Descubra a beleza do Peru') }}</h2>
+            </div>
+        </div>
+
+        <div class="lat-gallery__strip">
+            @foreach ($galleryImages as $photo)
+                <div class="lat-gallery__item">
+                    <img src="{{ $photo['url'] }}" alt="{{ $photo['alt'] }}" loading="lazy" width="400" height="500">
+                </div>
+            @endforeach
+        </div>
+    </section>
 
     {{-- ============================================================
          EXPLORA POR CATEGORÍA — reales (modelo Category)

@@ -251,6 +251,15 @@ class Settings extends Page implements HasForms
                                         FileUpload::make('home_exp_img_3')->label('3 · Experiencia')->image()->disk('media')->directory('home')->saveUploadedFileUsing(\App\Support\ImageOptimizer::saver('home', 1400, disk: 'media', deletePrevious: true)),
                                         FileUpload::make('home_exp_img_4')->label('4 · Experiencia')->image()->disk('media')->directory('home')->saveUploadedFileUsing(\App\Support\ImageOptimizer::saver('home', 1400, disk: 'media', deletePrevious: true)),
                                     ])->columns(2),
+                                \Filament\Forms\Components\Fieldset::make('Galería (Descubre la belleza del Perú)')
+                                    ->schema([
+                                        FileUpload::make('home_gallery_img_1')->label('1 · Foto')->image()->disk('media')->directory('home')->saveUploadedFileUsing(\App\Support\ImageOptimizer::saver('home', 1400, disk: 'media', deletePrevious: true)),
+                                        FileUpload::make('home_gallery_img_2')->label('2 · Foto')->image()->disk('media')->directory('home')->saveUploadedFileUsing(\App\Support\ImageOptimizer::saver('home', 1400, disk: 'media', deletePrevious: true)),
+                                        FileUpload::make('home_gallery_img_3')->label('3 · Foto')->image()->disk('media')->directory('home')->saveUploadedFileUsing(\App\Support\ImageOptimizer::saver('home', 1400, disk: 'media', deletePrevious: true)),
+                                        FileUpload::make('home_gallery_img_4')->label('4 · Foto')->image()->disk('media')->directory('home')->saveUploadedFileUsing(\App\Support\ImageOptimizer::saver('home', 1400, disk: 'media', deletePrevious: true)),
+                                        FileUpload::make('home_gallery_img_5')->label('5 · Foto')->image()->disk('media')->directory('home')->saveUploadedFileUsing(\App\Support\ImageOptimizer::saver('home', 1400, disk: 'media', deletePrevious: true)),
+                                        FileUpload::make('home_gallery_img_6')->label('6 · Foto')->image()->disk('media')->directory('home')->saveUploadedFileUsing(\App\Support\ImageOptimizer::saver('home', 1400, disk: 'media', deletePrevious: true)),
+                                    ])->columns(3),
                             ]),
 
                         // ── Hero (títulos) ────────────────────────────────────
