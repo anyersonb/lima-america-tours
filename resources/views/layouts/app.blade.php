@@ -55,14 +55,22 @@
     <meta name="description" content="{{ $description }}">
     @php
         // Some views (checkout/*.blade.php) need to force noindex,nofollow
-        // regardless of the global NOINDEX env — they set @section('robots', ...)
-        // instead of printing their own <meta name="robots"> tag, which used to
-        // duplicate this one (SEO S-06: 2 <meta name="robots"> in the same <head>).
+        // regardless of the global NOINDEX config/environment — they set
+        // @section('robots', ...) instead of printing their own
+        // <meta name="robots"> tag, which used to duplicate this one
+        // (SEO S-06: 2 <meta name="robots"> in the same <head>).
+        //
+        // Non-production environments (local/staging/testing) are ALWAYS
+        // forced to noindex,nofollow, on top of the manual config('app.noindex')
+        // override that can also force it in production. This keeps staging
+        // out of search results without requiring anyone to remember to set
+        // NOINDEX=true there. Production behavior is unchanged.
         $robotsOverride = trim($__env->yieldContent('robots'));
+        $forceNoindex = config('app.noindex') || ! app()->environment('production');
     @endphp
     @if ($robotsOverride !== '')
         <meta name="robots" content="{{ $robotsOverride }}">
-    @elseif (env('NOINDEX', false))
+    @elseif ($forceNoindex)
         <meta name="robots" content="noindex,nofollow">
     @else
         <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">

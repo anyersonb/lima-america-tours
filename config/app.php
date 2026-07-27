@@ -74,6 +74,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Force noindex,nofollow
+    |--------------------------------------------------------------------------
+    |
+    | Manual override to force noindex on ANY environment (including
+    | production) via NOINDEX=true in .env. Non-production environments
+    | (local/staging/testing) are already forced to noindex regardless of
+    | this flag — see resources/views/layouts/app.blade.php and
+    | App\Http\Middleware\StagingNoindex.
+    |
+    */
+
+    'noindex' => (bool) env('NOINDEX', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
