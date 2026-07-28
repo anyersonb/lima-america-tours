@@ -2,7 +2,7 @@
 
 return [
     'about_banner_heading' => 'We are
-Lima View
+Lima América
 Tours',
     'about_banner_text' => 'We transform every trip into an experience that connects your present with the vibrant legacy of Peru. We are more than an agency: we are your adventure companions.',
     'about_cultura_heading' => 'Experience local
@@ -309,6 +309,7 @@ culture',
     'verified_reviews' => 'verified reviews',
     'view_all_photos' => 'View all photos',
     'view_gallery' => 'View gallery',
+    'watch_video' => 'Watch video',
     'view_my_bookings' => 'View my bookings',
     'views_label' => 'Views',
     'was' => 'Was',

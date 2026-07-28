@@ -119,7 +119,10 @@ class Settings extends Page implements HasForms
                         TextInput::make('contact_email')->email()->label('Correo de contacto'),
                         TextInput::make('contact_phone')->label('Teléfono principal'),
                         TextInput::make('contact_phone_secondary')->label('Teléfono secundario'),
-                        TextInput::make('whatsapp')->label('WhatsApp (sin +)')->placeholder('51935542384'),
+                        TextInput::make('whatsapp')
+                            ->label('WhatsApp (sin +)')
+                            ->placeholder('51900000000')
+                            ->helperText('Solo números: código de país + número, sin espacios ni "+". Ejemplo de formato (no es un número real): 51900000000.'),
                         TextInput::make('contact_address_es')->label('Dirección (ES)'),
                         TextInput::make('contact_address_en')->label('Dirección (EN)'),
                         TextInput::make('contact_hours_es')->label('Horarios (ES)'),
@@ -282,6 +285,105 @@ class Settings extends Page implements HasForms
                                     ->label('Hero título (PT)')
                                     ->rows(3)
                                     ->placeholder("Descubra\no que\ntransforma você.")
+                                    ->columnSpanFull(),
+                            ]),
+
+                        // ── Hero — textos (SEO Fix 1, 2026-07-27): el hero rediseñado
+                        // ya LEE estas claves con Setting::get('clave') ?: $default
+                        // (home.blade.php), pero no existían campos aquí — el cliente
+                        // veía siempre el default hardcodeado y no podía cambiar ni
+                        // una palabra. Mismos nombres de clave que consume la vista. ──
+                        \Filament\Forms\Components\Section::make('Hero — eyebrow, línea roja y párrafo')
+                            ->description('Textos del banner superior, encima del bloque "10+ años" y la tarjeta de confianza. Deja vacío cualquier campo para usar el texto por defecto ya cargado en el diseño.')
+                            ->collapsible()
+                            ->columns(3)
+                            ->schema([
+                                TextInput::make('home_hero_eyebrow_es')->label('Eyebrow rojo pequeño (ES)')->placeholder('Somos'),
+                                TextInput::make('home_hero_eyebrow_en')->label('Eyebrow rojo pequeño (EN)')->placeholder('We are'),
+                                TextInput::make('home_hero_eyebrow_pt')->label('Eyebrow rojo pequeño (PT)')->placeholder('Somos'),
+
+                                Textarea::make('home_hero_tagline_es')
+                                    ->label('Línea roja, 2 líneas (ES)')
+                                    ->rows(2)
+                                    ->helperText('Usa un salto de línea para controlar dónde corta el texto. Ej: "10 años mostrando" + Enter + "lo mejor del Perú".')
+                                    ->placeholder("10 años mostrando\nlo mejor del Perú")
+                                    ->columnSpanFull(),
+                                Textarea::make('home_hero_tagline_en')
+                                    ->label('Línea roja, 2 líneas (EN)')
+                                    ->rows(2)
+                                    ->placeholder("10 years showcasing\nthe best of Peru")
+                                    ->columnSpanFull(),
+                                Textarea::make('home_hero_tagline_pt')
+                                    ->label('Línea roja, 2 líneas (PT)')
+                                    ->rows(2)
+                                    ->placeholder("10 anos mostrando\no melhor do Peru")
+                                    ->columnSpanFull(),
+
+                                Textarea::make('home_hero_sub_es')
+                                    ->label('Párrafo gris del hero (ES)')
+                                    ->rows(2)
+                                    ->placeholder('Explora lugares increíbles, vive experiencias únicas y crea recuerdos que durarán para siempre.')
+                                    ->columnSpanFull(),
+                                Textarea::make('home_hero_sub_en')
+                                    ->label('Párrafo gris del hero (EN)')
+                                    ->rows(2)
+                                    ->placeholder('Explore incredible places, live unique experiences and create memories that will last forever.')
+                                    ->columnSpanFull(),
+                                Textarea::make('home_hero_sub_pt')
+                                    ->label('Párrafo gris del hero (PT)')
+                                    ->rows(2)
+                                    ->placeholder('Explore lugares incríveis, viva experiências únicas e crie memórias que vão durar para sempre.')
+                                    ->columnSpanFull(),
+                            ]),
+
+                        // ── Hero — bloque "10+ años" ──────────────────────────
+                        \Filament\Forms\Components\Section::make('Hero — bloque "10+ años"')
+                            ->description('El número, la etiqueta y el subtexto del bloque de años de experiencia dentro del hero.')
+                            ->collapsible()
+                            ->columns(3)
+                            ->schema([
+                                TextInput::make('home_hero_years_number')
+                                    ->label('Número (ej. "10+")')
+                                    ->placeholder('10+')
+                                    ->helperText('Campo único, sin idioma: el número se ve igual en los 3 idiomas.'),
+                                TextInput::make('home_hero_years_label_es')->label('Etiqueta (ES)')->placeholder('Años de experiencia'),
+                                TextInput::make('home_hero_years_label_en')->label('Etiqueta (EN)')->placeholder('Years of experience'),
+                                TextInput::make('home_hero_years_label_pt')->label('Etiqueta (PT)')->placeholder('Anos de experiência'),
+                                TextInput::make('home_hero_years_sub_es')->label('Subtexto (ES)')->placeholder('Miles de viajeros descubriendo el Perú')->columnSpanFull(),
+                                TextInput::make('home_hero_years_sub_en')->label('Subtexto (EN)')->placeholder('Thousands of travelers discovering Peru')->columnSpanFull(),
+                                TextInput::make('home_hero_years_sub_pt')->label('Subtexto (PT)')->placeholder('Milhares de viajantes descobrindo o Peru')->columnSpanFull(),
+                            ]),
+
+                        // ── Hero — tarjeta de confianza ────────────────────────
+                        \Filament\Forms\Components\Section::make('Hero — tarjeta de confianza (4 textos)')
+                            ->description('Los 4 textos cortos con ícono que aparecen en la tarjeta de confianza flotante del hero.')
+                            ->collapsible()
+                            ->columns(3)
+                            ->schema([
+                                TextInput::make('home_hero_trust_1_es')->label('Confianza 1 (ES)')->placeholder('Guías expertos locales'),
+                                TextInput::make('home_hero_trust_1_en')->label('Confianza 1 (EN)')->placeholder('Local expert guides'),
+                                TextInput::make('home_hero_trust_1_pt')->label('Confianza 1 (PT)')->placeholder('Guias locais especializados'),
+                                TextInput::make('home_hero_trust_2_es')->label('Confianza 2 (ES)')->placeholder('Tours 100% seguros'),
+                                TextInput::make('home_hero_trust_2_en')->label('Confianza 2 (EN)')->placeholder('100% safe tours'),
+                                TextInput::make('home_hero_trust_2_pt')->label('Confianza 2 (PT)')->placeholder('Tours 100% seguros'),
+                                TextInput::make('home_hero_trust_3_es')->label('Confianza 3 (ES)')->placeholder('Atención personalizada'),
+                                TextInput::make('home_hero_trust_3_en')->label('Confianza 3 (EN)')->placeholder('Personalized support'),
+                                TextInput::make('home_hero_trust_3_pt')->label('Confianza 3 (PT)')->placeholder('Atendimento personalizado'),
+                                TextInput::make('home_hero_trust_4_es')->label('Confianza 4 (ES)')->placeholder('Mejor precio garantizado'),
+                                TextInput::make('home_hero_trust_4_en')->label('Confianza 4 (EN)')->placeholder('Best price guaranteed'),
+                                TextInput::make('home_hero_trust_4_pt')->label('Confianza 4 (PT)')->placeholder('Melhor preço garantido'),
+                            ]),
+
+                        // ── Hero — botón "Ver video" ───────────────────────────
+                        \Filament\Forms\Components\Section::make('Hero — botón "Ver video"')
+                            ->description('Enlace del video que abre el botón "Ver video" del hero.')
+                            ->collapsible()
+                            ->schema([
+                                TextInput::make('home_hero_video_url')
+                                    ->label('URL del video')
+                                    ->url()
+                                    ->placeholder('https://www.youtube.com/watch?v=XXXXXXXXXXX')
+                                    ->helperText('Pega el link tal como lo copias de YouTube o Vimeo (el normal, el que sale al darle "Compartir"): un link de youtube.com/watch, youtu.be, un Short, o de vimeo.com. Si se deja VACÍO, el botón "Ver video" del hero no se muestra en el sitio.')
                                     ->columnSpanFull(),
                             ]),
 

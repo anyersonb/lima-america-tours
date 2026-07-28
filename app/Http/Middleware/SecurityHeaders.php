@@ -32,10 +32,14 @@ class SecurityHeaders
             ."https://*.tacdn.com https://www.tripadvisor.com",
         'font-src'    => "'self' https://fonts.gstatic.com https://fonts.bunny.net https://*.tacdn.com data:",
         'img-src'     => "'self' data: https: blob:",
+        // youtube.com/-nocookie + player.vimeo.com: modal "Ver video" del hero
+        // de Home (home_hero_video_url, Fix 4 2026-07-27) — sin esto el iframe
+        // se crea en el DOM pero el navegador lo bloquea igual por CSP.
         'frame-src'   => "https://*.culqi.com https://www.googletagmanager.com "
             ."https://www.paypal.com https://*.paypal.com "
             ."https://www.tripadvisor.com https://*.tripadvisor.com "
-            ."https://www.google.com",
+            ."https://www.google.com "
+            ."https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com",
         'connect-src' => "'self' https://api.culqi.com "
             ."https://www.paypal.com https://*.paypal.com https://*.paypalobjects.com "
             ."https://www.google-analytics.com "

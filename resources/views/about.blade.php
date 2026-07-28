@@ -238,11 +238,14 @@
                         'Cada tour é uma história. Esses números refletem uma década acompanhando viajantes do mundo todo pelo Peru.'
                     ) }}
                 </p>
-                @php $waNumber = \App\Models\Setting::get('whatsapp') ?: '51925886725'; @endphp
+                {{-- Sin fallback a otro número de WhatsApp: ver App\Models\Setting::whatsappNumber(). --}}
+                @php $waNumber = \App\Models\Setting::whatsappNumber(); @endphp
+                @if ($waNumber)
                 <a href="https://wa.me/{{ $waNumber }}" target="_blank" rel="noopener noreferrer" class="lat-btn lat-btn--wa">
                     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="18" height="18"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24z"/></svg>
                     {{ $L('Habla con nosotros', 'Talk to us', 'Fale conosco') }}
                 </a>
+                @endif
             </div>
 
             <div class="lat-stat-tiles" data-stats-tiles>
@@ -281,10 +284,12 @@
                 {{ $L('Viajar es descubrir, aprender y vivir. Cuéntanos a dónde quieres ir.', 'To travel is to discover, learn and live. Tell us where you want to go.', 'Viajar é descobrir, aprender e viver. Conte-nos para onde você quer ir.') }}
             </p>
             <div class="lat-cta-final__actions">
+                @if ($waNumber)
                 <a href="https://wa.me/{{ $waNumber }}" target="_blank" rel="noopener noreferrer" class="lat-btn lat-btn--wa">
                     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="18" height="18"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24z"/></svg>
                     {{ $L('Escríbenos por WhatsApp', 'Message us on WhatsApp', 'Escreva-nos pelo WhatsApp') }}
                 </a>
+                @endif
                 <a href="{{ route('tours.index', ['locale' => $locale]) }}" class="lat-btn lat-btn--white">
                     {{ $L('Ver tours', 'View tours', 'Ver tours') }}
                 </a>

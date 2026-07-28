@@ -2,6 +2,15 @@
 
 @section('title', __('ui.search_results') . ' — ' . __('seo.site_name'))
 
+{{--
+    SEO S-03: /{locale}/buscar recibe q/destino/fecha/pax desde el buscador
+    del hero y genera URLs con parámetros ilimitadas enlazadas desde la home.
+    noindex,follow (no "nofollow") para que Google no indexe esta página de
+    resultados pero SÍ siga los enlaces internos a los tours (incluida la
+    sugerencia "Recomendados" cuando la búsqueda no da resultados).
+--}}
+@section('robots', 'noindex,follow')
+
 @php $locale = app()->getLocale(); @endphp
 
 @section('content')
@@ -86,6 +95,31 @@
                         {{ __('ui.see_all_tours') }}
                     </a>
                 </div>
+
+                {{-- Guardrail: nunca dejar la pantalla muerta — sugerimos tours
+                     reales (publicados/destacados) aunque la combinación de
+                     filtros no haya devuelto nada. --}}
+                @isset($suggested)
+                    @if ($suggested->isNotEmpty())
+                        <div class="mt-6">
+                            <p class="text-sm font-semibold text-lat-ink mb-4">{{ __('ui.recommended') }}</p>
+                            <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                                @foreach ($suggested as $tour)
+                                    <a href="{{ route('tours.show', ['locale' => $locale, 'slug' => $tour->slug]) }}"
+                                       class="block bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                                        <span class="block relative h-40">
+                                            <img src="{{ $tour->cover_url }}" alt="{{ $tour->title }}" class="absolute inset-0 w-full h-full object-cover" loading="lazy" width="300" height="160">
+                                        </span>
+                                        <span class="block p-4">
+                                            <span class="block font-display text-base text-lat-ink leading-snug clamp-2">{{ $tour->title }}</span>
+                                            <span class="block mt-2 font-price text-lg text-lat-red">{{ \App\Support\Money::format($tour->price, $tour->currency) }}</span>
+                                        </span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                @endisset
             @endforelse
         </div>
 

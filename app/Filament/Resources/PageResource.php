@@ -442,18 +442,18 @@ class PageResource extends Resource
                                             ->schema([
                                                 Forms\Components\Textarea::make('blocks.banner_heading_es')
                                                     ->label('Heading banner (ES)')
-                                                    ->placeholder("Somos\nLima View\nTours")
+                                                    ->placeholder("Somos\nLima América\nTours")
                                                     ->helperText('Usa saltos de línea para controlar el quiebre del título.')
                                                     ->rows(3)
                                                     ->maxLength(120),
                                                 Forms\Components\Textarea::make('blocks.banner_heading_en')
                                                     ->label('Banner heading (EN)')
-                                                    ->placeholder("We are\nLima View\nTours")
+                                                    ->placeholder("We are\nLima América\nTours")
                                                     ->rows(3)
                                                     ->maxLength(120),
                                                 Forms\Components\Textarea::make('blocks.banner_heading_pt')
                                                     ->label('Heading banner (PT)')
-                                                    ->placeholder("Somos\nLima View\nTours")
+                                                    ->placeholder("Somos\nLima América\nTours")
                                                     ->rows(3)
                                                     ->maxLength(120),
 

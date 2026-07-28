@@ -210,5 +210,6 @@ Se purgaron todos los registros creados durante la prueba:
 - Fecha bloqueada del 31/07/2026 (`QA_MANTENIMIENTO DE VEHÍCULOS...`) — borrada.
 - Reserva `LVT-GDEDMYB8` (Miguel Quispe Rojas) — borrada.
 - Configuración → Contacto: "Teléfono principal" y "Dirección (ES)" revertidos a sus valores originales (`+51 925 886 725` y `Av. Larcomar 233, Of. 410 — Miraflores, Lima`).
+  - ⚠️ **Corrección (2026-07-28):** ambos valores eran de **Lima View Tours** (heredados del fork), no de Lima América. El teléfono ya se corrigió a `+51 957 299 438`; la dirección sigue sin confirmar. Ver `BACKLOG-CONTENIDO.md` #5.
 
 Verificado tras la limpieza: listados de Tours (6/6, igual que al inicio), Blog, Mensajes, Fechas bloqueadas y Reservas todos sin rastro de `QA_`, y el teléfono/dirección del sitio público muestran de nuevo los valores originales. **La base de datos quedó igual a como se encontró.**

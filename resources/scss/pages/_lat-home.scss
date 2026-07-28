@@ -41,6 +41,36 @@
     &:hover { background: rgba(255, 255, 255, .12); border-color: #fff; transform: translateY(-2px); }
 }
 
+// Botones flotantes del hero sobre la foto (WhatsApp + Ver video)
+.lat-btn--wa {
+    background: $lat-wa;
+    color: #fff;
+    font-size: .85rem;
+    padding: 11px 18px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .22);
+
+    &:hover { background: #1fb659; transform: translateY(-2px); }
+    svg { width: 17px; height: 17px; }
+}
+
+.lat-btn--video {
+    background: $lat-surface;
+    color: $lat-ink;
+    font-size: .85rem;
+    padding: 8px 8px 8px 18px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .22);
+
+    &:hover { transform: translateY(-2px); }
+
+    &__ic {
+        width: 30px; height: 30px; border-radius: 50%;
+        background: $lat-ink; color: #fff;
+        display: grid; place-items: center; flex: none;
+
+        svg { width: 14px; height: 14px; margin-left: 2px; }
+    }
+}
+
 .lat-eyebrow {
     display: inline-flex;
     align-items: center;
@@ -60,217 +90,489 @@
     }
 }
 
-// ── Hero ────────────────────────────────────────────────────────────────
+// ── Hero (calca de hero.png — mockup aprobado 2026-07) ──────────────────
+// Fondo crema. En lg+ la foto (.lat-hero__media) cubre TODO el banner de
+// borde a borde (absolute inset:0), con .lat-hero__media-fade como velo
+// lateral hacia el crema por encima (texto legible a la izquierda, foto
+// limpia a la derecha — cambio 2026-07: antes la foto era solo una columna
+// derecha). Contenido (texto + tarjeta de confianzas + buscador) en flujo
+// normal, ancho de columna de texto limitado para no crecer más allá de lo
+// que el velo cubre. Mobile (<1024): la foto pasa a bloque normal (arriba,
+// banner completo, sin texto superpuesto), todo lo demás apilado debajo a
+// ancho completo.
 .lat-hero {
     position: relative;
-    isolation: isolate;
-    min-height: 75vh;
-    display: flex;
-    align-items: stretch;
-    padding: 40px 0;
+    background: $lat-paper;
+    color: $lat-ink;
+    padding-bottom: 32px;
+
+    @media (min-width: $bp-lg) { padding-bottom: 44px; }
+}
+
+// Contenedor de la foto + texto + tarjeta de confianzas. La foto (absoluta
+// en lg+) solo cubre ESTE bloque, nunca el buscador — así no hay forma de
+// que el bloque rojo/los botones flotantes se solapen con la barra de
+// búsqueda, sea cual sea el alto real del texto.
+.lat-hero__top {
+    position: relative;
     overflow: hidden;
-    color: #fff;
 
-    &__bg {
-        position: absolute; inset: 0; z-index: -2;
-        img { width: 100%; height: 100%; object-fit: cover; }
+    @media (min-width: $bp-lg) { overflow: visible; }
+}
 
-        &::after {
-            content: "";
+// ── Columna/bloque de foto ───────────────────────────────────────────────
+// La foto es el fondo de TODO el banner (mockup hero.png), no solo de una
+// columna: se hace con el mismo <img> (nunca background-image de CSS — es
+// el LCP, con fetchpriority="high"; una imagen de fondo no se descubre
+// hasta procesar la hoja de estilos y perdería la precarga), en absoluto
+// cubriendo .lat-hero__top de borde a borde, con el degradado como capa
+// aparte por encima (.lat-hero__media-fade, pointer-events:none).
+.lat-hero__media {
+    position: relative;
+    width: 100%;
+    min-height: clamp(240px, 62vw, 380px);
+    overflow: hidden;
+
+    img {
+        width: 100%; height: 100%; object-fit: cover; display: block;
+        // Sin recorte horizontal en lg+ (el box es más ancho que la foto:
+        // ver comentario de object-fit más abajo) — en mobile sí recorta en
+        // horizontal, por eso el eje X importa aquí (mantiene el faro/motivo
+        // principal visible en vez de cortarlo por el centro).
+        object-position: 64% 40%;
+    }
+
+    &-fade {
+        position: absolute; inset: 0; pointer-events: none;
+        // El fundido "to bottom" lavaba ~42% de la foto y no está en el
+        // mockup (hero.png): se retira. Solo queda el fundido lateral hacia
+        // el crema (izquierda), que sí está en el mockup. En mobile el texto
+        // NO se superpone a la foto (va debajo, en flujo normal) — este es
+        // solo un remate estético del borde.
+        background: linear-gradient(to right, rgba(250, 247, 242, .85) 0%, rgba(250, 247, 242, 0) 18%);
+    }
+
+    @media (min-width: $bp-lg) {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        min-height: 0;
+        overflow: visible; // el degradado y los flotantes pueden respirar sin recorte
+        z-index: 1;
+
+        // Ahora la foto cubre TODO .lat-hero__top (incluida la columna de
+        // texto), así que el degradado tiene que hacer de velo real, no de
+        // remate cosmético: mitad izquierda prácticamente crema plano (AA
+        // real medido contra eyebrow/H1/línea roja/párrafo — el diseño no
+        // puede depender de que la foto actual sea clara ahí, porque va a
+        // cambiar) y mitad derecha con la foto limpia, sin banda visible.
+        // La tarjeta de confianzas no depende de esto: es una caja opaca
+        // ($lat-surface) encima, su contraste no cambia con la foto.
+        &-fade {
             position: absolute; inset: 0;
-            background: linear-gradient(180deg, rgba(20, 15, 13, .6) 0%, rgba(20, 15, 13, .42) 46%, rgba(20, 15, 13, .72) 100%);
+            background: linear-gradient(
+                to right,
+                rgba($lat-paper, .99) 0%,
+                rgba($lat-paper, .97) 58%,
+                rgba($lat-paper, .4) 72%,
+                rgba($lat-paper, 0) 88%
+            );
         }
     }
+}
 
-    &__inner { max-width: 900px; padding: 40px 0 56px; }
+// Fila inferior sobre la foto: bloque "10+" (izq) + WhatsApp/Ver video (der).
+// En pantallas muy angostas no cabe todo en una fila (el pill de WhatsApp
+// con texto es ancho): se apila en columna, alineado a la derecha, con los
+// botones arriba y el bloque rojo abajo — mismo orden visual que el mockup,
+// solo que en columna en vez de en fila.
+.lat-hero__overlay-row {
+    position: absolute;
+    left: 12px; right: 12px; bottom: 12px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
 
-    h1 {
-        font-family: $lat-font-serif;
-        font-weight: 800;
-        line-height: 1.05;
-        font-size: clamp(2.5rem, 6vw, 4.6rem);
-        color: #fff;
-        margin: 0;
-        text-shadow: 0 2px 30px rgba(0, 0, 0, .3);
-
-        // Título del hero todo en blanco — rojo solo como acento en otros elementos.
-        em { font-style: normal; color: inherit; }
+    @media (min-width: 460px) {
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: space-between;
     }
 
-    &__sub {
-        margin: 20px 0 0;
-        font-size: 1.1rem;
-        color: #f1ebe4;
-        max-width: 600px;
-        line-height: 1.6;
-    }
-
-    @media (max-width: 760px) {
-        min-height: auto;
-        padding: 20px 0 0;
-
-        &__inner { padding: 20px 0 40px; }
+    // La foto (.lat-hero__media) ahora cubre TODO el ancho en lg+ (antes
+    // solo la columna derecha) — si esta fila heredara left:20/right:20
+    // relativos a esa foto, "10+" caería pegado al borde izquierdo del
+    // banner, debajo del texto, en vez de mantenerse en la franja derecha
+    // del mockup. Se ancla por `right` + `width` (mismo ancho que tenía la
+    // foto antes, clamp(380px,50vw,860px), menos los 40px de inset) para
+    // reproducir EXACTAMENTE la misma caja de antes sin depender del ancho
+    // de la foto.
+    @media (min-width: $bp-lg) {
+        left: auto;
+        right: 20px;
+        // El buscador sube 30px sobre la foto (margin-top:-30px en
+        // .lat-hero__search-wrap, para cortarla en seco como el mockup), así
+        // que la franja inferior de .lat-hero__media queda TAPADA por la barra
+        // oscura. Con bottom:20px el bloque "10+" y el botón de WhatsApp
+        // quedaban seccionados 10px por la barra (medido). El offset debe
+        // superar esos 30px con margen de respiro: 30 + 22 = 52.
+        // Si se cambia el margin-top negativo del buscador, hay que ajustar
+        // este valor en el mismo commit.
+        bottom: 52px;
+        width: calc(clamp(380px, 50vw, 860px) - 40px);
     }
 }
 
-// ── Buscador dentro del hero ────────────────────────────────────────────
-.lat-search {
-    background: rgba(255, 255, 255, .92);
-    backdrop-filter: blur(16px) saturate(150%);
-    border: 1px solid rgba(255, 255, 255, .5);
-    border-radius: $lat-r-lg;
-    padding: 12px;
-    display: grid;
-    grid-template-columns: 1.7fr 1fr 1.1fr auto;
-    gap: 8px;
+.lat-hero__floating-actions { order: -1; }
+@media (min-width: 460px) { .lat-hero__floating-actions { order: initial; } }
+
+.lat-hero__years {
+    background: $lat-red;
+    color: #fff;
+    padding: 12px 18px;
+    border-radius: $lat-r-md;
     box-shadow: $lat-shadow-lg;
-    max-width: 860px;
-    margin-top: 28px;
+    max-width: 190px;
+    line-height: 1.2;
 
-    .lat-search__field {
-        display: flex; flex-direction: column; gap: 2px;
-        padding: 8px 14px; border-radius: 14px;
-        min-width: 0;
-        transition: background .2s;
-
-        &:hover { background: $lat-surface-2; }
-        & + & { border-left: 1px solid $lat-line; }
+    strong {
+        display: block;
+        font-family: $lat-font-serif;
+        font-size: clamp(1.7rem, 3vw, 2.3rem);
+        font-weight: 800;
     }
 
-    label {
-        font-size: .66rem; font-weight: 700; letter-spacing: .1em;
-        text-transform: uppercase; color: $lat-muted;
+    &-label {
+        display: block;
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        margin-top: 2px;
     }
 
-    .lat-search__val {
-        display: flex; align-items: center; gap: 8px;
-        font-weight: 600; font-size: .95rem; color: $lat-ink;
-        min-width: 0;
-
-        svg { width: 16px; height: 16px; color: $lat-red; flex: none; }
+    &-sub {
+        display: block;
+        font-size: .72rem;
+        color: rgba(255, 255, 255, .88);
+        margin-top: 6px;
     }
 
-    select, input {
-        border: none; background: transparent; font-family: inherit;
-        font-weight: 600; font-size: .95rem; color: $lat-ink;
-        width: 100%; padding: 0; cursor: pointer; min-width: 0; text-overflow: ellipsis;
-
-        &:focus { outline: none; }
-    }
-
-    .lat-search__go { align-self: stretch; }
-    .lat-search__go .lat-btn { height: 100%; width: 100%; }
-
-    @media (max-width: 760px) {
-        grid-template-columns: 1fr 1fr;
-
-        .lat-search__go { grid-column: 1 / -1; }
-        .lat-search__field + .lat-search__field { border-left: none; }
-        .lat-search__field:nth-child(2) { border-left: 1px solid $lat-line; }
-    }
-    @media (max-width: 440px) {
-        grid-template-columns: 1fr;
-        .lat-search__field + .lat-search__field { border-left: none; border-top: 1px solid $lat-line; }
+    @media (max-width: 480px) {
+        padding: 9px 13px;
+        max-width: 130px;
+        strong { font-size: 1.4rem; }
+        &-sub { font-size: .66rem; margin-top: 4px; }
     }
 }
 
-.lat-chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
+.lat-hero__floating-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
 
-.lat-chip {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 8px 15px; border-radius: $lat-r-pill;
-    background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .28);
-    color: #fff; font-size: .83rem; font-weight: 500;
-    backdrop-filter: blur(6px);
-    transition: background .2s, transform .2s;
+    .lat-btn { white-space: nowrap; }
 
-    &:hover { background: $lat-red; border-color: $lat-red; transform: translateY(-2px); }
-    svg { width: 14px; height: 14px; }
-}
-
-// ── Fila de features dentro del hero ───────────────────────────────────
-.lat-hero-features {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 22px;
-    margin-top: auto;
-    padding: 40px 0 52px;
-    border-top: 1px solid rgba(255, 255, 255, .2);
-
-    @media (max-width: 900px) { grid-template-columns: 1fr 1fr; }
-    @media (max-width: 520px) { grid-template-columns: 1fr; gap: 16px; padding: 22px 0 34px; }
-}
-
-.lat-hf {
-    display: flex; align-items: center; gap: 14px; color: #fff;
-
-    // Neutralizado: círculo ink/outline (antes rojo sólido) para que el
-    // rojo de marca quede exclusivamente como acento en otros elementos.
-    &__ic {
-        width: 50px; height: 50px; border-radius: 50%;
-        background: rgba(23, 20, 18, .55);
-        border: 1px solid rgba(255, 255, 255, .28);
-        display: grid; place-items: center; flex: none;
-
-        svg { width: 22px; height: 22px; color: #fff; }
+    @media (max-width: 480px) {
+        .lat-btn--wa, .lat-btn--video { padding: 8px 12px; font-size: .72rem; }
+        .lat-btn--wa svg { width: 14px; height: 14px; }
+        .lat-btn--video__ic { width: 24px; height: 24px; svg { width: 11px; height: 11px; } }
     }
-
-    b { display: block; font-family: $lat-font-serif; font-size: 1.05rem; }
-    span { font-size: .8rem; color: #e7ded4; line-height: 1.3; }
 }
 
-// ── Tarjeta blanca superpuesta bajo el hero ─────────────────────────────
-// El solape (margin-top negativo) debe quedar siempre dentro del padding-bottom
-// vacío de .lat-hero-features (nunca comerse el contenido/texto de la última
-// fila). En desktop ese padding-bottom es 52px con un pull de 42px (10px de
-// aire). En <=520px el padding-bottom baja a 34px (1 columna, filas apiladas),
-// así que el pull debe reducirse a 24px para conservar ese mismo margen de
-// seguridad de ~10px y no cortar el texto de "Atención 24/7".
-.lat-hero-card-wrap {
+// ── Texto + trust card, en flujo normal sobre/junto a la foto ───────────
+.lat-hero__top-content {
     position: relative;
-    z-index: 6;
-    margin-top: -42px;
-    margin-bottom: 20px;
+    z-index: 2;
+    padding: 28px 0 32px;
 
-    @media (max-width: 520px) { margin-top: -24px; }
+    @media (min-width: $bp-lg) { padding: 48px 0 36px; }
+
+    // Bug crítico (QA, 2026-07): en lg+ el .lat-wrap interno (contenedor
+    // genérico compartido, ancho completo) queda por encima de la foto en
+    // el stacking (este bloque tiene z-index:2 vs. z-index:1 de
+    // .lat-hero__media) aunque su contenido visible (texto y tarjeta) sea
+    // más angosto — la caja invisible del .lat-wrap tapaba el link de
+    // WhatsApp y el botón "Ver video" flotantes sobre la foto (Playwright:
+    // "lat-wrap subtree intercepts pointer events"). No se toca el ancho de
+    // .lat-wrap (es compartido por todo el sitio) ni la altura de este
+    // bloque (eso fue lo que reintrodujo el choque tarjeta de confianzas /
+    // bloque rojo a 1024 en un intento anterior): se desactiva el
+    // pointer-events de todo el bloque y se reactiva solo en el contenido
+    // real, para que el resto del área (transparente) deje pasar el clic
+    // hacia la foto de abajo. Solo aplica en lg+: en mobile/tablet la foto
+    // va en flujo normal (sin superposición) y no hay nada que corregir.
+    @media (min-width: $bp-lg) {
+        pointer-events: none;
+
+        .lat-hero__text,
+        .lat-hero-trust {
+            pointer-events: auto;
+        }
+    }
 }
 
-.lat-hero-card {
+.lat-hero__text {
+    min-width: 0;
+
+    // El límite de ancho solo importa en lg+, cuando la foto pasa a columna
+    // absoluta a la derecha (ver el clamp gemelo en .lat-hero__media) — debe
+    // caber siempre a su izquierda sin invadirla. Por debajo de lg, la foto
+    // va en flujo normal arriba y el texto ocupa el ancho completo.
+    @media (min-width: $bp-lg) { max-width: clamp(300px, 42vw, 520px); }
+}
+
+.lat-hero h1 {
+    font-family: $lat-font-serif;
+    font-weight: 800;
+    line-height: 1.06;
+    font-size: clamp(2.1rem, 5vw, 3.4rem);
+    color: $lat-ink;
+    margin: 0;
+
+    em { font-style: normal; color: inherit; }
+}
+
+.lat-hero__tagline {
+    font-family: $lat-font-serif;
+    font-weight: 700;
+    color: $lat-red;
+    font-size: clamp(1.15rem, 2.3vw, 1.5rem);
+    line-height: 1.28;
+    margin: 14px 0 0;
+}
+
+.lat-hero__desc {
+    margin: 16px 0 0;
+    font-size: .98rem;
+    line-height: 1.65;
+    color: $lat-muted;
+    max-width: 460px;
+}
+
+// ── Tarjeta blanca de confianzas (icono circular + texto centrado) ──────
+.lat-hero-trust {
     background: $lat-surface;
     border: 1px solid $lat-line;
     border-radius: $lat-r-lg;
     box-shadow: $lat-shadow-lg;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr auto;
-    gap: 20px;
-    padding: 22px 26px;
-    align-items: center;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    padding: 20px 18px;
+    margin-top: 24px;
 
-    .lat-btn { white-space: nowrap; }
+    // Mismo límite que .lat-hero__text, y por la misma razón: solo aplica
+    // en lg+ (columna junto a la foto absoluta). Antes de eso, 2×2 a ancho
+    // completo (ya en flujo de una sola columna, con la foto arriba).
+    @media (min-width: $bp-lg) { max-width: clamp(300px, 42vw, 520px); }
 
     @media (max-width: 900px) {
         grid-template-columns: 1fr 1fr;
-        .lat-btn { grid-column: 1 / -1; }
+        gap: 16px 10px;
+        padding: 16px 12px;
+        border-radius: $lat-r-md;
     }
-    @media (max-width: 520px) { grid-template-columns: 1fr; }
 }
 
-.lat-hc {
-    display: flex; align-items: center; gap: 13px;
+.lat-htc {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    min-width: 0;
 
-    svg { width: 26px; height: 26px; color: $lat-red; flex: none; }
-    b { display: block; font-family: $lat-font-serif; font-size: 1.05rem; color: $lat-ink; line-height: 1.1; }
-    span { font-size: .82rem; color: $lat-muted; }
+    &__ic {
+        width: 42px; height: 42px; border-radius: 50%;
+        border: 1.5px solid $lat-red; color: $lat-red;
+        display: grid; place-items: center; flex: none;
 
-    & + & { border-left: 1px solid $lat-line; padding-left: 20px; }
+        svg { width: 18px; height: 18px; }
+    }
+
+    &__label {
+        font-size: .78rem;
+        font-weight: 700;
+        color: $lat-ink;
+        line-height: 1.3;
+    }
+}
+
+// ── Buscador — doble marco: contenedor oscuro grueso + barra clara ──────
+// (mockup: no es una sola barra, es un marco casi negro con una barra
+// blanca redondeada adentro, sobresaliendo por los 4 lados).
+.lat-hero__search-wrap {
+    position: relative;
+    // z-index > 1 (el z-index de .lat-hero__media en lg+) para que el marco
+    // oscuro del buscador pinte ENCIMA del borde inferior de la foto, no
+    // detrás — sin esto, un margin-top negativo solaparía visualmente pero
+    // la foto (positioned, z-index:1) seguiría ganando el pintado.
+    z-index: 2;
+    background: $lat-ink;
+    border-radius: $lat-r-lg;
+    padding: 12px;
+    margin-top: 4px;
+    box-shadow: $lat-shadow-lg;
+    max-width: 100%;
+
+    // Mockup (hero.png): la barra oscura del buscador solapa/corta el borde
+    // inferior de la foto — no hay separación. Esto solo aplica en lg+,
+    // que es donde la foto es columna absoluta a la derecha cubriendo todo
+    // .lat-hero__top; en mobile la foto va en flujo normal arriba y no hay
+    // nada que solapar. A propósito NO se toca la altura de .lat-hero__top
+    // (eso fue lo que reintrodujo el choque tarjeta de confianzas / bloque
+    // rojo a 1024 en un intento anterior).
+    @media (min-width: $bp-lg) { margin-top: -30px; }
+}
+
+.lat-search {
+    background: $lat-surface;
+    border-radius: $lat-r-md;
+    padding: 6px;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1fr 1fr auto;
+    align-items: stretch;
+
+    .lat-search__field {
+        position: relative;
+        display: flex; flex-direction: column; justify-content: center; gap: 3px;
+        padding: 12px 20px;
+        min-width: 0;
+        border-right: 1px solid $lat-line;
+    }
+
+    label {
+        font-size: .82rem; font-weight: 700;
+        color: $lat-ink; line-height: 1.2;
+    }
+
+    .lat-search__val {
+        display: flex; align-items: center; gap: 6px;
+        font-size: .84rem; color: $lat-muted;
+        min-width: 0;
+    }
+
+    input, select {
+        border: none; background: transparent; font-family: inherit;
+        font-size: .84rem; color: $lat-muted;
+        width: 100%; padding: 0; cursor: pointer; min-width: 0; text-overflow: ellipsis;
+        appearance: none;
+
+        &::placeholder { color: $lat-muted; opacity: 1; }
+        &:focus { outline: none; color: $lat-ink; }
+    }
+
+    .lat-search__chev, .lat-search__ic-cal {
+        width: 15px; height: 15px; color: $lat-muted; flex: none;
+    }
+
+    .lat-search__go {
+        padding: 6px;
+        display: flex;
+        align-items: stretch;
+    }
+    .lat-search__go .lat-btn {
+        width: 100%;
+        border-radius: $lat-r-md - 4px;
+        font-size: .9rem;
+    }
 
     @media (max-width: 900px) {
-        & + & { border-left: none; padding-left: 0; }
-        &:nth-child(2) { border-left: 1px solid $lat-line; padding-left: 20px; }
+        grid-template-columns: 1fr 1fr;
+
+        // En grid 2×2 los divisores verticales ya no alinean con nada — se
+        // reemplazan por un divisor horizontal, uniforme para las 4 celdas.
+        .lat-search__field { border-right: none; border-bottom: 1px solid $lat-line; }
+        .lat-search__go { grid-column: 1 / -1; }
     }
-    @media (max-width: 520px) {
-        &:nth-child(2) { border-left: none; padding-left: 0; }
+    @media (max-width: 480px) {
+        grid-template-columns: 1fr;
     }
+}
+
+// ── Modal "Ver video" del hero (Fix 4) ──────────────────────────────────
+// Fixed a pantalla completa; el iframe se inyecta por JS solo al abrir
+// (ver script en home.blade.php), nunca en el HTML inicial.
+.lat-video-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9500; // por encima del FAB global de WhatsApp (z-index 9000)
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+
+    &[hidden] { display: none; }
+
+    &__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(23, 20, 18, .82);
+        cursor: pointer;
+    }
+
+    &__panel {
+        position: relative;
+        width: 100%;
+        max-width: 960px;
+        // El overflow:hidden va en &__frame, NO aquí: el botón de cerrar es
+        // hijo de este panel y se posiciona por fuera de su caja (top
+        // negativo) — si el panel recorta overflow, el botón desaparece
+        // recortado y queda inalcanzable (bug detectado en Playwright).
+        box-shadow: $lat-shadow-lg;
+    }
+
+    &__close {
+        position: absolute;
+        top: -44px;
+        right: 0;
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        border: none;
+        background: $lat-surface;
+        color: $lat-ink;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        transition: transform .18s ease;
+
+        svg { width: 18px; height: 18px; }
+        &:hover { transform: scale(1.08); }
+        &:focus-visible { outline: 2px solid $lat-red; outline-offset: 2px; }
+    }
+
+    &__frame {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: $lat-ink;
+        border-radius: $lat-r-md;
+        overflow: hidden;
+
+        iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    }
+
+    @media (max-width: 640px) {
+        padding: 16px;
+        &__close { top: -40px; width: 32px; height: 32px; }
+    }
+}
+
+.lat-chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+
+.lat-chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 15px; border-radius: $lat-r-pill;
+    background: $lat-surface-2; border: 1px solid $lat-line;
+    color: $lat-ink-soft; font-size: .83rem; font-weight: 500;
+    transition: background .2s, color .2s, border-color .2s, transform .2s;
+
+    &:hover { background: $lat-red; border-color: $lat-red; color: #fff; transform: translateY(-2px); }
+    svg { width: 14px; height: 14px; }
 }
 
 // ── Encabezados de sección ──────────────────────────────────────────────

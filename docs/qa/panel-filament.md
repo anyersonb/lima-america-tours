@@ -119,6 +119,7 @@ Prefijo `QA_` en todo registro de prueba. Purga confirmada al final (ver §Purga
 - [✓] Category → correctamente filtrada del front cuando no tiene tours (por diseño).
 - [✓] BlogPost → título/publicación sincronizan con `/es/blog`.
 - [✓] Settings → Contacto (`contact_phone`) sincroniza con `/es/contacto` (editado a "+51 900 000 000", confirmado, revertido a "+51 925 886 725", re-confirmado). Redes sociales coinciden entre admin y footer del front (verificado por comparación visual, sin editar).
+  - ⚠️ **Corrección (2026-07-28):** ese "valor original" al que se revirtió era el teléfono de **Lima View Tours**, otro cliente, heredado del fork. Restaurar lo que uno encuentra no es restaurar lo correcto: un dato de contacto se verifica contra la fuente del cliente, no contra el estado previo de la BD. Corregido a `+51 957 299 438` (ver `BACKLOG-CONTENIDO.md` #5).
 - [✓] Settings → `contact_phone_secondary` sigue vacío (fix `81ba722` "teléfono secundario vaciado" intacto).
 - [✗] Página `contacto` (bloques hero) → NO sincroniza (hallazgo #3).
 - [✗] Página `nosotros` (bloques "contenido" completos) → NO sincroniza salvo hero_eyebrow/title/lead/img_hero (hallazgo #4).

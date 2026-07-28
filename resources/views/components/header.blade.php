@@ -1,8 +1,12 @@
 @php
     $locale = app()->getLocale();
-    $contactPhone = \App\Models\Setting::get('contact_phone') ?: '+51 925 886 725';
+    // Sin fallback a otro número/otra cuenta de WhatsApp: ver
+    // App\Models\Setting::contactPhone() / whatsappNumber(). Los bloques
+    // de teléfono y los botones de WhatsApp de este header se ocultan con
+    // @if cuando el cliente todavía no cargó el dato real.
+    $contactPhone = \App\Models\Setting::contactPhone();
     $contactEmail = \App\Models\Setting::get('contact_email') ?: 'info@limaamericatours.com';
-    $whatsapp     = \App\Models\Setting::get('whatsapp') ?: preg_replace('/\D/', '', $contactPhone);
+    $whatsapp     = \App\Models\Setting::whatsappNumber();
 
     $sFb  = \App\Models\Setting::get('social_facebook');
     $sIg  = \App\Models\Setting::get('social_instagram');
@@ -25,10 +29,12 @@
 <div class="lat-topbar">
     <div class="lat-wrap">
         <div class="lat-topbar__left">
+            @if ($whatsapp && $contactPhone)
             <a href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
                 {{ $contactPhone }}
             </a>
+            @endif
             <a class="lat-topbar__email" href="mailto:{{ $contactEmail }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
                 {{ $contactEmail }}
@@ -67,9 +73,11 @@
         </div>
 
         <div class="lat-nav-cta">
+            @if ($whatsapp)
             <a class="lat-btn-reservar" href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener">
                 {{ __('nav.reservar_ahora') }}
             </a>
+            @endif
             <button type="button"
                     class="lat-burger"
                     @click="open = !open"
@@ -122,16 +130,20 @@
             @endforeach
         </nav>
 
+        @if ($whatsapp)
         <a class="lat-drawer__wa" href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.6.2-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.4-1.5-.9-.8-1.5-1.8-1.6-2.1-.2-.3 0-.4.1-.6l.5-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.2-.6-1.5-.9-2-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3s1 2.7 1.2 2.9c.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3zM12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2z"/></svg>
             {{ __('nav.book_whatsapp') }}
         </a>
+        @endif
 
         <div class="lat-drawer__foot">
+            @if ($contactPhone)
             <a href="tel:{{ str_replace([' ', '+'], '', $contactPhone) }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
                 {{ $contactPhone }}
             </a>
+            @endif
             <x-lang-switcher />
         </div>
     </div>

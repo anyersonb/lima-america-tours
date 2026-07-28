@@ -123,20 +123,46 @@ class TourController extends Controller
             ->withFragment('reviews');
     }
 
+    /**
+     * Buscador del home (4 campos: ¿qué tour buscas? + destino + fecha + personas).
+     *
+     * Guardrail funcional: la fecha es un dato del viajero (se guarda/pasa a la
+     * vista), no un filtro duro — este catálogo no maneja disponibilidad por día,
+     * así que filtrar por fecha solo produciría falsos "0 resultados". "Personas"
+     * tampoco filtra (es informativo, como ya lo era antes de este cambio). Si la
+     * combinación de texto+destino no arroja tours, la vista igual recibe
+     * `$suggested` con tours reales para no dejar una pantalla muerta.
+     */
     public function search(Request $request): View
     {
         $q = trim((string) $request->query('q'));
-        $tours = Tour::published()
+        $destino = trim((string) $request->query('destino'));
+        $fecha = trim((string) $request->query('fecha'));
+        $pax = trim((string) $request->query('pax'));
+
+        $filtered = Tour::published()
             ->when($q, fn ($query) => $query->where(function ($w) use ($q) {
                 $w->where('title_es', 'like', "%{$q}%")
                     ->orWhere('title_en', 'like', "%{$q}%")
                     ->orWhere('description_es', 'like', "%{$q}%");
             }))
-            ->ordered()->paginate(12)->withQueryString();
+            ->when($destino, fn ($query) => $query->whereHas('region', fn ($r) => $r->where('slug', $destino)));
+
+        $tours = (clone $filtered)->ordered()->paginate(12)->withQueryString();
+
+        // Sin resultados con los filtros aplicados: sugerir tours reales
+        // (destacados/publicados) en vez de una pantalla vacía sin salida.
+        $suggested = $tours->total() === 0
+            ? Tour::published()->ordered()->limit(4)->get()
+            : collect();
 
         return view('tours.results', [
             'q' => $q,
+            'destino' => $destino,
+            'fecha' => $fecha,
+            'pax' => $pax,
             'tours' => $tours,
+            'suggested' => $suggested,
         ]);
     }
 }

@@ -7,15 +7,17 @@
     $locale = app()->getLocale();
     $L = fn (string $es, string $en, string $pt): string => $locale === 'pt' ? $pt : ($locale === 'en' ? $en : $es);
 
-    // Datos reales del CMS (Configuración → Contacto), con fallback solo si el
-    // admin no ha cargado nada todavía. Mismo patrón que footer/otras páginas.
-    $contactPhone          = \App\Models\Setting::get('contact_phone') ?: '+51 925 886 725';
+    // Datos reales del CMS (Configuración → Contacto). Sin fallback a un
+    // teléfono/WhatsApp ajeno: ver App\Models\Setting::contactPhone() /
+    // whatsappNumber(). Si el cliente no cargó el dato, el bloque
+    // correspondiente se oculta con @if más abajo.
+    $contactPhone          = \App\Models\Setting::contactPhone();
     $contactPhoneSecondary = \App\Models\Setting::get('contact_phone_secondary');
     $contactEmail          = \App\Models\Setting::get('contact_email') ?: 'hola@limaamericatours.com';
     $contactHours          = \App\Models\Setting::get('contact_hours_' . $locale)
         ?: \App\Models\Setting::get('contact_hours_es')
         ?: $L('Lunes a domingo · 9:30 a.m. – 7:00 p.m.', 'Monday to Sunday · 9:30 a.m. – 7:00 p.m.', 'Segunda a domingo · 9:30 – 19:00');
-    $waPhoneDigits = preg_replace('/\D/', '', $contactPhone);
+    $waPhoneDigits = \App\Models\Setting::whatsappNumber();
 
     // Blocks from CMS (Page model, slug "contacto") — igual patrón que about.blade.php.
     // Nota: el mockup aprobado (docs/propuesta/exports/lat-07-contacto.jpeg) confirma un
@@ -163,6 +165,7 @@
             {{-- ── Columna derecha: canales de contacto ── --}}
             <div class="lat-contact-channels">
 
+                @if ($contactPhone || !empty($contactPhoneSecondary))
                 <div class="lat-contact-card">
                     <div class="lat-contact-channel">
                         <div class="lat-contact-icon-circle" aria-hidden="true">
@@ -170,13 +173,16 @@
                         </div>
                         <div>
                             <h3>{{ $L('Teléfono / WhatsApp', 'Phone / WhatsApp', 'Telefone / WhatsApp') }}</h3>
-                            <a href="tel:{{ $waPhoneDigits }}">{{ $contactPhone }}</a>
+                            @if ($contactPhone)
+                                <a href="tel:{{ preg_replace('/\D/', '', $contactPhone) }}">{{ $contactPhone }}</a>
+                            @endif
                             @if (!empty($contactPhoneSecondary))
                                 <a href="tel:{{ preg_replace('/\D/', '', $contactPhoneSecondary) }}">{{ $contactPhoneSecondary }}</a>
                             @endif
                         </div>
                     </div>
                 </div>
+                @endif
 
                 <div class="lat-contact-card">
                     <div class="lat-contact-channel">
@@ -202,10 +208,12 @@
                     </div>
                 </div>
 
+                @if ($waPhoneDigits)
                 <a href="https://wa.me/{{ $waPhoneDigits }}" target="_blank" rel="noopener" class="lat-contact-wa-btn">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
                     {{ $L('Escríbenos por WhatsApp', 'Write to us on WhatsApp', 'Escreva para nós no WhatsApp') }}
                 </a>
+                @endif
 
                 <div class="lat-contact-card">
                     <div class="lat-contact-channel">

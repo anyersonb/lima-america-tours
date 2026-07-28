@@ -297,8 +297,11 @@
 
     {{-- Botón flotante WhatsApp — posición 100% inline para funcionar sin rebuild de Tailwind.
          Offset elevado (evita taparse con CTAs "en reposo": hero de Home, cards de Tours, etc.)
-         + se encoge/atenúa mientras el usuario hace scroll para no tapar controles al pasar por encima. --}}
-    @php $waNumber = \App\Models\Setting::get('whatsapp') ?: '51925886725'; @endphp
+         + se encoge/atenúa mientras el usuario hace scroll para no tapar controles al pasar por encima.
+         Sin fallback a otro número de WhatsApp: ver App\Models\Setting::whatsappNumber().
+         Sin dato cargado en Configuración → Contacto, el FAB simplemente no se pinta. --}}
+    @php $waNumber = \App\Models\Setting::whatsappNumber(); @endphp
+    @if ($waNumber)
     <a href="https://wa.me/{{ $waNumber }}"
        target="_blank"
        rel="noopener noreferrer"
@@ -311,12 +314,16 @@
             <path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.51 5.26l-.999 3.648 3.978-1.045zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.148-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.017-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.247-.694.247-1.289.173-1.413z"/>
         </svg>
     </a>
+    @endif
     <script>
     (function () {
         var fab = document.getElementById('waFab');
         if (!fab) return;
         var BASE_BOTTOM = 104; // px — despeja el CTA del hero de Home y las cards de Tours "en reposo"
         var SAFE_GAP = 16;
+        var HERO_BP = 1024; // debe igualar $bp-lg (resources/scss/abstracts/_variables.scss):
+                             // ahí es donde el hero de Home pasa de apilado a dos columnas.
+        var hero = document.querySelector('.lat-hero');
 
         function rectsOverlap(a, b) {
             return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
@@ -326,47 +333,119 @@
         // conocidos (no con cualquier enlace de texto, que siempre habría alguno
         // cerca). Cubre los casos reportados: CTA del hero, favorito de tarjetas,
         // filtros, botones de reserva/checkout y la barra sticky del carrito.
+        // OJO al añadir clases: `.lat-btn` NO cubre `.lat-btn-out` ni
+        // `.lat-btn-reservar` — son clases sueltas, no modificadores BEM del tipo
+        // `lat-btn lat-btn--red` (esos sí los cubre `.lat-btn`). Omitir
+        // `.lat-btn-out` dejaba el FAB encima del "Ver Detalles" de la primera
+        // tarjeta de Tours Destacados en móvil, justo al terminar el hero
+        // (bug QA 2026-07-27). Misma clase en el CTA de las ofertas.
         var CONTROL_SELECTOR = [
             '.lat-btn', '.lat-tcard__fav', '.lat-filter', '.lat-btn-reservar',
+            '.lat-btn-out',
             '.cart-cta-btn', '.cart-sticky', '.cart-coupon-submit',
             'button[type="submit"]', '.btn--primary', '.tour-card a[href]:last-child'
         ].join(', ');
 
+        // En mobile/tablet (<HERO_BP) el hero de Home apila foto + texto + tarjeta
+        // de confianzas + buscador a pantalla casi completa. Entre el párrafo y la
+        // tarjeta de confianzas NO hay banda vertical libre para un botón de 52px
+        // (~24px de hueco real en 360×800, y varía por idioma/longitud del texto
+        // del CMS): empujar el FAB dentro de ese hueco solo cambia QUÉ tapa, no SI
+        // tapa (bug QA 2026-07-27 — .lat-hero-trust se había sumado antes al
+        // CONTROL_SELECTOR para librar la tarjeta y el FAB aterrizó sobre el
+        // párrafo). La tarjeta no es un CTA y no pertenece a ese selector: el
+        // hueco se resuelve ocultando el FAB (fuera de pantalla, sin
+        // pointer-events) mientras cualquier parte del hero siga en el viewport,
+        // y restaurándolo apenas el hero termina de pasar.
+        function withinMobileHero() {
+            if (!hero || window.innerWidth >= HERO_BP) return false;
+            var r = hero.getBoundingClientRect();
+            return r.bottom > 0 && r.top < window.innerHeight;
+        }
+
+        // Iterativo (punto fijo), no de una sola pasada: empujar el FAB para librar
+        // el primer control que lo tapa puede aterrizarlo sobre OTRO control que a
+        // BASE_BOTTOM no se tocaban (bug QA 2026-07-27: en 1024, librar el botón
+        // rojo "Buscar Tours" lo hacía aterrizar sobre "Ver video"). Se repite la
+        // detección tras cada empuje hasta que no quede ningún solape o se agoten
+        // los intentos (tope defensivo: nunca sigue empujando si una vuelta no
+        // gana altura, para no entrar en bucle infinito).
         function avoidOverlap() {
-            fab.style.bottom = BASE_BOTTOM + 'px';
-            var fabRect = fab.getBoundingClientRect();
-            var nodes = document.querySelectorAll(CONTROL_SELECTOR);
-            var highestTop = null;
-            for (var i = 0; i < nodes.length; i++) {
-                var el = nodes[i];
-                if (el === fab || fab.contains(el) || el.contains(fab)) continue;
-                var r = el.getBoundingClientRect();
-                if (r.width === 0 || r.height === 0) continue;
-                if (rectsOverlap(fabRect, r)) {
-                    if (highestTop === null || r.top < highestTop) highestTop = r.top;
+            var bottom = BASE_BOTTOM;
+            var maxBottom = window.innerHeight - 60; // deja siempre algo de FAB visible
+            for (var iter = 0; iter < 8; iter++) {
+                fab.style.bottom = bottom + 'px';
+                var fabRect = fab.getBoundingClientRect();
+                var nodes = document.querySelectorAll(CONTROL_SELECTOR);
+                var highestTop = null;
+                for (var i = 0; i < nodes.length; i++) {
+                    var el = nodes[i];
+                    if (el === fab || fab.contains(el) || el.contains(fab)) continue;
+                    var r = el.getBoundingClientRect();
+                    if (r.width === 0 || r.height === 0) continue;
+                    if (rectsOverlap(fabRect, r)) {
+                        if (highestTop === null || r.top < highestTop) highestTop = r.top;
+                    }
                 }
-            }
-            if (highestTop !== null) {
+                if (highestTop === null) return; // sin solapes: queda donde está
                 var needed = Math.round(window.innerHeight - highestTop + SAFE_GAP);
-                fab.style.bottom = Math.max(BASE_BOTTOM, needed) + 'px';
+                if (needed <= bottom) return; // sin progreso posible: evita bucle
+                bottom = Math.min(Math.max(BASE_BOTTOM, needed), maxBottom);
+            }
+            fab.style.bottom = bottom + 'px';
+        }
+
+        function updateVisibility() {
+            if (withinMobileHero()) {
+                // Se desplaza en X lo suficiente para que su borde izquierdo quede
+                // más allá del ancho del viewport: así el rect del FAB no puede
+                // solaparse con NINGÚN elemento de la página (la página no scrollea
+                // horizontal — punto 3 de no-regresión), sin depender de cálculos
+                // verticales frágiles ante texto de CMS más largo/corto por idioma.
+                fab.style.opacity = '0';
+                fab.style.transform = 'translateX(' + window.innerWidth + 'px)';
+                fab.style.pointerEvents = 'none';
+                fab.setAttribute('aria-hidden', 'true');
+                fab.setAttribute('tabindex', '-1');
+            } else {
+                fab.style.pointerEvents = '';
+                fab.style.opacity = '1';
+                fab.style.transform = 'scale(1)';
+                fab.removeAttribute('aria-hidden');
+                fab.removeAttribute('tabindex');
+                avoidOverlap();
             }
         }
-        avoidOverlap();
-        window.addEventListener('resize', avoidOverlap, { passive: true });
+
+        updateVisibility();
+        window.addEventListener('resize', updateVisibility, { passive: true });
+
+        // El alto de la página también cambia SIN que el usuario scrollee:
+        // imágenes lazy que terminan de cargar, fuentes que hacen swap, texto del
+        // CMS que reflota. Cuando eso pasa después de avoidOverlap(), el FAB queda
+        // colocado contra un layout viejo y termina encima del CTA que se movió
+        // (bug QA 2026-07-27: "Ver Detalles" de las tarjetas y "Leer más" del
+        // blog, justo donde las imágenes cargan tarde). Recalcular al observar el
+        // cambio de tamaño cubre los tres casos sin depender del scroll.
+        if (typeof ResizeObserver === 'function') {
+            var roTimer = null;
+            new ResizeObserver(function () {
+                clearTimeout(roTimer);
+                roTimer = setTimeout(updateVisibility, 150);
+            }).observe(document.body);
+        }
 
         // Mientras el usuario hace scroll, el botón se atenúa y encoge para no tapar
         // CTAs/controles que queden justo debajo; vuelve a su tamaño normal (y
-        // recalcula colisiones) al detenerse.
+        // recalcula colisiones/visibilidad) al detenerse.
         var scrollTimer = null;
         window.addEventListener('scroll', function () {
-            fab.style.opacity = '.45';
-            fab.style.transform = 'scale(.82)';
+            if (!withinMobileHero()) {
+                fab.style.opacity = '.45';
+                fab.style.transform = 'scale(.82)';
+            }
             clearTimeout(scrollTimer);
-            scrollTimer = setTimeout(function () {
-                fab.style.opacity = '1';
-                fab.style.transform = 'scale(1)';
-                avoidOverlap();
-            }, 220);
+            scrollTimer = setTimeout(updateVisibility, 220);
         }, { passive: true });
     })();
     </script>

@@ -1,28 +1,42 @@
 @php
     $settings   = $siteSettings ?? [];
     $locale     = app()->getLocale();
-    $siteName   = $settings['site_name']   ?? __('seo.site_name');
-    $description= $settings['site_description_' . $locale]
-                  ?? ($settings['site_description_es'] ?? __('seo.default_description'));
-    $email      = $settings['contact_email']   ?? 'hola@limaamericatours.com';
-    $phone      = $settings['contact_phone']   ?? '+51 925 886 725';
-    $whatsapp   = $settings['whatsapp']        ?? null;
-    $telephone  = $whatsapp ? '+' . $whatsapp : $phone;
+    // SEO S-02: usar "?:" en vez de "??" para estos fallbacks. Las claves de
+    // Settings existen en BD con valor '' (string vacío), no null, así que
+    // "??" nunca disparaba el default (solo lo hace con null/ausente). "?:"
+    // sí trata '' como "sin valor" y cae al fallback correctamente.
+    // Nota: se antepone "?? ''" a cada acceso directo al array para no emitir
+    // "Undefined array key" cuando la clave todavía no existe en Settings.
+    $siteName   = ($settings['site_name'] ?? '')   ?: __('seo.site_name');
+    $description= ($settings['site_description_' . $locale] ?? '')
+                  ?: (($settings['site_description_es'] ?? '') ?: __('seo.default_description'));
+    $email      = ($settings['contact_email'] ?? '')   ?: 'hola@limaamericatours.com';
+    // Sin fallback a otro número de contacto: ver App\Models\Setting::contactPhone().
+    // Un "telephone" falso o heredado de otro cliente en el schema que lee
+    // Google es peor que no declarar la propiedad.
+    $waDigits   = \App\Models\Setting::whatsappNumber();
+    $telephone  = $waDigits ? ('+' . $waDigits) : \App\Models\Setting::contactPhone();
 
     // GEO settings
-    $geoName    = $settings['geo_business_name'] ?? $siteName;
-    $geoStreet  = $settings['geo_street']        ?? ($settings['contact_address_' . $locale] ?? 'Lima');
-    $geoCity    = $settings['geo_city']          ?? 'Lima';
-    $geoRegion  = $settings['geo_region']        ?? 'Lima';
+    $geoName    = ($settings['geo_business_name'] ?? '') ?: $siteName;
+    // Dirección real: prioriza geo_street (campo dedicado del tab GEO); si está
+    // vacío, cae a la dirección real ya cargada en el tab Contacto para el
+    // idioma actual y, si ese idioma no tiene equivalente (p.ej. no existe
+    // contact_address_pt), cae a la versión en español antes del literal "Lima".
+    $geoStreet  = ($settings['geo_street'] ?? '')
+                  ?: (($settings['contact_address_' . $locale] ?? '')
+                  ?: (($settings['contact_address_es'] ?? '') ?: 'Lima'));
+    $geoCity    = ($settings['geo_city'] ?? '')          ?: 'Lima';
+    $geoRegion  = ($settings['geo_region'] ?? '')        ?: 'Lima';
     $geoPostal  = $settings['geo_postal_code']   ?? null;
-    $geoCountry = $settings['geo_country']       ?? 'PE';
+    $geoCountry = ($settings['geo_country'] ?? '')       ?: 'PE';
     $geoLat     = $settings['geo_latitude']      ?? null;
     $geoLong    = $settings['geo_longitude']     ?? null;
-    $geoPrice   = $settings['geo_price_range']   ?? '$$';
+    $geoPrice   = ($settings['geo_price_range'] ?? '')   ?: '$$';
 
     // Opening hours: derived from contact_hours setting if available
-    $rawHours   = $settings['contact_hours_' . $locale]
-                  ?? ($settings['contact_hours_es'] ?? null);
+    $rawHours   = ($settings['contact_hours_' . $locale] ?? '')
+                  ?: (($settings['contact_hours_es'] ?? '') ?: null);
 
     // Social links for sameAs.
     // OJO: no usar ltrim($url, 'https://') — recorta por juego de caracteres
@@ -52,7 +66,6 @@
         'image'    => asset('assets/banners/banner-hero.jpg'),
         'description' => $description,
         'email'    => $email,
-        'telephone' => $telephone,
         'priceRange' => $geoPrice,
         'address'  => array_filter([
             '@type'           => 'PostalAddress',
@@ -70,6 +83,11 @@
         ],
         'inLanguage' => ['es-PE', 'en-US', 'pt-BR'],
     ];
+
+    // Omitir "telephone" del schema si no hay dato — ver comentario arriba.
+    if ($telephone) {
+        $organization['telephone'] = $telephone;
+    }
 
     // Add geo coordinates only when available
     if ($geoLat && $geoLong) {

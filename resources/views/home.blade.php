@@ -4,20 +4,10 @@
 @section('description', __('seo.home_description'))
 @section('header_variant', 'solid')
 
-@push('schema')
-<script type="application/ld+json">{!! json_encode([
-    '@context' => 'https://schema.org',
-    '@type' => 'WebSite',
-    'name' => __('seo.site_name'),
-    'url' => url('/' . app()->getLocale()),
-    'inLanguage' => app()->getLocale(),
-    'potentialAction' => [
-        '@type' => 'SearchAction',
-        'target' => url('/' . app()->getLocale() . '/tours?q={search_term_string}'),
-        'query-input' => 'required name=search_term_string',
-    ],
-], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
-@endpush
+{{-- El JSON-LD WebSite (con su SearchAction) ya lo emite
+     resources/views/seo/jsonld.blade.php — este bloque duplicado se retiró
+     el 2026-07-27 (informe SEO: duplicado + apuntaba a /tours?q= que
+     TourController::index() ignora). No reintroducir aquí. --}}
 
 @php
     $locale = app()->getLocale();
@@ -40,11 +30,98 @@
     ];
     $heroTitleRaw = \App\Models\Setting::get('home_hero_title_' . $locale)
         ?: ($heroTitleDefault[$locale] ?? $heroTitleDefault['es']);
-    $heroSub = $L(
-        'Explora lugares increíbles, vive experiencias únicas y crea recuerdos que durarán para siempre.',
-        'Explore incredible places, live unique experiences and create memories that will last forever.',
-        'Explore lugares incríveis, viva experiências únicas e crie memórias que vão durar para sempre.'
+    $heroSubDefault = $L(
+        'Creamos experiencias auténticas que conectan viajeros con la historia, la cultura y la esencia de nuestro país.',
+        'We create authentic experiences that connect travelers with the history, culture and essence of our country.',
+        'Criamos experiências autênticas que conectam viajantes com a história, a cultura e a essência do nosso país.'
     );
+    $heroSub = \App\Models\Setting::get('home_hero_sub_' . $locale) ?: $heroSubDefault;
+
+    // ── Hero (rediseño mockup 2026-07): eyebrow + línea roja + bloque
+    // "10+ años" + 4 trust badges — editables por Settings con default en
+    // código. Claves nuevas (aún no existen en Filament, ver reporte). ──
+    $heroEyebrow = \App\Models\Setting::get('home_hero_eyebrow_' . $locale)
+        ?: $L('Somos', 'We are', 'Somos');
+
+    $heroTaglineDefault = $L("10 años mostrando\nlo mejor del Perú", "10 years showcasing\nthe best of Peru", "10 anos mostrando\no melhor do Peru");
+    $heroTagline = \App\Models\Setting::get('home_hero_tagline_' . $locale) ?: $heroTaglineDefault;
+
+    $heroYearsNumber = \App\Models\Setting::get('home_hero_years_number') ?: '10+';
+    $heroYearsLabel = \App\Models\Setting::get('home_hero_years_label_' . $locale)
+        ?: $L('Años de experiencia', 'Years of experience', 'Anos de experiência');
+    $heroYearsSub = \App\Models\Setting::get('home_hero_years_sub_' . $locale)
+        ?: $L('Miles de viajeros descubriendo el Perú', 'Thousands of travelers discovering Peru', 'Milhares de viajantes descobrindo o Peru');
+
+    $heroTrustDefaults = [
+        $L('Guías expertos locales', 'Local expert guides', 'Guias locais especializados'),
+        $L('Tours 100% seguros', '100% safe tours', 'Tours 100% seguros'),
+        $L('Atención personalizada', 'Personalized support', 'Atendimento personalizado'),
+        $L('Mejor precio garantizado', 'Best price guaranteed', 'Melhor preço garantido'),
+    ];
+    $heroTrustIcons = [
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.7"/></svg>',
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>',
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .58 1.41l9.6 9.6a2 2 0 0 0 2.83 0l4.34-4.34a2 2 0 0 0 0-2.85z"/><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/></svg>',
+    ];
+    $heroTrust = collect($heroTrustDefaults)->map(function ($default, $i) use ($locale) {
+        $n = $i + 1;
+        return \App\Models\Setting::get("home_hero_trust_{$n}_{$locale}") ?: $default;
+    });
+
+    // ── Destinos reales para el select del buscador (mismo dataset que usa
+    // el resto del home / tours.index — modelo Region, ya cargado por
+    // HomeController como $regions). ──
+    $heroRegions = $regions ?? collect();
+
+    // ── Sugerencias (datalist) para el campo "¿Qué tour buscas?" — títulos
+    // reales y publicados, catálogo pequeño (~26), consulta liviana. ──
+    try {
+        $heroSearchSuggestions = \App\Models\Tour::published()
+            ->orderBy('title_' . $locale)
+            ->limit(60)
+            ->pluck('title_' . $locale);
+    } catch (\Throwable $e) {
+        $heroSearchSuggestions = collect();
+    }
+
+    // Mismo número que usa el FAB global de WhatsApp (layouts/app.blade.php).
+    // Sin fallback a otro número: ver App\Models\Setting::whatsappNumber().
+    // Sin dato, el botón "Escríbenos por WhatsApp" del hero no se pinta
+    // (mismo criterio ya usado para heroVideoUrl más abajo).
+    $heroWaNumber = \App\Models\Setting::whatsappNumber();
+
+    // ── Botón "Ver video" del hero: solo se pinta si el cliente ya cargó la
+    // URL en Settings → Home (home_hero_video_url). Sin URL, mejor sin botón
+    // que con un CTA muerto (ver reporte: pendiente URL real del cliente).
+    //
+    // El campo del panel acepta cualquier URL "de compartir" (watch?v=,
+    // youtu.be, shorts, vimeo.com/ID) pero el <iframe> SOLO admite el
+    // formato embebible (/embed/ID) — la URL de compartir de YouTube da
+    // "Refused to display... X-Frame-Options 'sameorigin'". Se normaliza
+    // aquí, en un solo lugar, a embebible + youtube-nocookie.com (mejor
+    // privacidad, ya permitido en el CSP). Si no matchea ningún patrón
+    // conocido, mejor sin botón que con un modal roto. ──
+    $heroVideoUrlRaw = trim((string) (\App\Models\Setting::get('home_hero_video_url') ?: ''));
+    $heroVideoUrl = '';
+    if ($heroVideoUrlRaw !== '') {
+        $u = $heroVideoUrlRaw;
+        if (preg_match('~youtube(?:-nocookie)?\.com/embed/([A-Za-z0-9_-]{6,})~i', $u, $m)) {
+            $heroVideoUrl = 'https://www.youtube-nocookie.com/embed/' . $m[1];
+        } elseif (preg_match('~youtube\.com/watch\?[^\s#]*\bv=([A-Za-z0-9_-]{6,})~i', $u, $m)) {
+            $heroVideoUrl = 'https://www.youtube-nocookie.com/embed/' . $m[1];
+        } elseif (preg_match('~youtu\.be/([A-Za-z0-9_-]{6,})~i', $u, $m)) {
+            $heroVideoUrl = 'https://www.youtube-nocookie.com/embed/' . $m[1];
+        } elseif (preg_match('~youtube\.com/shorts/([A-Za-z0-9_-]{6,})~i', $u, $m)) {
+            $heroVideoUrl = 'https://www.youtube-nocookie.com/embed/' . $m[1];
+        } elseif (preg_match('~player\.vimeo\.com/video/(\d+)~i', $u, $m)) {
+            $heroVideoUrl = 'https://player.vimeo.com/video/' . $m[1];
+        } elseif (preg_match('~vimeo\.com/(?:channels/[\w-]+/|groups/[\w-]+/videos/)?(\d+)~i', $u, $m)) {
+            $heroVideoUrl = 'https://player.vimeo.com/video/' . $m[1];
+        }
+        // Ningún patrón conocido: $heroVideoUrl queda vacío y el @if de abajo
+        // simplemente no pinta el botón "Ver video".
+    }
 
     // ── Tours destacados: reales, ya calculados por HomeController ──
     $destacados = $featuredTours->take(4);
@@ -112,115 +189,163 @@
 <div class="lat-page">
 
     {{-- ============================================================
-         HERO — imagen de fondo + título + buscador + chips + features
+         HERO — foto a sangre (columna derecha, altura completa) + texto,
+         tarjeta de confianzas y buscador de 4 campos en doble marco.
+         Calca de hero.png (mockup aprobado 2026-07).
          ============================================================ --}}
     <section class="lat-hero" aria-labelledby="hero-title">
-        <div class="lat-hero__bg">
-            <img src="{{ $heroImgUrl }}" alt="" loading="eager" fetchpriority="high">
+      <div class="lat-hero__top">
+        <div class="lat-hero__media">
+            <img
+                src="{{ $heroImgUrl }}"
+                alt="{{ $L('Malecón de Miraflores al atardecer, con el faro La Marina y el mar de fondo, Lima', 'Miraflores boardwalk at sunset, with La Marina lighthouse and the sea in the background, Lima', 'Malecón de Miraflores ao entardecer, com o farol La Marina e o mar ao fundo, Lima') }}"
+                width="1717" height="916" loading="eager" fetchpriority="high">
+            <span class="lat-hero__media-fade" aria-hidden="true"></span>
+
+            {{-- Fila inferior sobre la foto (mockup): bloque "10+" a la izquierda +
+                 WhatsApp/Ver video apilados a la derecha. Los botones comparten
+                 clase .lat-btn para que el FAB global de WhatsApp
+                 (layouts/app.blade.php) los detecte y se desplace hacia arriba
+                 sin solaparse en ningún breakpoint. --}}
+            <div class="lat-hero__overlay-row">
+                <div class="lat-hero__years">
+                    <strong>{{ $heroYearsNumber }}</strong>
+                    <span class="lat-hero__years-label">{{ $heroYearsLabel }}</span>
+                    <span class="lat-hero__years-sub">{!! nl2br(e($heroYearsSub)) !!}</span>
+                </div>
+
+                <div class="lat-hero__floating-actions">
+                    @if ($heroWaNumber)
+                    <a class="lat-btn lat-btn--wa" href="https://wa.me/{{ $heroWaNumber }}" target="_blank" rel="noopener noreferrer">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.51 5.26l-.999 3.648 3.978-1.045zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.148-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.017-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.247-.694.247-1.289.173-1.413z"/></svg>
+                        {{ $L('Escríbenos por WhatsApp', 'Message us on WhatsApp', 'Fale conosco pelo WhatsApp') }}
+                    </a>
+                    @endif
+                    @if ($heroVideoUrl !== '')
+                        <button type="button" class="lat-btn lat-btn--video" id="heroVideoBtn"
+                                aria-haspopup="dialog" aria-controls="heroVideoModal">
+                            {{ __('ui.watch_video') }}
+                            <span class="lat-btn--video__ic" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                            </span>
+                        </button>
+                    @endif
+                </div>
+            </div>
         </div>
 
-        <div class="lat-wrap" style="display:flex; flex-direction:column; width:100%;">
-            <div class="lat-hero__inner">
-                <h1 id="hero-title">{!! $heroTitleRaw !!}</h1>
-                <p class="lat-hero__sub">{{ $heroSub }}</p>
+        <div class="lat-hero__top-content">
+            <div class="lat-wrap">
+                <div class="lat-hero__text">
+                    <span class="lat-eyebrow">{{ $heroEyebrow }}</span>
+                    <h1 id="hero-title">{!! $heroTitleRaw !!}</h1>
+                    <p class="lat-hero__tagline">{!! nl2br(e($heroTagline)) !!}</p>
+                    <p class="lat-hero__desc">{{ $heroSub }}</p>
+                </div>
 
-                <form class="lat-search" role="search" method="GET" action="{{ route('tours.results', ['locale' => $locale]) }}">
-                    <div class="lat-search__field">
-                        <label for="s-dest">{{ $L('Destino', 'Destination', 'Destino') }}</label>
-                        <div class="lat-search__val">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                            <input id="s-dest" type="text" name="q" placeholder="{{ $L('Lima, Ica, Paracas…', 'Lima, Ica, Paracas…', 'Lima, Ica, Paracas…') }}">
+                {{-- Tarjeta blanca flotante — 4 confianzas (icono + texto centrado) --}}
+                <div class="lat-hero-trust">
+                    @foreach ($heroTrust as $i => $label)
+                        <div class="lat-htc">
+                            <span class="lat-htc__ic">{!! $heroTrustIcons[$i] !!}</span>
+                            <span class="lat-htc__label">{{ $label }}</span>
                         </div>
-                    </div>
-                    <div class="lat-search__field">
-                        <label for="s-date">{{ $L('Fecha', 'Date', 'Data') }}</label>
-                        <div class="lat-search__val">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                            <input id="s-date" type="text" name="fecha" placeholder="{{ $L('Cuándo viajas', 'When you travel', 'Quando viaja') }}" onfocus="(this.type='date')">
-                        </div>
-                    </div>
-                    <div class="lat-search__field">
-                        <label for="s-pax">{{ $L('Pasajeros', 'Travelers', 'Passageiros') }}</label>
-                        <div class="lat-search__val">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.7"/></svg>
-                            <select id="s-pax" name="pax">
-                                <option>1 {{ $L('pasajero', 'traveler', 'passageiro') }}</option>
-                                <option selected>2 {{ $L('pasajeros', 'travelers', 'passageiros') }}</option>
-                                <option>3 {{ $L('pasajeros', 'travelers', 'passageiros') }}</option>
-                                <option>4+ {{ $L('pasajeros', 'travelers', 'passageiros') }}</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="lat-search__go">
-                        <button type="submit" class="lat-btn lat-btn--red">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                            {{ __('ui.search') }}
-                        </button>
-                    </div>
-                </form>
-
-                <div class="lat-chips">
-                    @php
-                        $chips = [
-                            [$L('City Tours', 'City Tours', 'City Tours'), 'city'],
-                            [$L('Gastronómicos', 'Food tours', 'Gastronômicos'), 'gastro'],
-                            [$L('Paracas & Ica', 'Paracas & Ica', 'Paracas & Ica'), 'paracas'],
-                            [$L('Nazca', 'Nazca', 'Nazca'), 'nazca'],
-                            [__('nav.free_tours'), 'free'],
-                        ];
-                    @endphp
-                    @foreach ($chips as [$label, $q])
-                        <a class="lat-chip" href="{{ route('tours.results', ['locale' => $locale, 'q' => $q]) }}">{{ $label }}</a>
                     @endforeach
                 </div>
             </div>
+        </div>
+      </div>
 
-            {{-- Fila de features --}}
-            <div class="lat-hero-features">
-                <div class="lat-hf">
-                    <div class="lat-hf__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-                    <div><b>{{ $L('Viajes Seguros', 'Safe Travel', 'Viagens Seguras') }}</b><span>{{ $L('Tu seguridad es nuestra prioridad', 'Your safety is our priority', 'Sua segurança é nossa prioridade') }}</span></div>
-                </div>
-                <div class="lat-hf">
-                    <div class="lat-hf__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.7"/></svg></div>
-                    <div><b>{{ $L('Guías Expertos', 'Expert Guides', 'Guias Especialistas') }}</b><span>{{ $L('Guías locales profesionales', 'Professional local guides', 'Guias locais profissionais') }}</span></div>
-                </div>
-                <div class="lat-hf">
-                    <div class="lat-hf__ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6L12 2z"/></svg></div>
-                    <div><b>{{ $L('Mejores Precios', 'Best Prices', 'Melhores Preços') }}</b><span>{{ $L('Calidad garantizada al mejor precio', 'Guaranteed quality at the best price', 'Qualidade garantida ao melhor preço') }}</span></div>
-                </div>
-                <div class="lat-hf">
-                    <div class="lat-hf__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></div>
-                    <div><b>{{ $L('Atención 24/7', '24/7 Support', 'Atendimento 24/7') }}</b><span>{{ $L('Estamos siempre para ayudarte', "We're always here to help", 'Estamos sempre aqui para ajudar') }}</span></div>
+        {{-- Buscador — 4 campos reales (doble marco: contenedor oscuro + barra clara).
+             Fuera de .lat-hero__top a propósito: nunca debe solaparse con el
+             bloque rojo "10+" ni con los botones flotantes sobre la foto. --}}
+        <div class="lat-wrap">
+            <div class="lat-hero__search-wrap">
+                    <form class="lat-search" role="search" method="GET" action="{{ route('tours.results', ['locale' => $locale]) }}">
+                        <div class="lat-search__field">
+                            <label for="s-q">{{ $L('¿Qué tour buscas?', 'What tour are you looking for?', 'Que tour você procura?') }}</label>
+                            <div class="lat-search__val">
+                                <input id="s-q" type="text" name="q" list="hero-tour-suggestions" autocomplete="off"
+                                       placeholder="{{ $L('Ej. City Tour, Machu Picchu…', 'E.g. City Tour, Machu Picchu…', 'Ex. City Tour, Machu Picchu…') }}">
+                                <svg class="lat-search__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                            </div>
+                            <datalist id="hero-tour-suggestions">
+                                @foreach ($heroSearchSuggestions as $title)
+                                    <option value="{{ $title }}"></option>
+                                @endforeach
+                            </datalist>
+                        </div>
+
+                        <div class="lat-search__field">
+                            <label for="s-dest">{{ $L('Destino', 'Destination', 'Destino') }}</label>
+                            <div class="lat-search__val">
+                                <select id="s-dest" name="destino">
+                                    <option value="">{{ $L('Todos los destinos', 'All destinations', 'Todos os destinos') }}</option>
+                                    @foreach ($heroRegions as $region)
+                                        <option value="{{ $region->slug }}">{{ $region->name }}</option>
+                                    @endforeach
+                                </select>
+                                <svg class="lat-search__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                            </div>
+                        </div>
+
+                        <div class="lat-search__field">
+                            <label for="s-date">{{ $L('Fecha', 'Date', 'Data') }}</label>
+                            <div class="lat-search__val">
+                                {{-- Fecha deseada del viajero: no filtra resultados (el catálogo no
+                                     maneja disponibilidad por día), solo viaja como referencia a
+                                     tours.results — ver TourController::search(). --}}
+                                <input id="s-date" type="text" name="fecha" autocomplete="off"
+                                       placeholder="{{ $L('Selecciona fecha', 'Pick a date', 'Selecione a data') }}"
+                                       onfocus="(this.type='date')" onblur="if(!this.value)this.type='text'">
+                                <svg class="lat-search__ic-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                            </div>
+                        </div>
+
+                        <div class="lat-search__field">
+                            <label for="s-pax">{{ $L('Personas', 'People', 'Pessoas') }}</label>
+                            <div class="lat-search__val">
+                                <select id="s-pax" name="pax">
+                                    @for ($n = 1; $n <= 9; $n++)
+                                        <option value="{{ $n }}" @selected($n === 2)>{{ $n }} {{ $n === 1 ? $L('persona', 'person', 'pessoa') : $L('personas', 'people', 'pessoas') }}</option>
+                                    @endfor
+                                    <option value="10+">10+ {{ $L('personas', 'people', 'pessoas') }}</option>
+                                </select>
+                                <svg class="lat-search__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                            </div>
+                        </div>
+
+                        <div class="lat-search__go">
+                            <button type="submit" class="lat-btn lat-btn--red">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                {{ $L('Buscar Tours', 'Search Tours', 'Buscar Tours') }}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </div>
     </section>
 
     {{-- ============================================================
-         TARJETA BLANCA superpuesta (Destinos / Tours para Todos / Viajeros)
+         MODAL "Ver video" — solo existe en el DOM si hay URL en Settings.
+         El iframe NO se crea hasta el clic (evita cargar un player al
+         cargar la home y matar el LCP). Fuera de .lat-hero__top a
+         propósito: ese contenedor tiene overflow:hidden en mobile y el
+         modal es position:fixed a pantalla completa.
          ============================================================ --}}
-    <div class="lat-hero-card-wrap">
-        <div class="lat-wrap">
-            <div class="lat-hero-card">
-                <div class="lat-hc">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    <div><b>{{ $L('Destinos Increíbles', 'Amazing Destinations', 'Destinos Incríveis') }}</b><span>{{ $L('Lima y todo Perú', 'Lima and all of Peru', 'Lima e todo o Peru') }}</span></div>
-                </div>
-                <div class="lat-hc">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                    <div><b>{{ $L('Tours para Todos', 'Tours for Everyone', 'Tours para Todos') }}</b><span>{{ $L('Aventura • Cultura • Gastronomía', 'Adventure • Culture • Food', 'Aventura • Cultura • Gastronomia') }}</span></div>
-                </div>
-                <div class="lat-hc">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.7"/></svg>
-                    <div><b>{{ $L('Miles de Viajeros', 'Thousands of Travelers', 'Milhares de Viajantes') }}</b><span>{{ $L('Confían en nosotros', 'Trust us', 'Confiam em nós') }}</span></div>
-                </div>
-                <a class="lat-btn lat-btn--red" href="{{ route('tours.index', ['locale' => $locale]) }}">
-                    {{ $L('Ver Tours', 'View Tours', 'Ver Tours') }}
-                </a>
+    @if ($heroVideoUrl !== '')
+        <div class="lat-video-modal" id="heroVideoModal" role="dialog" aria-modal="true"
+             aria-label="{{ __('ui.watch_video') }}" hidden>
+            <div class="lat-video-modal__backdrop" data-video-close></div>
+            <div class="lat-video-modal__panel">
+                <button type="button" class="lat-video-modal__close" data-video-close
+                        aria-label="{{ $L('Cerrar video', 'Close video', 'Fechar vídeo') }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+                <div class="lat-video-modal__frame" data-video-frame></div>
             </div>
         </div>
-    </div>
+    @endif
 
     {{-- ============================================================
          TOURS DESTACADOS — reales, ordenados por featured_order/compras
@@ -429,3 +554,70 @@
 @push('schema')
 @include('partials.faq-schema')
 @endpush
+
+@if ($heroVideoUrl !== '')
+@push('scripts')
+<script>
+(function () {
+    var btn = document.getElementById('heroVideoBtn');
+    var modal = document.getElementById('heroVideoModal');
+    if (!btn || !modal) return;
+
+    var frame = modal.querySelector('[data-video-frame]');
+    var closers = modal.querySelectorAll('[data-video-close]');
+    var videoUrl = @json($heroVideoUrl);
+    var videoTitle = @json(__('ui.watch_video'));
+    var lastFocused = null;
+
+    function focusableEls() {
+        return Array.prototype.slice
+            .call(modal.querySelectorAll('button, [href], iframe, [tabindex]:not([tabindex="-1"])'))
+            .filter(function (el) { return el.offsetParent !== null; });
+    }
+
+    function onKeydown(e) {
+        if (e.key === 'Escape' || e.key === 'Esc') { close(); return; }
+        if (e.key !== 'Tab') return;
+        var els = focusableEls();
+        if (!els.length) return;
+        var first = els[0], last = els[els.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+
+    function open() {
+        lastFocused = document.activeElement;
+
+        // El iframe recién se crea aquí — al abrir el modal — para que el
+        // recurso de video nunca aparezca en la red mientras carga la home.
+        var iframe = document.createElement('iframe');
+        iframe.src = videoUrl;
+        iframe.title = videoTitle;
+        iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+        iframe.allowFullscreen = true;
+        iframe.setAttribute('frameborder', '0');
+        frame.innerHTML = '';
+        frame.appendChild(iframe);
+
+        modal.hidden = false;
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', onKeydown);
+
+        var els = focusableEls();
+        (els[0] || modal).focus();
+    }
+
+    function close() {
+        modal.hidden = true;
+        document.body.style.overflow = '';
+        frame.innerHTML = ''; // corta el video al cerrar, no solo lo oculta
+        document.removeEventListener('keydown', onKeydown);
+        if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+    }
+
+    btn.addEventListener('click', open);
+    closers.forEach(function (el) { el.addEventListener('click', close); });
+})();
+</script>
+@endpush
+@endif

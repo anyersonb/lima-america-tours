@@ -7,7 +7,9 @@
     $accountUrl = route('customer.account', ['locale' => $locale]);
     $loginUrl   = route('customer.login',   ['locale' => $locale]);
     $contactEmail = \App\Models\Setting::get('contact_email') ?: 'reservas@limaamericatours.com';
-    $contactPhone = \App\Models\Setting::get('contact_phone') ?: '+51 925 886 725';
+    // Sin fallback a otro teléfono: ver App\Models\Setting::contactPhone().
+    // Sin dato, la línea del footer solo muestra el correo.
+    $contactPhone = \App\Models\Setting::contactPhone();
 @endphp
 <!doctype html>
 <html lang="{{ $locale }}">
@@ -142,7 +144,9 @@
     <tr><td style="background:#073b3d;color:#fff;padding:18px;text-align:center;font-size:13px;">
         <a href="{{ url('/') }}" style="color:#fff;text-decoration:none;">limaamericatours.com</a>
         <span style="color:#dca03a;margin:0 10px;">|</span>{{ $contactEmail }}
+        @if ($contactPhone)
         <span style="color:#dca03a;margin:0 10px;">|</span>{{ $contactPhone }}
+        @endif
     </td></tr>
 
 </table>

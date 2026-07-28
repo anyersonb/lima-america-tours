@@ -9,8 +9,10 @@
     // Se usa un closure local $L (mismo patrón que about.blade.php) en vez de
     // saturar lang/*/ui.php con claves de un solo uso de esta pantalla.
     $L = fn (string $es, string $en, string $pt): string => $locale === 'pt' ? $pt : ($locale === 'en' ? $en : $es);
-    $waPhone = \App\Models\Setting::get('contact_phone') ?: '+51 925 886 725';
-    $waPhoneDigits = preg_replace('/\D/', '', $waPhone);
+    // Sin fallback a otro número de WhatsApp: ver
+    // App\Models\Setting::whatsappNumber(). Sin dato, el botón "Confirmar
+    // reserva por WhatsApp" no se pinta (queda "Enviar por correo").
+    $waPhoneDigits = \App\Models\Setting::whatsappNumber();
 @endphp
 
 @section('title', __('ui.cart_title') . ' — ' . __('seo.site_name'))
@@ -1345,10 +1347,12 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
                                     </span>
                                 </label>
 
+                                @if ($waPhoneDigits)
                                 <button type="submit" id="btn-whatsapp-confirm" class="lat-checkout-btn-wa">
                                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
                                     <span>{{ $L('Confirmar reserva por WhatsApp', 'Confirm booking via WhatsApp', 'Confirmar reserva pelo WhatsApp') }}</span>
                                 </button>
+                                @endif
                                 <button type="submit" id="btn-email-confirm" class="lat-checkout-btn-outline">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
                                     <span>{{ $L('Enviar por correo', 'Send by email', 'Enviar por e-mail') }}</span>

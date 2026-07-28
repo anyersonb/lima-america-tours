@@ -19,7 +19,14 @@ class SettingSeeder extends Seeder
 
             // Contacto
             ['key' => 'contact_email', 'value' => 'hola@limaamericatours.com', 'group' => 'contact'],
-            ['key' => 'contact_phone', 'value' => '+51 925 886 725', 'group' => 'contact'],
+            // Vacíos a propósito: "+51 925 886 725" / "51925886725" eran el
+            // teléfono y WhatsApp REALES de Lima View Tours (otro cliente,
+            // proyecto del que este se forkeó), sembrados aquí como si fueran
+            // el dato real de Lima América. El front nunca cae en ese fallback
+            // (ver App\Models\Setting::contactPhone()/whatsappNumber()): oculta
+            // el bloque de teléfono/WhatsApp hasta que el cliente cargue su
+            // propio número en Configuración → Contacto.
+            ['key' => 'contact_phone', 'value' => '', 'group' => 'contact'],
             // Vacío a propósito: es un teléfono secundario opcional. El front
             // (contact.blade.php) ya lo oculta con @if(!empty(...)) cuando no
             // hay valor cargado desde Configuración → Contacto.
@@ -28,7 +35,7 @@ class SettingSeeder extends Seeder
             ['key' => 'contact_address_en', 'value' => 'Larcomar Ave. 233, Off. 410 — Miraflores, Lima', 'group' => 'contact'],
             ['key' => 'contact_hours_es', 'value' => 'Lun – Vie: 9:00 a.m. – 7:00 p.m.', 'group' => 'contact'],
             ['key' => 'contact_hours_en', 'value' => 'Mon – Fri: 9:00 a.m. – 7:00 p.m.', 'group' => 'contact'],
-            ['key' => 'whatsapp', 'value' => '51925886725', 'group' => 'contact'],
+            ['key' => 'whatsapp', 'value' => '', 'group' => 'contact'],
 
             // Redes sociales
             ['key' => 'social_instagram', 'value' => 'https://instagram.com/limaamericatours', 'group' => 'social'],

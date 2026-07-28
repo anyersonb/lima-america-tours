@@ -1,4 +1,4 @@
-# Lima View Tours
+# Lima América Tours
 
 Sitio web de reservaciones de tours en Lima, Ica y Cusco — Perú.
 

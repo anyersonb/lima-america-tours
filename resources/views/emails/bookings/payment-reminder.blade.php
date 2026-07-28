@@ -5,8 +5,11 @@
     $grandTotal   = (float) $bookings->sum('total_price');
     $currency     = $first?->currency ?? 'PEN';
     $cur          = \App\Support\Money::prefix($currency);
-    $contactPhone = \App\Models\Setting::get('contact_phone') ?: '+51 925 886 725';
-    $wa           = preg_replace('/\D/', '', \App\Models\Setting::get('whatsapp') ?: $contactPhone);
+    // Sin fallback a otro teléfono/WhatsApp: ver App\Models\Setting::contactPhone()
+    // / whatsappNumber(). Sin dato, el footer omite el teléfono y el botón
+    // "Pagar por WhatsApp" no se imprime (queda solo "Ver mis tours").
+    $contactPhone = \App\Models\Setting::contactPhone();
+    $wa           = \App\Models\Setting::whatsappNumber();
     $contactEmail = \App\Models\Setting::get('contact_email') ?: 'reservas@limaamericatours.com';
     $toursUrl     = url('/' . ($locale === 'en' ? 'en' : 'es') . '/tours');
     $fallbackImg  = asset('assets/banners/banner-hero.jpg');
@@ -16,7 +19,7 @@
         "Hola, quiero completar el pago de mi reserva {$first?->reference} de Lima América Tours.",
         "Hi, I'd like to complete the payment for my Lima América Tours booking {$first?->reference}."
     );
-    $waUrl = 'https://wa.me/' . $wa . '?text=' . rawurlencode($waText);
+    $waUrl = $wa ? ('https://wa.me/' . $wa . '?text=' . rawurlencode($waText)) : null;
 @endphp
 <!doctype html>
 <html lang="{{ $locale }}">
@@ -114,7 +117,11 @@
                 <td width="48" style="padding:18px 0 18px 18px;vertical-align:top;font-size:30px;color:#0c7354;">&#128179;</td>
                 <td style="padding:18px;">
                     <div style="font-family:Georgia,serif;font-size:18px;color:#0b3035;margin-bottom:5px;">{{ $L('¿Cómo completar el pago?', 'How to complete your payment?') }}</div>
+                    @if ($wa)
                     <div style="font-size:14px;color:#344b52;line-height:1.55;">{{ $L('Escríbenos por WhatsApp con tu código de reserva y te enviaremos el enlace de pago. Nuestro equipo te ayudará en minutos.', 'Message us on WhatsApp with your booking code and we will send you the payment link. Our team will help you in minutes.') }}</div>
+                    @else
+                    <div style="font-size:14px;color:#344b52;line-height:1.55;">{{ $L('Respóndenos a este correo con tu código de reserva y te enviaremos el enlace de pago. Nuestro equipo te ayudará en minutos.', 'Reply to this email with your booking code and we will send you the payment link. Our team will help you in minutes.') }}</div>
+                    @endif
                 </td>
             </tr>
         </table>
@@ -124,10 +131,12 @@
     <tr><td style="padding:18px 28px 24px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
+                @if ($waUrl)
                 <td style="padding-right:7px;">
                     <a href="{{ $waUrl }}" style="display:block;text-align:center;background:#dd8523;color:#fff;text-decoration:none;border-radius:999px;padding:14px;font-weight:bold;font-size:14px;">{{ $L('Pagar por WhatsApp', 'Pay via WhatsApp') }}</a>
                 </td>
-                <td style="padding-left:7px;">
+                @endif
+                <td style="{{ $waUrl ? 'padding-left:7px;' : '' }}">
                     <a href="{{ $toursUrl }}" style="display:block;text-align:center;background:#073b3d;color:#fff;text-decoration:none;border-radius:999px;padding:14px;font-weight:bold;font-size:14px;">{{ $L('Ver mis tours', 'View tours') }}</a>
                 </td>
             </tr>
@@ -138,7 +147,9 @@
     <tr><td style="background:#073b3d;color:#fff;padding:18px;text-align:center;font-size:13px;">
         <a href="{{ url('/') }}" style="color:#fff;text-decoration:none;">limaamericatours.com</a>
         <span style="color:#dca03a;margin:0 10px;">|</span>{{ $contactEmail }}
+        @if ($contactPhone)
         <span style="color:#dca03a;margin:0 10px;">|</span>{{ $contactPhone }}
+        @endif
     </td></tr>
 
 </table>

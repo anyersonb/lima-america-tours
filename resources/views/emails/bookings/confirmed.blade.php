@@ -10,8 +10,11 @@
     $grandTotal = (float) $bookings->sum('total_price');
     $currency   = $first?->currency ?? 'PEN';
     $cur        = \App\Support\Money::prefix($currency);
-    $contactPhone = \App\Models\Setting::get('contact_phone') ?: '+51 925 886 725';
-    $wa  = preg_replace('/\D/', '', \App\Models\Setting::get('whatsapp') ?: $contactPhone);
+    // Sin fallback a otro teléfono/WhatsApp: ver App\Models\Setting::contactPhone()
+    // / whatsappNumber(). Sin dato, el footer omite el teléfono y el botón de
+    // WhatsApp no se imprime (queda solo "Ver más tours").
+    $contactPhone = \App\Models\Setting::contactPhone();
+    $wa  = \App\Models\Setting::whatsappNumber();
     $contactEmail = \App\Models\Setting::get('contact_email') ?: 'reservas@limaamericatours.com';
     $urlLocale = in_array($locale, ['en', 'pt'], true) ? $locale : 'es';
     $toursUrl = url('/' . $urlLocale . '/tours');
@@ -151,10 +154,12 @@
     <tr><td style="padding:18px 28px 24px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
+                @if ($wa)
                 <td style="padding-right:7px;">
                     <a href="https://wa.me/{{ $wa }}" style="display:block;text-align:center;background:#dd8523;color:#fff;text-decoration:none;border-radius:999px;padding:14px;font-weight:bold;font-size:14px;">{{ $L('Escríbenos por WhatsApp', 'Message us on WhatsApp', 'Fale conosco pelo WhatsApp') }}</a>
                 </td>
-                <td style="padding-left:7px;">
+                @endif
+                <td style="{{ $wa ? 'padding-left:7px;' : '' }}">
                     <a href="{{ $toursUrl }}" style="display:block;text-align:center;background:#073b3d;color:#fff;text-decoration:none;border-radius:999px;padding:14px;font-weight:bold;font-size:14px;">{{ $L('Ver más tours', 'Explore more tours', 'Ver mais passeios') }}</a>
                 </td>
             </tr>
@@ -165,7 +170,9 @@
     <tr><td style="background:#073b3d;color:#fff;padding:18px;text-align:center;font-size:13px;">
         <a href="{{ url('/') }}" style="color:#fff;text-decoration:none;">limaamericatours.com</a>
         <span style="color:#dca03a;margin:0 10px;">|</span>{{ $contactEmail }}
+        @if ($contactPhone)
         <span style="color:#dca03a;margin:0 10px;">|</span>{{ $contactPhone }}
+        @endif
     </td></tr>
 
 </table>

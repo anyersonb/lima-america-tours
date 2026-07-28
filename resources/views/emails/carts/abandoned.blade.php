@@ -11,7 +11,9 @@
     $currency = \App\Support\Money::prefix('PEN');
     $total    = (float) $cart->total;
 
-    $contactPhone = \App\Models\Setting::get('contact_phone') ?: '+51 925 886 725';
+    // Sin fallback a otro teléfono: ver App\Models\Setting::contactPhone().
+    // Sin dato, el footer omite el teléfono.
+    $contactPhone = \App\Models\Setting::contactPhone();
     $contactEmail = \App\Models\Setting::get('contact_email') ?: 'reservas@limaamericatours.com';
     $fallbackImg  = asset('assets/banners/banner-hero.jpg');
 
@@ -126,7 +128,9 @@
     <tr><td style="background:#073b3d;color:#fff;padding:18px;text-align:center;font-size:13px;">
         <a href="{{ url('/') }}" style="color:#fff;text-decoration:none;">limaamericatours.com</a>
         <span style="color:#dca03a;margin:0 10px;">|</span>{{ $contactEmail }}
+        @if ($contactPhone)
         <span style="color:#dca03a;margin:0 10px;">|</span>{{ $contactPhone }}
+        @endif
     </td></tr>
 
 </table>
