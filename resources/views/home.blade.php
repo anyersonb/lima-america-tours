@@ -177,14 +177,31 @@
     // ── Galería "Descubre la belleza del Perú" — editable en Settings → Home,
     // fallback a fotos de destinos reales ya presentes en storage/app/public/tours
     // para que la sección nunca salga vacía. ──
-    $galleryResolve = function (string $settingKey, string $fallbackUrl) {
+    // Devuelve la URL pública Y la ruta FÍSICA de la imagen. Las dos, y por
+    // separado, a propósito: derivar la ruta del disco parseando la URL parece
+    // equivalente y no lo es. En staging la app vive en una subcarpeta
+    // (`/staging`), así que `asset()` devuelve `/staging/storage/...` y
+    // `public_path()` de ese path apunta a un archivo que no existe. Resultado
+    // silencioso: la optimización no se aplicaba y se servían los JPG de 300+ KB
+    // tal cual (detectado midiendo en staging, en local funcionaba).
+    $galleryResolve = function (string $settingKey, string $fallbackRelative) {
         $val = \App\Models\Setting::get($settingKey);
         if (is_array($val)) { $val = $val[0] ?? ''; }
         $val = trim((string) $val);
 
-        return ($val !== '' && $val !== '[]' && $val !== '""')
-            ? \Illuminate\Support\Facades\Storage::disk('media')->url($val)
-            : $fallbackUrl;
+        if ($val !== '' && $val !== '[]' && $val !== '""') {
+            // Disco `media` → raíz en public/media.
+            return [
+                'url' => \Illuminate\Support\Facades\Storage::disk('media')->url($val),
+                'path' => public_path('media/'.ltrim($val, '/')),
+            ];
+        }
+
+        // Fallback → disco `public`, cuya raíz es public/storage.
+        return [
+            'url' => asset('storage/'.$fallbackRelative),
+            'path' => public_path('storage/'.$fallbackRelative),
+        ];
     };
 
     $gallerySlots = [
@@ -213,11 +230,10 @@
     // WebP a 640, que es de sobra para la tira (cada ítem mide ~400 px de ancho).
     // Las que sube la clienta por el panel ya pasan por ImageOptimizer.
     $galleryImages = collect($gallerySlots)->map(function ($slot) use ($galleryResolve, $locale) {
-        $url = $galleryResolve($slot['key'], asset('storage/'.$slot['fallback']));
-        $localPath = public_path(ltrim((string) parse_url($url, PHP_URL_PATH), '/'));
+        $img = $galleryResolve($slot['key'], $slot['fallback']);
 
         return [
-            'url' => \App\Support\ResponsiveImage::make($localPath, $url, [640], '(min-width: 900px) 400px, 70vw')['src'],
+            'url' => \App\Support\ResponsiveImage::make($img['path'], $img['url'], [640], '(min-width: 900px) 400px, 70vw')['src'],
             'alt' => $slot['alt'][$locale] ?? $slot['alt']['es'],
         ];
     });

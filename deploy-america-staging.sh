@@ -37,25 +37,28 @@ URL="${URL:-https://limaamericatours.com/staging}"
 LOCAL="$(cd "$(dirname "$0")" && pwd)"
 SSH_OPTS=(-i "$SSH_KEY" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15)
 
-# --- Archivos del lote (commit 838069b) ------------------------------------
-# Se listan uno a uno a propósito: un rsync del repo entero se llevaría .env,
-# storage/ y el vendor local, y ya nos costó un 404 asumir cosas del docroot.
-FILES=(
-  app/Filament/Pages/Settings.php
-  app/Http/Controllers/TourController.php
-  app/Support/HeroIcons.php
-  app/Support/ResponsiveImage.php
-  lang/en/nav.php lang/en/ui.php
-  lang/es/nav.php lang/es/ui.php
-  lang/pt/nav.php lang/pt/ui.php
-  public/assets/banners/hero-machu-picchu-pano.jpg
-  resources/views/components/footer.blade.php
-  resources/views/components/header.blade.php
-  resources/views/home.blade.php
-  resources/views/layouts/app.blade.php
-  resources/views/tours/results.blade.php
-  public/build/manifest.json
+# --- Archivos a subir ------------------------------------------------------
+# Se derivan del DIFF contra el commit que está desplegado en staging, no de
+# una lista escrita a mano por lote.
+#
+# Por qué: el primer intento subió solo los archivos del último lote y la home
+# quedó en 500 con "Call to undefined method Setting::contactPhone()". Staging
+# estaba en 92a6ddc y nunca había recibido el commit del hero (46dbf42), que es
+# donde nacieron esos métodos del modelo: subir la vista que los llama sin subir
+# el modelo deja el sitio roto. Un lote no es autocontenido si el servidor va
+# más atrás de lo que crees.
+#
+# ACTUALIZA `DEPLOYED_COMMIT` cada vez que despliegues, o pásalo por entorno.
+# El servidor no tiene repo git (el deploy es por copia), así que este valor es
+# la única memoria de qué hay publicado.
+DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-92a6ddc}"
+
+mapfile -t FILES < <(
+  git -C "$LOCAL" diff --name-only "$DEPLOYED_COMMIT..HEAD" \
+    | grep -vE '^(tests/|docs/|\.claude/|\.gitignore|deploy-|README)' \
+    | while read -r f; do [ -f "$LOCAL/$f" ] && echo "$f"; done
 )
+FILES+=(public/build/manifest.json)
 
 # El SCSS no se sube (el servidor no compila): va el CSS ya construido.
 for asset in "$LOCAL"/public/build/assets/*; do
@@ -117,7 +120,22 @@ echo "   cachés regeneradas"
 REMOTE_EOF
 
 echo "== 5. Verificación en caliente =="
-HTML="$(curl -s --ssl-no-revoke "$URL/es")"
+
+# PRIMERO el código de estado. En el primer intento la home devolvía 500 y las
+# comprobaciones de AUSENCIA daban "OK" alegremente (en una página de error no
+# está el pill de WhatsApp ni el PNG viejo, claro). Un 500 tiene que abortar la
+# verificación, no colar tres OK falsos.
+CODE="$(curl -s -o /dev/null -w '%{http_code}' --ssl-no-revoke -m 40 "$URL/es")"
+echo "   HTTP $CODE en $URL/es"
+
+if [ "$CODE" != "200" ]; then
+  echo "   !! La home NO responde 200. Últimos errores del log:"
+  ssh "${SSH_OPTS[@]}" "$SSH_USER@$HOST" "cd '$REMOTE' && tail -c 60000 storage/logs/laravel.log | grep -aoE '(ERROR|CRITICAL): .{0,200}' | tail -3"
+  echo "   Backup para revertir: .deploy-backups/pre-$STAMP.tar.gz"
+  exit 1
+fi
+
+HTML="$(curl -s --ssl-no-revoke -m 40 "$URL/es")"
 
 # presente: el patrón DEBE aparecer. ausente: NO debe aparecer.
 # (grep -E no tiene lookahead: las comprobaciones negativas van por separado,
