@@ -35,6 +35,32 @@
     } catch (\Throwable $e) {
         $popularTours = collect();
     }
+
+    // ── Enlaces que dependen de que HAYA contenido ───────────────────────────
+    // Un enlace del footer que lleva a una pantalla de "Sin resultados" es un
+    // enlace muerto: el visitante hace clic y recibe un mensaje de vacío en vez
+    // de una sección. Estos dos se pintan solo cuando hay algo que mostrar, así
+    // que reaparecen solos el día que el CMS tenga ese contenido (no hay que
+    // acordarse de descomentar nada).
+    //
+    // "Free Tours" no es una sección propia: es la búsqueda ?q=free. Hoy no hay
+    // ningún tour que la satisfaga (verificado: 0 resultados), así que el enlace
+    // no se pinta.
+    try {
+        $hasFreeTours = \App\Models\Tour::published()->where(function ($q) {
+            $q->where('title_es', 'like', '%free%')
+                ->orWhere('title_en', 'like', '%free%')
+                ->orWhere('description_es', 'like', '%free%');
+        })->exists();
+    } catch (\Throwable $e) {
+        $hasFreeTours = false;
+    }
+
+    try {
+        $hasBlogPosts = \App\Models\BlogPost::where('is_published', true)->exists();
+    } catch (\Throwable $e) {
+        $hasBlogPosts = false;
+    }
 @endphp
 <footer class="lat-footer" role="contentinfo"
         style="background-image:linear-gradient(rgba(16,13,11,.9), rgba(16,13,11,.96)), url('{{ $footBg }}');">
@@ -108,8 +134,13 @@
                     <a href="{{ route('home', ['locale' => $locale]) }}">{{ __('nav.home') }}</a>
                     <a href="{{ route('about', ['locale' => $locale]) }}">{{ __('footer.about_short') }}</a>
                     <a href="{{ route('tours.index', ['locale' => $locale]) }}">{{ __('nav.tours') }}</a>
-                    <a href="{{ route('tours.results', ['locale' => $locale, 'q' => 'free']) }}">{{ __('nav.free_tours') }}</a>
-                    <a href="{{ route('blog.index', ['locale' => $locale]) }}">Blog</a>
+                    {{-- Solo si hay contenido detrás: ver el @php de arriba. --}}
+                    @if ($hasFreeTours)
+                        <a href="{{ route('tours.results', ['locale' => $locale, 'q' => 'free']) }}">{{ __('nav.free_tours') }}</a>
+                    @endif
+                    @if ($hasBlogPosts)
+                        <a href="{{ route('blog.index', ['locale' => $locale]) }}">Blog</a>
+                    @endif
                     <a href="{{ route('contact', ['locale' => $locale]) }}">{{ __('nav.contact') }}</a>
                     <a href="{{ route('legal.terms', ['locale' => $locale]) }}">{{ __('footer.terms') }}</a>
                     <a href="{{ route('legal.privacy', ['locale' => $locale]) }}">{{ __('footer.privacy') }}</a>
