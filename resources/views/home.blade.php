@@ -435,7 +435,7 @@
          TOURS DESTACADOS — reales, ordenados por featured_order/compras
          ============================================================ --}}
     <section class="lat-wrap" style="padding:70px 24px" id="tours" aria-labelledby="destacados-title">
-        <div class="lat-sec-head">
+        <div class="lat-sec-head lat-sec-head--home">
             <span class="lat-eyebrow is-center">{{ $L('Explora lugares increíbles', 'Explore incredible places', 'Explore lugares incríveis') }}</span>
             <h2 id="destacados-title">{{ $L('Tours Destacados', 'Featured Tours', 'Tours em Destaque') }}</h2>
             <p>{{ $L('Descubre nuestros tours más populares y vive experiencias inolvidables en los mejores destinos de Perú.', 'Discover our most popular tours and live unforgettable experiences in the best destinations in Peru.', 'Descubra nossos tours mais populares e viva experiências inesquecíveis nos melhores destinos do Peru.') }}</p>
@@ -522,7 +522,7 @@
          ============================================================ --}}
     <section class="lat-gallery" aria-labelledby="gallery-title">
         <div class="lat-wrap">
-            <div class="lat-sec-head">
+            <div class="lat-sec-head lat-sec-head--home">
                 <span class="lat-eyebrow is-center">{{ $L('Galería', 'Gallery', 'Galeria') }}</span>
                 <h2 id="gallery-title">{{ $L('Descubre la belleza del Perú', 'Discover the beauty of Peru', 'Descubra a beleza do Peru') }}</h2>
             </div>
@@ -542,7 +542,7 @@
          ============================================================ --}}
     @if ($categories->isNotEmpty())
         <section class="lat-wrap" style="padding:70px 24px" aria-labelledby="cats-title">
-            <div class="lat-sec-head">
+            <div class="lat-sec-head lat-sec-head--home">
                 <span class="lat-eyebrow is-center">{{ $L('Elige tu experiencia', 'Choose your experience', 'Escolha sua experiência') }}</span>
                 <h2 id="cats-title">{{ $L('Explora por categoría', 'Explore by category', 'Explore por categoria') }}</h2>
                 <p>{{ $L('Descubre el tipo de aventura que más te gusta: recorridos por la ciudad, sabores peruanos, aventura y culturas milenarias.', 'Discover the kind of adventure you like best: city tours, Peruvian flavors, adventure and ancient cultures.', 'Descubra o tipo de aventura que mais gosta: passeios pela cidade, sabores peruanos, aventura e culturas milenares.') }}</p>
@@ -585,7 +585,7 @@
     @php $offers = $offers ?? collect(); @endphp
     @if ($offers->isNotEmpty())
         <section class="lat-wrap" style="padding:70px 24px" aria-labelledby="offers-title">
-            <div class="lat-sec-head">
+            <div class="lat-sec-head lat-sec-head--home">
                 <span class="lat-eyebrow is-center">{{ $L('Aprovecha ahora', 'Grab it now', 'Aproveite agora') }}</span>
                 <h2 id="offers-title">{{ $L('Ofertas especiales', 'Special offers', 'Ofertas especiais') }}</h2>
                 <p>{{ $L('Promociones por tiempo limitado en nuestros tours más populares.', 'Limited-time promotions on our most popular tours.', 'Promoções por tempo limitado em nossos tours mais populares.') }}</p>
@@ -633,6 +633,28 @@
          posterior de restyle.
          ============================================================ --}}
     <x-faq-section />
+
+    {{-- ============================================================
+         CTA FINAL — masa de rojo con la silueta de Sudamérica del logo
+         como motivo. Clase propia .lat-home-cta (NO .lat-cta-final, que
+         es de about.blade.php / pages/_lat-about.scss, fuera de alcance
+         de este lote) para no compartir cascada entre archivos.
+         ============================================================ --}}
+    <section class="lat-home-cta" aria-labelledby="home-cta-title">
+        <div class="lat-home-cta__mark" aria-hidden="true">
+            <img src="{{ asset('assets/logos/logo-america-white.webp') }}" alt="" loading="lazy" width="768" height="379">
+        </div>
+        <div class="lat-wrap lat-home-cta__inner">
+            <span class="lat-eyebrow is-center">{{ $L('Vive la experiencia', 'Live the experience', 'Viva a experiência') }}</span>
+            <h2 id="home-cta-title">{{ $L('Tu próxima aventura empieza aquí', 'Your next adventure starts here', 'Sua próxima aventura começa aqui') }}</h2>
+            <p>{{ $L('Explora nuestro catálogo completo y encuentra el tour perfecto para ti.', 'Explore our full catalog and find the perfect tour for you.', 'Explore nosso catálogo completo e encontre o tour perfeito para você.') }}</p>
+            <div class="lat-home-cta__actions">
+                <a href="{{ route('tours.index', ['locale' => $locale]) }}" class="lat-home-cta__btn">
+                    {{ $L('Ver todos los tours', 'View all tours', 'Ver todos os tours') }}
+                </a>
+            </div>
+        </div>
+    </section>
 
 </div>
 

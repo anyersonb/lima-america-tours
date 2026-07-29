@@ -662,6 +662,14 @@
     p { color: $lat-muted; font-size: 1.05rem; }
 }
 
+// .lat-sec-head también lo usan about.blade.php y blog/show.blade.php (clase
+// compartida, no se toca la regla base #16305b por ellos). Este modificador
+// SOLO se aplica desde home.blade.php (las 4 secciones con encabezado:
+// Destacados, Galería, Categoría, Ofertas) para hablar el mismo idioma que
+// el hero: $lat-ink, igual que .lat-hero__brand — 17.16:1 contra
+// $lat-surface/$lat-paper, de sobra sobre AA.
+.lat-sec-head--home h2 { color: $lat-ink; }
+
 // ── Tours Destacados (dest-grid) ────────────────────────────────────────
 .lat-dest-grid {
     display: grid;
@@ -680,9 +688,11 @@
     box-shadow: $lat-shadow-sm;
     display: flex;
     flex-direction: column;
-    transition: transform .3s ease, box-shadow .3s ease;
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
 
-    &:hover { transform: translateY(-6px); box-shadow: $lat-shadow-lg; }
+    // Acento de marca en hover (mismo idioma que los círculos rojos del hero):
+    // el borde neutro ($lat-line) pasa a rojo en vez de quedarse mudo.
+    &:hover { transform: translateY(-6px); box-shadow: $lat-shadow-lg; border-color: $lat-red; }
 
     &__media {
         position: relative; aspect-ratio: 16 / 11; overflow: hidden;
@@ -718,7 +728,11 @@
 
     &__body { padding: 18px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
 
-    h3 { font-family: $lat-font-sans; font-weight: 700; font-size: 1.12rem; line-height: 1.25; color: #16305b; }
+    // Antes #16305b (navy hardcodeado, no era token ni parte de ningún
+    // criterio de marca — 1.4:1 de diferencia con $lat-ink, o sea otro
+    // idioma visual). $lat-ink es el mismo tono del titular del hero
+    // (.lat-hero__brand); 17.16:1 contra $lat-surface, de sobra sobre AA.
+    h3 { font-family: $lat-font-sans; font-weight: 700; font-size: 1.12rem; line-height: 1.25; color: $lat-ink; }
 
     &__desc { color: $lat-muted; font-size: .88rem; flex: 1; }
 
@@ -795,9 +809,16 @@
     align-items: flex-end;
     box-shadow: $lat-shadow-sm;
     isolation: isolate;
-    transition: transform .3s ease, box-shadow .3s ease;
+    // outline en vez de border: no reflowa la tarjeta (transparente en
+    // reposo, no cambia ninguna medida ya validada de la grilla).
+    outline: 3px solid transparent;
+    outline-offset: -3px;
+    transition: transform .3s ease, box-shadow .3s ease, outline-color .3s ease;
 
-    &:hover { transform: translateY(-5px); box-shadow: $lat-shadow-lg; }
+    // Hover en rojo de marca (mismo criterio que el resto de la home).
+    // El eyebrow ("Elige tu experiencia") ya era rojo de por sí — .lat-eyebrow
+    // es compartido y ya cumplía, no requirió cambio.
+    &:hover { transform: translateY(-5px); box-shadow: $lat-shadow-lg; outline-color: $lat-red; }
 
     img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
@@ -841,4 +862,152 @@
 
 @media (prefers-reduced-motion: reduce) {
     .lat-reveal { opacity: 1; transform: none; transition: none; }
+}
+
+// ── Galería "Descubre la belleza del Perú" — acento de marca ────────────
+// Los estilos propios de .lat-gallery viven en pages/_lat-gallery.scss
+// (fuera del alcance de este lote — solo home.blade.php y este archivo).
+// Este bloque SOLO añade propiedades que ese parcial no declara (position,
+// ::before) para no pelear la cascada con un import posterior (ver nota de
+// .lat-btn--wa más arriba en el repo): es un marco rojo superpuesto, no una
+// redefinición de nada que ya exista allí.
+.lat-gallery {
+    position: relative;
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+        background: $lat-red;
+    }
+}
+
+// ── CTA final de la home — masa de rojo con la silueta de Sudamérica ────
+// Clase propia (.lat-home-cta), a propósito DISTINTA de .lat-cta-final
+// (about.blade.php / pages/_lat-about.scss, que se importa después en
+// app.scss): compartir el nombre de clase repetiría el problema de cascada
+// ya documentado con .lat-btn--wa. El motivo de fondo usa
+// assets/logos/logo-america-red.png como referencia (silueta + excursionista
+// + texto) recortado por la izquierda para quedarse solo con la silueta.
+.lat-home-cta {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 72px 0;
+    text-align: center;
+    color: #fff;
+    background: linear-gradient(135deg, $lat-red 0%, $lat-red-deep 100%);
+
+    &__mark {
+        position: absolute;
+        top: 50%;
+        right: 4%;
+        transform: translateY(-50%);
+
+        // Recorte MEDIDO sobre el archivo, no estimado. `logo-america-white.webp`
+        // mide 768×379 y es un lockup: la silueta ocupa x=3..250, hay un hueco
+        // vacío en x=251..293 y el texto "LIMA AMÉRICA TOURS" va de x=294 a 765
+        // (perfil de alfa por columnas). Un recorte cuadrado (379/768 = 49% del
+        // ancho) se comía casi medio lockup y dejaba a la vista trozos de letras
+        // ("LI", "A") pegados al borde: parecía un error de maquetación, no un
+        // motivo de marca.
+        //
+        // Con aspect-ratio 251/379 y `cover` anclado a la izquierda, la parte
+        // visible es exactamente 251/768 = 32,7% del ancho: la silueta completa y
+        // ni un pixel del texto. Si se cambia el archivo del logo, hay que volver
+        // a medir estos números.
+        height: clamp(200px, 26vw, 320px);
+        width: auto;
+        aspect-ratio: 251 / 379;
+        overflow: hidden;
+        opacity: .16;
+        pointer-events: none;
+        z-index: 0;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: left center;
+            display: block;
+        }
+    }
+
+    &__inner {
+        position: relative;
+        z-index: 1;
+        max-width: 620px;
+        margin: 0 auto;
+    }
+
+    // Eyebrow propio: el rojo de marca no sirve de acento sobre un fondo que
+    // YA es rojo (2.4:1 aprox, y el rojo pierde toda función de señal).
+    // Blanco puro sí cumple (5.78:1 contra $lat-red, el extremo más claro
+    // del degradado — el otro extremo, $lat-red-deep, da 8.41:1).
+    .lat-eyebrow {
+        color: #fff;
+
+        &::before, &::after { background: #fff; }
+    }
+
+    h2 {
+        font-family: $lat-font-serif;
+        font-weight: 800;
+        font-size: clamp(1.9rem, 3.6vw, 2.8rem);
+        line-height: 1.15;
+        color: #fff;
+        margin: 16px 0 14px;
+    }
+
+    p {
+        // Blanco al 92% de opacidad sobre $lat-red compone ~(250,231,233):
+        // el contraste efectivo queda a un pelo del blanco puro, muy por
+        // encima de 4.5:1.
+        color: rgba(255, 255, 255, .92);
+        font-size: 1rem;
+        max-width: 480px;
+        margin: 0 auto 30px;
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    // Botón propio (NO .lat-btn--white de _lat-about.scss): ese vive en un
+    // archivo fuera de alcance y depende de un fondo distinto (degradado
+    // ink, no rojo) — reusar su clase habría heredado una regla pensada
+    // para otro contexto en vez de una pensada para este.
+    &__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        font-family: $lat-font-sans;
+        font-weight: 700;
+        font-size: .95rem;
+        padding: 13px 30px;
+        border-radius: $lat-r-pill;
+        background: $lat-surface;
+        // $lat-red-deep sobre blanco: 8.41:1.
+        color: $lat-red-deep;
+        transition: transform .18s ease, box-shadow .2s ease, background .2s ease, color .2s ease;
+
+        &:hover { background: $lat-ink; color: #fff; transform: translateY(-2px); box-shadow: $lat-shadow-lg; }
+        // Ink sobre el fondo rojo de la sección: visible por tono aunque no
+        // sea texto (WCAG 1.4.11 no aplica a botones de solo texto blanco
+        // sobre fondo blanco en reposo; aun así, ink se distingue de sobra
+        // por matiz frente al rojo/blanco circundantes).
+        &:focus-visible { outline: 2px solid $lat-ink; outline-offset: 2px; }
+    }
+
+    @media (max-width: 640px) {
+        padding: 56px 0;
+
+        &__mark { opacity: .12; width: clamp(160px, 40vw, 220px); right: 2%; }
+    }
 }

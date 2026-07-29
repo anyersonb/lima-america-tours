@@ -352,11 +352,18 @@
         // `.lat-btn-out` dejaba el FAB encima del "Ver Detalles" de la primera
         // tarjeta de Tours Destacados en móvil, justo al terminar el hero
         // (bug QA 2026-07-27). Misma clase en el CTA de las ofertas.
+        // 2026-07-29: se suman los CAMPOS del newsletter del footer. El selector
+        // solo listaba botones, y el newsletter tiene sus inputs abajo a la
+        // derecha, justo donde aparca el FAB: medido, tapaba 46×39 px del campo
+        // de correo. Se acotan a `.lat-footer__newsletter` a propósito y no se
+        // añade `input` en general: en checkout y contacto, con formularios
+        // largos, el FAB se iría al techo de la pantalla persiguiendo campos.
         var CONTROL_SELECTOR = [
             '.lat-btn', '.lat-tcard__fav', '.lat-filter', '.lat-btn-reservar',
             '.lat-btn-out',
             '.cart-cta-btn', '.cart-sticky', '.cart-coupon-submit',
-            'button[type="submit"]', '.btn--primary', '.tour-card a[href]:last-child'
+            'button[type="submit"]', '.btn--primary', '.tour-card a[href]:last-child',
+            '.lat-footer__newsletter input', '.lat-footer__newsletter button'
         ].join(', ');
 
         // En mobile/tablet (<HERO_BP) el hero de Home apila foto + texto + tarjeta
