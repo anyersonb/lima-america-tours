@@ -140,13 +140,48 @@ class TourController extends Controller
         $fecha = trim((string) $request->query('fecha'));
         $pax = trim((string) $request->query('pax'));
 
+        // ── Fecha ────────────────────────────────────────────────────────────
+        // El campo "Fecha" del hero llegaba y no filtraba nada: el buscador
+        // ofrecía tours en fechas que el CMS ya tiene bloqueadas. Ahora se
+        // respeta BlockedDate (las mismas reglas que la ficha de tour): un
+        // bloqueo global tumba el catálogo completo para ese día, uno por tour
+        // solo tumba ese tour, y los bloqueos por día de la semana aplican
+        // igual. Fecha basura o pasada: se ignora en silencio (no es un error
+        // del usuario que merezca una pantalla de error).
+        $searchDate = $this->parseSearchDate($fecha);
+
+        // ── Personas ─────────────────────────────────────────────────────────
+        // `max_capacity` nulo = sin límite declarado, siempre se muestra. No
+        // tiene sentido ofrecer un tour de cupo 2 a alguien que busca para 6.
+        $paxWanted = $this->parseSearchPax($pax);
+
         $filtered = Tour::published()
             ->when($q, fn ($query) => $query->where(function ($w) use ($q) {
                 $w->where('title_es', 'like', "%{$q}%")
                     ->orWhere('title_en', 'like', "%{$q}%")
                     ->orWhere('description_es', 'like', "%{$q}%");
             }))
-            ->when($destino, fn ($query) => $query->whereHas('region', fn ($r) => $r->where('slug', $destino)));
+            ->when($destino, fn ($query) => $query->whereHas('region', fn ($r) => $r->where('slug', $destino)))
+            ->when($paxWanted, fn ($query) => $query->where(function ($w) use ($paxWanted) {
+                $w->whereNull('max_capacity')->orWhere('max_capacity', '>=', $paxWanted);
+            }))
+            ->when($searchDate, function ($query) use ($searchDate) {
+                $weekday = (int) $searchDate->dayOfWeek; // 0=domingo, igual que BlockedDate
+
+                $query->whereNotExists(function ($sub) use ($searchDate, $weekday) {
+                    $sub->selectRaw('1')
+                        ->from('blocked_dates')
+                        ->where(function ($scope) {
+                            // Bloqueo global (tour_id null) o del propio tour.
+                            $scope->whereNull('blocked_dates.tour_id')
+                                ->orWhereColumn('blocked_dates.tour_id', 'tours.id');
+                        })
+                        ->where(function ($rule) use ($searchDate, $weekday) {
+                            $rule->whereDate('blocked_dates.date', $searchDate->toDateString())
+                                ->orWhere('blocked_dates.weekday', $weekday);
+                        });
+                });
+            });
 
         $tours = (clone $filtered)->ordered()->paginate(12)->withQueryString();
 
@@ -156,13 +191,85 @@ class TourController extends Controller
             ? Tour::published()->ordered()->limit(4)->get()
             : collect();
 
+        // Si lo que dejó la búsqueda en cero fue la fecha (y no el texto o el
+        // destino), se dice explícitamente: un "0 resultados" mudo hace pensar
+        // que el catálogo está vacío. Solo se muestra cuando la fecha es la
+        // culpable de verdad.
+        // Ojo: NO se usa BlockedDate::isBlocked() aquí. Ese helper compara la
+        // fecha con igualdad exacta (`where('date', $fecha)`), lo que funciona
+        // en MySQL —columna DATE— pero no en SQLite, donde el cast `date` de
+        // Eloquent guarda el valor con hora ('2026-08-08 00:00:00') y la
+        // igualdad falla. `whereDate()` normaliza en los dos motores, que es lo
+        // que ya usa el filtro de arriba. (El helper se deja intacto: lo usa la
+        // ficha de tour contra MySQL y no es este el sitio para cambiarlo.)
+        $dateBlocked = $searchDate !== null
+            && $tours->total() === 0
+            && BlockedDate::query()
+                ->whereNull('tour_id')
+                ->where(function ($rule) use ($searchDate) {
+                    $rule->whereDate('date', $searchDate->toDateString())
+                        ->orWhere('weekday', (int) $searchDate->dayOfWeek);
+                })
+                ->exists();
+
         return view('tours.results', [
             'q' => $q,
             'destino' => $destino,
-            'fecha' => $fecha,
+            'fecha' => $searchDate?->toDateString() ?? '',
             'pax' => $pax,
             'tours' => $tours,
             'suggested' => $suggested,
+            'dateBlocked' => $dateBlocked,
         ]);
+    }
+
+    /**
+     * Normaliza el parámetro `fecha` del buscador del hero.
+     *
+     * Devuelve null (= no filtrar) para cualquier cosa que no sea una fecha
+     * Y-m-d real de hoy en adelante: cadenas vacías, fechas pasadas, "2026-99-99",
+     * intentos de inyección. La entrada viene de una URL pública, así que se
+     * valida el FORMATO antes de parsear — `Carbon::parse('no-es-fecha')` lanza
+     * excepción y un 500 en el buscador sería un bug de disponibilidad.
+     */
+    private function parseSearchDate(string $raw): ?\Illuminate\Support\Carbon
+    {
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw)) {
+            return null;
+        }
+
+        try {
+            $date = \Illuminate\Support\Carbon::createFromFormat('Y-m-d', $raw);
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        // createFromFormat es permisivo: '2026-99-99' "rueda" a otra fecha en vez
+        // de fallar. Se compara la reconstrucción con el original para descartarlo.
+        if ($date === false || $date->format('Y-m-d') !== $raw) {
+            return null;
+        }
+
+        return $date->startOfDay()->lt(now()->startOfDay()) ? null : $date->startOfDay();
+    }
+
+    /**
+     * Normaliza el parámetro `pax`. El select del hero ofrece 1..9 y "10+";
+     * "10+" se entiende como 10 (cupo mínimo para grupo grande). Cualquier otra
+     * cosa (vacío, texto, 0, negativos) no filtra.
+     */
+    private function parseSearchPax(string $raw): ?int
+    {
+        if ($raw === '') {
+            return null;
+        }
+
+        if (! preg_match('/^(\d{1,3})\+?$/', $raw, $m)) {
+            return null;
+        }
+
+        $pax = (int) $m[1];
+
+        return $pax >= 1 ? $pax : null;
     }
 }

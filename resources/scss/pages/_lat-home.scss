@@ -43,13 +43,17 @@
 
 // Botones flotantes del hero sobre la foto (WhatsApp + Ver video)
 .lat-btn--wa {
-    background: $lat-wa;
+    // Verde de WhatsApp en su versión con contraste (5.2:1 con el texto blanco;
+    // el verde de marca #25d366 daba 1.98:1 y el pill va sobre una foto, que es
+    // el peor escenario de legibilidad). Ver $lat-wa-strong en _variables.scss.
+    background: $lat-wa-strong;
     color: #fff;
     font-size: .85rem;
     padding: 11px 18px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, .22);
 
-    &:hover { background: #1fb659; transform: translateY(-2px); }
+    &:hover { background: #0b6231; transform: translateY(-2px); }
+    &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
     svg { width: 17px; height: 17px; }
 }
 
@@ -106,7 +110,20 @@
     color: $lat-ink;
     padding-bottom: 32px;
 
-    @media (min-width: $bp-lg) { padding-bottom: 44px; }
+    @media (min-width: $bp-lg) {
+        padding-bottom: 44px;
+
+        // Altura pedida por el jefe (2026-07-29): 90vh, para que el hero cubra
+        // casi toda la pantalla. Se aplica al BLOQUE COMPLETO (foto + buscador),
+        // no solo a la foto: dándole 90vh a .lat-hero__top, la barra de búsqueda
+        // —que cuelga 30 px por debajo— se iba fuera de la primera pantalla, y
+        // es el CTA principal. Medido con el buscador dentro del viewport en
+        // 1440×900 y en 1366×768. Subir más de 90vh lo empuja fuera en
+        // portátiles de 768 de alto: comprobar antes de tocarlo.
+        min-height: 90vh;
+        display: flex;
+        flex-direction: column;
+    }
 }
 
 // Contenedor de la foto + texto + tarjeta de confianzas. La foto (absoluta
@@ -117,7 +134,17 @@
     position: relative;
     overflow: hidden;
 
-    @media (min-width: $bp-lg) { overflow: visible; }
+    @media (min-width: $bp-lg) {
+        overflow: visible;
+        // Absorbe el alto sobrante del hero (min-height:80vh) para que la foto,
+        // que es absolute inset:0 sobre este bloque, crezca con él. El
+        // contenido se centra vertically: con 80vh el texto quedaba pegado
+        // arriba y la mitad inferior de la foto vacía.
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
 }
 
 // ── Columna/bloque de foto ───────────────────────────────────────────────
@@ -135,11 +162,14 @@
 
     img {
         width: 100%; height: 100%; object-fit: cover; display: block;
-        // Sin recorte horizontal en lg+ (el box es más ancho que la foto:
-        // ver comentario de object-fit más abajo) — en mobile sí recorta en
-        // horizontal, por eso el eje X importa aquí (mantiene el faro/motivo
-        // principal visible en vez de cortarlo por el centro).
-        object-position: 64% 40%;
+        // Encuadre de la panorámica de Machu Picchu (1920×960). En lg+ la caja
+        // es más alta que el ratio de la foto, así que `cover` recorta arriba y
+        // abajo: el 42% vertical deja la ciudadela y los picos dentro y se come
+        // parte del cielo. El 58% horizontal empuja el motivo hacia la mitad
+        // derecha, que es la zona que el velo NO tapa. Si se cambia la foto por
+        // otra con el motivo en otro sitio, esto se reajusta (y por eso el
+        // encuadre no está en el CMS: es una decisión por imagen).
+        object-position: 58% 42%;
     }
 
     &-fade {
@@ -168,14 +198,23 @@
         // cambiar) y mitad derecha con la foto limpia, sin banda visible.
         // La tarjeta de confianzas no depende de esto: es una caja opaca
         // ($lat-surface) encima, su contraste no cambia con la foto.
+        // Ajuste 2026-07-29, foto nueva: la del mockup tenía el motivo (el faro)
+        // a la DERECHA, así que un velo opaco hasta el 58% no tapaba nada
+        // importante. La panorámica de Machu Picchu tiene la ciudadela al
+        // CENTRO: con el velo anterior quedaba debajo del crema y solo se veía
+        // la ladera derecha. Se cierra el velo antes (42%) y se termina antes
+        // (72%). La columna de texto mide como máximo clamp(300px,42vw,520px)
+        // —38% del ancho a 1440— así que sigue cayendo entera sobre crema
+        // prácticamente plano: el contraste del párrafo no cambia. Si alguien
+        // ensancha .lat-hero__text, hay que revisar estas paradas.
         &-fade {
             position: absolute; inset: 0;
             background: linear-gradient(
                 to right,
                 rgba($lat-paper, .99) 0%,
-                rgba($lat-paper, .97) 58%,
-                rgba($lat-paper, .4) 72%,
-                rgba($lat-paper, 0) 88%
+                rgba($lat-paper, .97) 42%,
+                rgba($lat-paper, .45) 60%,
+                rgba($lat-paper, 0) 72%
             );
         }
     }
@@ -201,27 +240,26 @@
         justify-content: space-between;
     }
 
-    // La foto (.lat-hero__media) ahora cubre TODO el ancho en lg+ (antes
-    // solo la columna derecha) — si esta fila heredara left:20/right:20
-    // relativos a esa foto, "10+" caería pegado al borde izquierdo del
-    // banner, debajo del texto, en vez de mantenerse en la franja derecha
-    // del mockup. Se ancla por `right` + `width` (mismo ancho que tenía la
-    // foto antes, clamp(380px,50vw,860px), menos los 40px de inset) para
-    // reproducir EXACTAMENTE la misma caja de antes sin depender del ancho
-    // de la foto.
+    // Con el pill de WhatsApp fuera (2026-07-29) aquí queda SOLO el bloque rojo
+    // "10+". El ancho fijo que había antes —calc(clamp(380px,50vw,860px) - 40px),
+    // heredado de cuando la foto era una columna derecha y esta fila repartía
+    // "10+" a la izquierda y los pills a la derecha con space-between— dejaba el
+    // bloque pegado al borde IZQUIERDO de esa caja invisible, o sea flotando en
+    // mitad de la foto. Con `width:auto` la caja se ajusta al bloque y `right`
+    // lo pega al margen derecho, que es donde lo pone el mockup.
     @media (min-width: $bp-lg) {
         left: auto;
-        right: 20px;
+        right: 45px;
+        width: auto;
+
         // El buscador sube 30px sobre la foto (margin-top:-30px en
         // .lat-hero__search-wrap, para cortarla en seco como el mockup), así
         // que la franja inferior de .lat-hero__media queda TAPADA por la barra
-        // oscura. Con bottom:20px el bloque "10+" y el botón de WhatsApp
-        // quedaban seccionados 10px por la barra (medido). El offset debe
-        // superar esos 30px con margen de respiro: 30 + 22 = 52.
-        // Si se cambia el margin-top negativo del buscador, hay que ajustar
-        // este valor en el mismo commit.
+        // oscura. Con bottom:20px el bloque "10+" quedaba seccionado 10px por la
+        // barra (medido). El offset debe superar esos 30px con margen de respiro:
+        // 30 + 22 = 52. Si se cambia el margin-top negativo del buscador, hay
+        // que ajustar este valor en el mismo commit.
         bottom: 52px;
-        width: calc(clamp(380px, 50vw, 860px) - 40px);
     }
 }
 
@@ -325,18 +363,31 @@
     @media (min-width: $bp-lg) { max-width: clamp(300px, 42vw, 520px); }
 }
 
-.lat-hero h1 {
+// El <h1> del hero envuelve DOS líneas visibles: la marca (grande, ink) y el
+// subtitular rojo. Es una decisión de SEO explicada en home.blade.php; para
+// que el diseño no dependa de eso, el h1 no aporta estilo propio y cada línea
+// lleva su clase. NO volver a estilar por etiqueta (`.lat-hero h1 {}`): si
+// mañana cambia la jerarquía de encabezados, el hero se movería de sitio.
+.lat-hero__title {
+    margin: 0;
+    font-size: inherit;   // el tamaño lo pone cada línea, no el h1
+    font-weight: 400;
+    line-height: inherit;
+}
+
+.lat-hero__brand {
+    display: block;
     font-family: $lat-font-serif;
     font-weight: 800;
     line-height: 1.06;
     font-size: clamp(2.1rem, 5vw, 3.4rem);
     color: $lat-ink;
-    margin: 0;
 
     em { font-style: normal; color: inherit; }
 }
 
 .lat-hero__tagline {
+    display: block;   // era un <p>; ahora es un <span> dentro del h1
     font-family: $lat-font-serif;
     font-weight: 700;
     color: $lat-red;
@@ -443,6 +494,19 @@
         padding: 12px 20px;
         min-width: 0;
         border-right: 1px solid $lat-line;
+        border-radius: $lat-r-sm;
+
+        // Foco visible del buscador. El anillo va en la CELDA, no en el input:
+        // los controles son transparentes y sin borde (el diseño los muestra
+        // como texto suelto dentro de la barra), así que un outline pegado al
+        // input se veía como una caja flotante desalineada. Con :focus-within
+        // se ilumina el campo completo — etiqueta incluida — que es la unidad
+        // que el usuario percibe. Antes había `outline:none` sin reemplazo:
+        // navegando con teclado no se sabía en qué campo estabas.
+        &:focus-within {
+            outline: 2px solid $lat-red;
+            outline-offset: -1px;
+        }
     }
 
     label {
@@ -463,7 +527,13 @@
         appearance: none;
 
         &::placeholder { color: $lat-muted; opacity: 1; }
-        &:focus { outline: none; color: $lat-ink; }
+
+        // El anillo de foco lo pinta .lat-search__field:focus-within (arriba):
+        // aquí solo se quita el outline propio del control para no dibujar dos
+        // marcos. NO borrar la regla de :focus-within si se toca esto — el foco
+        // quedaría invisible otra vez.
+        &:focus { outline: none; }
+        &:focus-visible { outline: none; color: $lat-ink; }
     }
 
     .lat-search__chev, .lat-search__ic-cal {

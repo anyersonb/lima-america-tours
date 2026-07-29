@@ -216,11 +216,16 @@
     &__actions { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
 }
 
+// MISMA clase que el pill de WhatsApp del hero (_lat-home.scss), y este parcial
+// se importa DESPUÉS en app.scss: esta regla gana la cascada. Si aquí queda el
+// verde de marca, el hero vuelve a 1.98:1 de contraste aunque su propio parcial
+// declare el accesible. Los dos valores no se pueden separar.
 .lat-btn--wa {
-    background: $lat-wa;
+    background: $lat-wa-strong;
     color: #fff;
 
-    &:hover { background: #1fb857; transform: translateY(-2px); box-shadow: 0 10px 24px rgba(37, 211, 102, .35); }
+    &:hover { background: #0b6231; transform: translateY(-2px); box-shadow: 0 10px 24px rgba(15, 125, 61, .35); }
+    &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 }
 
 .lat-btn--white {

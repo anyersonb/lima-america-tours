@@ -15,14 +15,23 @@
     $sTa  = \App\Models\Setting::get('social_tripadvisor');
     $norm = fn ($u) => $u ? (\Illuminate\Support\Str::startsWith($u, ['http://', 'https://']) ? $u : 'https://' . ltrim($u, '/')) : null;
 
+    // Menú reducido por decisión del jefe (2026-07-29): solo Inicio, Nosotros y
+    // Tours, porque esas otras secciones no se van a mostrar por ahora.
+    //
+    // Los 4 ítems retirados quedan COMENTADOS, no borrados: las rutas, las vistas
+    // y las traducciones siguen existiendo y funcionando (/blog, /contacto y las
+    // páginas siguen respondiendo si se entra por URL directa, y el footer las
+    // sigue enlazando). Volver a mostrar cualquiera es descomentar su línea.
+    // Esta lista alimenta el nav de escritorio Y el drawer de móvil: no hay que
+    // tocar dos sitios.
     $navItems = [
         ['label' => __('nav.home'),       'url' => route('home', ['locale' => $locale]),                          'active' => request()->routeIs('home')],
         ['label' => __('nav.about'),      'url' => route('about', ['locale' => $locale]),                         'active' => request()->routeIs('about')],
         ['label' => __('nav.tours'),      'url' => route('tours.index', ['locale' => $locale]),                   'active' => request()->routeIs('tours.index', 'tours.category', 'tours.show')],
-        ['label' => __('nav.free_tours'), 'url' => route('tours.results', ['locale' => $locale, 'q' => 'free']),  'active' => request()->routeIs('tours.results') && request('q') === 'free'],
-        ['label' => __('nav.services'),   'url' => route('home', ['locale' => $locale]) . '#servicios',            'active' => false],
-        ['label' => 'Blog',               'url' => route('blog.index', ['locale' => $locale]),                    'active' => request()->routeIs('blog.index', 'blog.show')],
-        ['label' => __('nav.contact'),    'url' => route('contact', ['locale' => $locale]),                       'active' => request()->routeIs('contact')],
+        // ['label' => __('nav.free_tours'), 'url' => route('tours.results', ['locale' => $locale, 'q' => 'free']),  'active' => request()->routeIs('tours.results') && request('q') === 'free'],
+        // ['label' => __('nav.services'),   'url' => route('home', ['locale' => $locale]) . '#servicios',            'active' => false],
+        // ['label' => 'Blog',               'url' => route('blog.index', ['locale' => $locale]),                    'active' => request()->routeIs('blog.index', 'blog.show')],
+        // ['label' => __('nav.contact'),    'url' => route('contact', ['locale' => $locale]),                       'active' => request()->routeIs('contact')],
     ];
 @endphp
 
@@ -73,11 +82,13 @@
         </div>
 
         <div class="lat-nav-cta">
-            @if ($whatsapp)
-            <a class="lat-btn-reservar" href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener">
+            {{-- "Reservar Ahora" lleva al catálogo de tours, no a WhatsApp
+                 (decisión del jefe, 2026-07-29). Además es coherente con
+                 docs/pagos/PLAN-PASARELAS.md: WhatsApp es soporte, la reserva se
+                 cierra en el sitio. Ya no depende de que haya número cargado. --}}
+            <a class="lat-btn-reservar" href="{{ route('tours.index', ['locale' => $locale]) }}">
                 {{ __('nav.reservar_ahora') }}
             </a>
-            @endif
             <button type="button"
                     class="lat-burger"
                     @click="open = !open"

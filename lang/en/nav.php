@@ -12,7 +12,8 @@ return [
     'language_label' => 'Language',
     'main_menu' => 'Main menu',
     'main_navigation' => 'Main navigation',
-    'book_whatsapp' => 'Book via WhatsApp',
+    // WhatsApp is a support channel, not checkout — see lang/es/nav.php.
+    'book_whatsapp' => 'Message us on WhatsApp',
     'reservar_ahora' => 'Book Now',
     'services' => 'Services',
     'open_menu' => 'Open menu',

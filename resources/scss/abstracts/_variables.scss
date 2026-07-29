@@ -46,7 +46,13 @@ $lat-line:       #e9e3da;
 $lat-line-strong:#dcd4c8;
 $lat-muted:      #6f6a63;
 $lat-ink-soft:   #3a352f;
-$lat-wa:         #25d366;
+$lat-wa:         #25d366;   // verde de marca de WhatsApp — SOLO para superficies sin texto encima
+// El verde de marca con texto blanco da 1.98:1, muy por debajo del 4.5:1 que
+// pide AA para texto normal. Este es el mismo verde oscurecido hasta 5.2:1 con
+// blanco: se usa en cualquier botón de WhatsApp CON TEXTO. Verificado por
+// HeroAccessibilityTest, que calcula el ratio desde este token — si alguien lo
+// aclara, el test falla.
+$lat-wa-strong:  #0f7d3d;
 
 $lat-shadow-sm: 0 1px 2px rgba(28, 27, 26, .06), 0 2px 8px rgba(28, 27, 26, .05);
 $lat-shadow-md: 0 6px 18px rgba(28, 27, 26, .09), 0 2px 6px rgba(28, 27, 26, .06);

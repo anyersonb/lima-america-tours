@@ -12,7 +12,8 @@ return [
     'language_label' => 'Idioma',
     'main_menu' => 'Menu principal',
     'main_navigation' => 'Navegação principal',
-    'book_whatsapp' => 'Reservar pelo WhatsApp',
+    // WhatsApp é canal de consulta, não de fechamento — ver lang/es/nav.php.
+    'book_whatsapp' => 'Fale conosco pelo WhatsApp',
     'reservar_ahora' => 'Reservar Agora',
     'services' => 'Serviços',
     'open_menu' => 'Abrir menu',

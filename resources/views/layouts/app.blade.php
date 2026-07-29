@@ -142,6 +142,13 @@
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="manifest" href="{{ asset('site.webmanifest') }}">
 
+    {{-- Precarga de la imagen LCP de la vista (hoy: la foto del hero de la home).
+         Va ANTES de las hojas de estilo a propósito: el preload scanner la
+         descubre sin esperar a que se descargue y parsee el CSS de fuentes,
+         que es render-blocking. Cada vista que tenga un LCP de imagen empuja
+         su <link rel="preload" as="image"> aquí. --}}
+    @stack('preload')
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@300;400;500;600;700&family=Hedvig+Letters+Serif:opsz@12..24&family=Instrument+Serif:ital@0;1&family=Raleway:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap">
@@ -307,7 +314,13 @@
        rel="noopener noreferrer"
        aria-label="WhatsApp"
        id="waFab"
-       style="position:fixed;bottom:104px;right:18px;z-index:9000;width:52px;height:52px;border-radius:9999px;background-color:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:transform .2s ease,opacity .2s ease;color:#fff;text-decoration:none;"
+       {{-- Verde #0f7d3d, no el #25D366 de marca: el glifo blanco sobre el verde
+            claro da 1.98:1 (WCAG 1.4.11 pide 3:1 para elementos gráficos) y, además,
+            este FAB y el pill de WhatsApp del hero se ven a la vez en escritorio —
+            con dos verdes distintos parecía un error de maquetación.
+            Mismo valor que $lat-wa-strong en _variables.scss: si se cambia uno,
+            cambiar el otro (aquí es inline porque el FAB no depende del build). --}}
+       style="position:fixed;bottom:104px;right:18px;z-index:9000;width:52px;height:52px;border-radius:9999px;background-color:#0F7D3D;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:transform .2s ease,opacity .2s ease;color:#fff;text-decoration:none;"
        onmouseover="this.style.transform='scale(1.1)'"
        onmouseout="this.style.transform='scale(1)'">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

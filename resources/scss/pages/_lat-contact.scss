@@ -78,7 +78,8 @@
 
 .lat-contact-wa-btn {
     width: 100%; height: 52px; border-radius: 14px; border: none;
-    background: $lat-wa; color: #fff; font-weight: 700; font-size: .95rem;
+    // Verde accesible (5.2:1 con texto blanco); el de marca daba 1.98:1.
+    background: $lat-wa-strong; color: #fff; font-weight: 700; font-size: .95rem;
     display: flex; align-items: center; justify-content: center; gap: 9px; cursor: pointer;
     text-decoration: none; transition: filter .15s; font-family: $lat-font-sans;
 }

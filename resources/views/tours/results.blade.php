@@ -37,6 +37,17 @@
 
 <section class="bg-cream-100 pb-20">
     <div class="container mx-auto px-5 lg:px-10">
+        {{-- Fecha sin salidas: un "0 resultados" a secas hace pensar que el
+             catálogo está vacío. Se explica el motivo y se ofrece salida. --}}
+        @if ($dateBlocked ?? false)
+            <div class="mb-5 rounded-2xl border border-lat-red/30 bg-lat-red/5 px-5 py-4 flex items-start gap-3" role="status">
+                <svg class="w-5 h-5 shrink-0 text-lat-red mt-0.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round"/>
+                </svg>
+                <p class="text-sm text-lat-ink">{{ __('ui.search_date_blocked') }}</p>
+            </div>
+        @endif
+
         <p class="text-sm text-lat-ink/70">{{ $tours->total() }} {{ $tours->total() !== 1 ? __('ui.results') : __('ui.result') }}{{ $q ? " para \"$q\"" : '' }}</p>
         <hr class="mt-2 mb-6 border-lat-line-strong">
 

@@ -355,24 +355,74 @@ class Settings extends Page implements HasForms
                             ]),
 
                         // ── Hero — tarjeta de confianza ────────────────────────
-                        \Filament\Forms\Components\Section::make('Hero — tarjeta de confianza (4 textos)')
-                            ->description('Los 4 textos cortos con ícono que aparecen en la tarjeta de confianza flotante del hero.')
+                        \Filament\Forms\Components\Section::make('Hero — tarjeta de confianza (4 textos + ícono)')
+                            ->description('Los 4 textos cortos con ícono que aparecen en la tarjeta de confianza flotante del hero. El ícono se elige de la lista: si se deja vacío, queda el del diseño aprobado.')
                             ->collapsible()
                             ->columns(3)
                             ->schema([
+                                Select::make('home_hero_trust_1_icon')
+                                    ->label('Confianza 1 — Ícono')
+                                    ->options(\App\Support\HeroIcons::options())
+                                    ->placeholder('Guía / personas (por defecto)')
+                                    ->native(false),
                                 TextInput::make('home_hero_trust_1_es')->label('Confianza 1 (ES)')->placeholder('Guías expertos locales'),
                                 TextInput::make('home_hero_trust_1_en')->label('Confianza 1 (EN)')->placeholder('Local expert guides'),
-                                TextInput::make('home_hero_trust_1_pt')->label('Confianza 1 (PT)')->placeholder('Guias locais especializados'),
+                                TextInput::make('home_hero_trust_1_pt')->label('Confianza 1 (PT)')->placeholder('Guias locais especializados')->columnSpan(['default' => 1, 'sm' => 3]),
+
+                                Select::make('home_hero_trust_2_icon')
+                                    ->label('Confianza 2 — Ícono')
+                                    ->options(\App\Support\HeroIcons::options())
+                                    ->placeholder('Escudo (por defecto)')
+                                    ->native(false),
                                 TextInput::make('home_hero_trust_2_es')->label('Confianza 2 (ES)')->placeholder('Tours 100% seguros'),
                                 TextInput::make('home_hero_trust_2_en')->label('Confianza 2 (EN)')->placeholder('100% safe tours'),
-                                TextInput::make('home_hero_trust_2_pt')->label('Confianza 2 (PT)')->placeholder('Tours 100% seguros'),
+                                TextInput::make('home_hero_trust_2_pt')->label('Confianza 2 (PT)')->placeholder('Tours 100% seguros')->columnSpan(['default' => 1, 'sm' => 3]),
+
+                                Select::make('home_hero_trust_3_icon')
+                                    ->label('Confianza 3 — Ícono')
+                                    ->options(\App\Support\HeroIcons::options())
+                                    ->placeholder('Auriculares (por defecto)')
+                                    ->native(false),
                                 TextInput::make('home_hero_trust_3_es')->label('Confianza 3 (ES)')->placeholder('Atención personalizada'),
                                 TextInput::make('home_hero_trust_3_en')->label('Confianza 3 (EN)')->placeholder('Personalized support'),
-                                TextInput::make('home_hero_trust_3_pt')->label('Confianza 3 (PT)')->placeholder('Atendimento personalizado'),
+                                TextInput::make('home_hero_trust_3_pt')->label('Confianza 3 (PT)')->placeholder('Atendimento personalizado')->columnSpan(['default' => 1, 'sm' => 3]),
+
+                                Select::make('home_hero_trust_4_icon')
+                                    ->label('Confianza 4 — Ícono')
+                                    ->options(\App\Support\HeroIcons::options())
+                                    ->placeholder('Etiqueta de precio (por defecto)')
+                                    ->native(false),
                                 TextInput::make('home_hero_trust_4_es')->label('Confianza 4 (ES)')->placeholder('Mejor precio garantizado'),
                                 TextInput::make('home_hero_trust_4_en')->label('Confianza 4 (EN)')->placeholder('Best price guaranteed'),
-                                TextInput::make('home_hero_trust_4_pt')->label('Confianza 4 (PT)')->placeholder('Melhor preço garantido'),
+                                TextInput::make('home_hero_trust_4_pt')->label('Confianza 4 (PT)')->placeholder('Melhor preço garantido')->columnSpan(['default' => 1, 'sm' => 3]),
                             ]),
+
+                        // ── Hero — texto alternativo de la foto ────────────────
+                        \Filament\Forms\Components\Section::make('Hero — descripción de la foto (accesibilidad y SEO)')
+                            ->description('Describe en pocas palabras QUÉ se ve en la foto del hero. Lo leen los lectores de pantalla y Google. Si cambias la foto, cambia también esta descripción.')
+                            ->collapsible()
+                            ->columns(3)
+                            ->schema([
+                                TextInput::make('home_hero_image_alt_es')
+                                    ->label('Descripción de la foto (ES)')
+                                    ->placeholder('Ciudadela inca de Machu Picchu entre montañas y nubes, Cusco, Perú')
+                                    ->maxLength(180),
+                                TextInput::make('home_hero_image_alt_en')
+                                    ->label('Descripción de la foto (EN)')
+                                    ->placeholder('Inca citadel of Machu Picchu among mountains and clouds, Cusco, Peru')
+                                    ->maxLength(180),
+                                TextInput::make('home_hero_image_alt_pt')
+                                    ->label('Descripción de la foto (PT)')
+                                    ->placeholder('Cidadela inca de Machu Picchu entre montanhas e nuvens, Cusco, Peru')
+                                    ->maxLength(180),
+                            ]),
+
+                        // El pill de WhatsApp del hero se retiró el 2026-07-29 (dos
+                        // CTAs del mismo canal en la primera pantalla). Su campo de
+                        // texto se quitó de aquí a la vez: un campo en el panel que
+                        // no cambia nada visible es peor que no tenerlo. El botón
+                        // flotante de WhatsApp sigue tomando el número de
+                        // Configuración → Contacto.
 
                         // ── Hero — botón "Ver video" ───────────────────────────
                         \Filament\Forms\Components\Section::make('Hero — botón "Ver video"')

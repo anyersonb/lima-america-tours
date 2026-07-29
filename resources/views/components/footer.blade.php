@@ -15,8 +15,16 @@
     $sYt = \App\Models\Setting::get('social_youtube');
     $norm = fn ($u) => $u ? (\Illuminate\Support\Str::startsWith($u, ['http://', 'https://']) ? $u : 'https://' . ltrim($u, '/')) : null;
 
-    // Fondo fotográfico del footer (fallback al hero por defecto del sitio si no hay banner propio)
-    $footBg = asset('assets/banners/hero-machu-picchu.png');
+    // Fondo fotográfico del footer (fallback a la foto por defecto del sitio si no
+    // hay banner propio). Pasa por ResponsiveImage: antes era el PNG de 2.52 MB en
+    // crudo, descargado en TODAS las páginas del sitio para pintarlo detrás de un
+    // velo oscuro.
+    //
+    // 640 y no 1024: es un fondo difuminado por el overlay, nadie le mira el
+    // detalle, y así en móvil reutiliza EXACTAMENTE el archivo que el hero ya
+    // descargó (misma URL, sale de caché y cuesta 0 KB). Medido: 139 KB → 60 KB
+    // en desktop, gratis en móvil.
+    $footBg = \App\Support\ResponsiveImage::defaultPhotoUrl(640);
 
     // Tours Populares: usa los tours reales destacados (mismo criterio que la home)
     try {

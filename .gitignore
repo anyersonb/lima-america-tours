@@ -35,3 +35,7 @@ CLAUDE.md
 
 # Snapshots de BD de QA (dumps, no se commitean)
 /docs/qa/snapshots/
+
+# Variantes WebP del hero generadas por App\Support\ResponsiveImage: caché de
+# disco, se regeneran solas a partir del original. No son fuente.
+/public/media/derived/
