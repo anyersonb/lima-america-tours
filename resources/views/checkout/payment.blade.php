@@ -61,7 +61,16 @@
         <div class="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] items-start">
 
             {{-- Payment form --}}
-            <div class="space-y-4" x-data="{ paymentTiming: 'now', paymentMethod: 'card' }">
+            @php
+                // El estado inicial depende de lo que REALMENTE se puede cobrar:
+                // sin ninguna pasarela configurada, "pagar ahora" no se ofrece y
+                // el checkout arranca en "reservar y pagar luego" (el flujo que
+                // funciona hoy: confirma por WhatsApp/correo).
+                $onlinePayment = $culqiEnabled || $paypalEnabled;
+                $defaultMethod = $culqiEnabled ? 'card' : ($paypalEnabled ? 'paypal' : 'card');
+                $defaultTiming = $onlinePayment ? 'now' : 'later';
+            @endphp
+            <div class="space-y-4" x-data="{ paymentTiming: @json($defaultTiming), paymentMethod: @json($defaultMethod) }">
 
                 {{-- Cancellation policy banner --}}
                 <div class="bg-white rounded-2xl p-5 lg:p-6 shadow-sm flex items-start gap-4 border-l-4 border-state-success">
@@ -199,6 +208,7 @@
                         <p class="text-sm text-teal-800/70 mb-4">{{ __('checkout.choose_when_to_pay') }}</p>
 
                         <div class="grid gap-3">
+                            @if ($onlinePayment)
                             <label class="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
                                    :class="paymentTiming === 'now' ? 'border-orange-500 bg-orange-50/40' : 'border-teal-800/15 hover:border-teal-800/30'">
                                 <input type="radio" name="payment_timing_ui" value="now" x-model="paymentTiming"
@@ -209,6 +219,7 @@
                                 </div>
                                 <span class="font-price text-lg text-teal-800 whitespace-nowrap">{{ \App\Support\Money::format($total, \App\Support\Money::site(), 2) }}</span>
                             </label>
+                            @endif
 
                             <label class="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition"
                                    :class="paymentTiming === 'later' ? 'border-orange-500 bg-orange-50/40' : 'border-teal-800/15 hover:border-teal-800/30'">
@@ -223,19 +234,28 @@
                         </div>
                     </div>
 
-                    {{-- Payment method --}}
-                    <div class="bg-white rounded-2xl p-6 lg:p-7 shadow-sm">
+                    {{-- Payment method: solo tiene sentido si hay algo que cobrar en línea --}}
+                    @if ($onlinePayment)
+                    <div class="bg-white rounded-2xl p-6 lg:p-7 shadow-sm" x-show="paymentTiming === 'now'" x-cloak>
                         <h2 class="font-display text-xl text-teal-800 mb-4 flex items-center gap-2">
                             <span class="w-2 h-6 bg-orange-500 rounded-full" aria-hidden="true"></span>
                             {{ __('checkout.pay_with') }}
                         </h2>
 
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {{--
+                                "Próximamente" NO se escribe a mano: sale de si la
+                                pasarela tiene credenciales cargadas (Configuración →
+                                Pagos). Un método pintado como disponible sin claves
+                                detrás lleva al cliente hasta el último clic para
+                                fallar ahí. Yape/Plin siguen fijos: no están
+                                integrados todavía, no es cuestión de claves.
+                            --}}
                             @foreach ([
-                                ['card', __('checkout.payment_card'), '💳', false],
+                                ['card', __('checkout.payment_card'), '💳', ! $culqiEnabled],
                                 ['yape', 'Yape', '🟣', true],
                                 ['plin', 'Plin', '🔷', true],
-                                ['paypal', 'PayPal', '🅿️', true],
+                                ['paypal', 'PayPal', '🅿️', ! $paypalEnabled],
                             ] as [$id, $label, $emoji, $soon])
                                 <label class="relative flex flex-col items-center gap-1 p-3 rounded-xl border-2 cursor-pointer transition {{ $soon ? 'opacity-50 cursor-not-allowed' : '' }}"
                                        :class="paymentMethod === '{{ $id }}' ? 'border-orange-500 bg-orange-50/40' : 'border-teal-800/15 hover:border-teal-800/30'">
@@ -251,6 +271,7 @@
                             @endforeach
                         </div>
                     </div>
+                    @endif
 
                     {{-- Terms + CTA --}}
                     <div class="bg-white rounded-2xl p-6 lg:p-7 shadow-sm">
@@ -264,12 +285,29 @@
                             </span>
                         </label>
 
+                        {{--
+                            Con PayPal elegido se esconde este botón y manda el
+                            del SDK: PayPal exige que su propio botón dispare el
+                            popup, si no el navegador lo bloquea por no venir de
+                            un gesto del usuario sobre su iframe.
+                        --}}
                         <button type="button"
                                 id="btn-culqi-open"
-                                class="btn--primary btn--block mt-5 text-base py-4">
+                                class="btn--primary btn--block mt-5 text-base py-4"
+                                @if ($paypalEnabled) x-show="!(paymentTiming === 'now' && paymentMethod === 'paypal')" @endif>
                             <span x-show="paymentTiming === 'now'">{{ __('checkout.pay_now') }} — {{ \App\Support\Money::format($total, \App\Support\Money::site(), 2) }}</span>
                             <span x-show="paymentTiming === 'later'">{{ __('checkout.book_now_pay_later') }}</span>
                         </button>
+
+                        @if ($paypalEnabled)
+                            <div class="mt-5" x-show="paymentTiming === 'now' && paymentMethod === 'paypal'" x-cloak>
+                                {{-- El SDK de PayPal inyecta sus botones acá --}}
+                                <div id="paypal-buttons"></div>
+                                <p id="paypal-error"
+                                   class="mt-3 hidden rounded-xl bg-state-error/10 border border-state-error/30 text-state-error px-4 py-3 text-xs font-semibold"
+                                   role="alert"></p>
+                            </div>
+                        @endif
 
                         <p class="mt-3 text-[11px] text-center text-teal-800/55">
                             {{ __('checkout.accepted_cards') }} &nbsp;·&nbsp; {{ __('checkout.secure_payment') }}
@@ -328,15 +366,97 @@
 </section>
 
 @push('scripts')
+@if ($culqiEnabled)
 <script src="https://checkout.culqi.com/js/v4"></script>
+@endif
+@if ($paypalEnabled)
+{{--
+    SDK de PayPal. El client-id sale del panel (Configuración → Pagos) y la
+    moneda de Money::site(): si el SDK se carga con una moneda distinta a la de
+    la orden que crea el servidor, PayPal rechaza la orden al aprobarla.
+--}}
+<script src="https://www.paypal.com/sdk/js?client-id={{ urlencode($paypalClientId) }}&currency={{ urlencode($currency) }}&intent=capture&locale={{ $locale === 'es' ? 'es_PE' : ($locale === 'pt' ? 'pt_BR' : 'en_US') }}"></script>
+@endif
 <script>
 (function () {
-    // Culqi configuration
-    Culqi.publicKey = '{{ $public_key }}';
+    'use strict';
+
+    const form = document.getElementById('payment-form');
+    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content
+        ?? form.querySelector('input[name="_token"]')?.value
+        ?? '';
+
+    /**
+     * Campos que el servidor exige en ambos flujos (tarjeta y PayPal). Se
+     * validan ANTES de abrir cualquier pasarela: si el cliente aprueba el pago
+     * en PayPal y recién ahí el servidor rechaza la reserva por un campo vacío,
+     * el dinero quedó autorizado sin reserva — el peor de los estados.
+     */
+    function missingFields() {
+        const value = (sel) => (form.querySelector(sel)?.value ?? '').trim();
+
+        return ! value('#customer_name') || ! value('#customer_email')
+            || ! value('#customer_phone') || ! value('#travel_date');
+    }
+
+    function acceptedTerms() {
+        const box = form.querySelector('input[name="accept_terms"]');
+
+        return ! box || box.checked;
+    }
+
+    function currentTiming() {
+        const radio = form.querySelector('input[name="payment_timing_ui"]:checked');
+
+        return radio ? radio.value : @json($defaultTiming);
+    }
+
+    function customerPayload() {
+        const value = (sel) => (form.querySelector(sel)?.value ?? '').trim();
+
+        return {
+            customer_name: value('#customer_name'),
+            customer_email: value('#customer_email'),
+            customer_phone: value('#customer_phone'),
+            travel_date: value('#travel_date'),
+            pickup_point: value('#pickup_point'),
+            pickup_detail: form.querySelector('input[name="pickup_detail"]')?.value?.trim() ?? '',
+        };
+    }
+
+    // ── CTA principal (tarjeta / pagar luego) ────────────────────────────
+    document.getElementById('btn-culqi-open').addEventListener('click', function () {
+        if (missingFields()) {
+            alert('Por favor, completa todos los campos requeridos antes de continuar.');
+            return;
+        }
+
+        if (! acceptedTerms()) {
+            alert('Debes aceptar los términos y condiciones para continuar.');
+            return;
+        }
+
+        if (currentTiming() === 'later') {
+            // Reservar y pagar después: envío directo, sin pasarela.
+            form.submit();
+            return;
+        }
+
+@if ($culqiEnabled)
+        // Pagar ahora con tarjeta: abre el modal de Culqi.
+        Culqi.open();
+@else
+        alert('El pago con tarjeta no está disponible por ahora. Elige "reservar y pagar luego" o escríbenos por WhatsApp.');
+@endif
+    });
+
+@if ($culqiEnabled)
+    // ── Culqi ────────────────────────────────────────────────────────────
+    Culqi.publicKey = @json($public_key);
 
     Culqi.settings({
         title:    'Lima América Tours',
-        currency: @json(\App\Support\Money::site()),
+        currency: @json($currency),
         amount:   {{ $total_centavos }},
         order:    '',
     });
@@ -349,42 +469,107 @@
         executeCulqi: true,
     });
 
-    // Open Culqi modal on button click — validate form fields first
-    document.getElementById('btn-culqi-open').addEventListener('click', function () {
-        const form    = document.getElementById('payment-form');
-        const name    = form.querySelector('#customer_name').value.trim();
-        const email   = form.querySelector('#customer_email').value.trim();
-        const phone   = form.querySelector('#customer_phone').value.trim();
-        const date    = form.querySelector('#travel_date').value;
-
-        if (!name || !email || !phone || !date) {
-            alert('Por favor, completa todos los campos requeridos antes de continuar.');
-            return;
-        }
-
-        // Leer el timing elegido por el usuario desde el radio del DOM
-        const timingRadio = form.querySelector('input[name="payment_timing_ui"]:checked');
-        const timing      = timingRadio ? timingRadio.value : 'now';
-
-        if (timing === 'later') {
-            // Reservar y pagar después: envío directo sin abrir Culqi
-            form.submit();
-        } else {
-            // Pagar ahora con tarjeta: abre el modal de Culqi
-            Culqi.open();
-        }
-    });
-
-    // Culqi callback — receives the token after card tokenisation
+    // Callback de Culqi: llega el token tras tokenizar la tarjeta.
     window.culqi = function () {
         if (Culqi.token) {
             document.getElementById('culqi_token').value = Culqi.token.id;
-            document.getElementById('payment-form').submit();
+            form.submit();
         } else if (Culqi.error) {
             console.error('Culqi error:', Culqi.error);
             alert('Error al procesar la tarjeta: ' + (Culqi.error.user_message || 'Inténtalo de nuevo.'));
         }
     };
+@endif
+
+@if ($paypalEnabled)
+    // ── PayPal ───────────────────────────────────────────────────────────
+    const paypalError = document.getElementById('paypal-error');
+
+    function showPaypalError(message) {
+        paypalError.textContent = message;
+        paypalError.classList.remove('hidden');
+    }
+
+    function clearPaypalError() {
+        paypalError.textContent = '';
+        paypalError.classList.add('hidden');
+    }
+
+    async function postJson(url, body) {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': CSRF,
+            },
+            body: JSON.stringify(body ?? {}),
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (! response.ok) {
+            throw new Error(data.error || data.message || 'No pudimos completar el pago.');
+        }
+
+        return data;
+    }
+
+    if (window.paypal && typeof window.paypal.Buttons === 'function') {
+        window.paypal.Buttons({
+            style: { layout: 'vertical', shape: 'pill', label: 'paypal' },
+
+            // El importe NO viaja desde el navegador: el servidor lo calcula
+            // del carrito. Si el total se mandara desde acá, cualquiera podría
+            // pagar 1 dólar por un tour de 300 editando la petición.
+            createOrder: async function () {
+                clearPaypalError();
+
+                if (missingFields()) {
+                    showPaypalError('Completa tus datos y la fecha antes de pagar.');
+                    throw new Error('missing fields');
+                }
+
+                if (! acceptedTerms()) {
+                    showPaypalError('Debes aceptar los términos y condiciones para continuar.');
+                    throw new Error('terms not accepted');
+                }
+
+                const data = await postJson(@json(route('checkout.paypal.create', ['locale' => $locale])));
+
+                return data.id;
+            },
+
+            onApprove: async function (data) {
+                try {
+                    const result = await postJson(
+                        @json(route('checkout.paypal.capture', ['locale' => $locale])),
+                        Object.assign({ orderID: data.orderID }, customerPayload())
+                    );
+
+                    // La reserva ya existe del lado del servidor: llevamos al
+                    // cliente a la página de gracias con la sesión cargada.
+                    window.location.href = result.redirect
+                        ?? @json(route('checkout.thanks', ['locale' => $locale]));
+                } catch (error) {
+                    // Pago aprobado y captura fallida es el caso que hay que
+                    // hacer visible: el cliente NO debe quedarse creyendo que
+                    // no pasó nada, porque su pago sí puede estar autorizado.
+                    showPaypalError(error.message + ' Guarda esta pantalla y escríbenos por WhatsApp antes de volver a intentar.');
+                    console.error('paypal.capture', error);
+                }
+            },
+
+            onError: function (error) {
+                showPaypalError('PayPal no pudo procesar el pago. Intenta con tarjeta o escríbenos por WhatsApp.');
+                console.error('paypal.sdk', error);
+            },
+        }).render('#paypal-buttons');
+    } else {
+        showPaypalError('No pudimos cargar PayPal. Revisa tu conexión o paga con tarjeta.');
+    }
+@endif
 })();
 </script>
 @endpush

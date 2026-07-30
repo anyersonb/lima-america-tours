@@ -129,6 +129,19 @@
 .lat-checkout-btn-wa:hover { filter: brightness(.94); }
 .lat-checkout-btn-wa:disabled { opacity: .55; cursor: not-allowed; }
 
+// CTA de pago en línea. Es el botón principal cuando hay pasarela activa, así
+// que va en el rojo de marca y queda ARRIBA del de WhatsApp: el de WhatsApp
+// reserva sin pagar, y con los dos en verde el cliente no distingue cuál cobra.
+// Rojo #cb101e con texto blanco = 5.78:1 (medido en el lote de branding).
+.lat-checkout-btn-pay {
+    width: 100%; height: 52px; border-radius: 14px; border: none; margin-top: 16px;
+    background: $lat-red; color: #fff; font-weight: 700; font-size: .95rem;
+    display: flex; align-items: center; justify-content: center; gap: 9px; cursor: pointer;
+    transition: filter .15s; font-family: $lat-font-sans; text-decoration: none;
+}
+.lat-checkout-btn-pay svg { width: 19px; height: 19px; }
+.lat-checkout-btn-pay:hover { filter: brightness(.94); color: #fff; }
+
 .lat-checkout-btn-outline {
     width: 100%; height: 50px; border-radius: 14px; border: 1px solid $lat-line-strong; margin-top: 10px;
     background: $lat-surface; color: $lat-ink; font-weight: 700; font-size: .9rem;

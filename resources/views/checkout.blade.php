@@ -1332,9 +1332,20 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
                                     <b data-total>{{ \App\Support\Money::format($total, \App\Support\Money::site(), 2) }}</b>
                                 </div>
 
+                                {{--
+                                    El aviso depende de si hay pasarela configurada
+                                    ($onlinePayment, decidido en CartController): prometer
+                                    "sin pago en línea" con el pago activo, o al revés,
+                                    es contradecir el botón que está justo debajo.
+                                --}}
                                 <div class="lat-checkout-notice">
-                                    ✓ <b>{{ $L('Sin pago en línea por ahora', 'No online payment for now', 'Sem pagamento online por enquanto') }}:</b>
-                                    {{ $L('reservas y te confirmamos por WhatsApp o correo. Sin comisiones.', 'you book and we confirm via WhatsApp or email. No fees.', 'você reserva e confirmamos por WhatsApp ou e-mail. Sem taxas.') }}
+                                    @if ($onlinePayment ?? false)
+                                        ✓ <b>{{ $L('Pago seguro en línea', 'Secure online payment', 'Pagamento seguro online') }}:</b>
+                                        {{ $L('paga con tarjeta o PayPal, o reserva ahora y paga después.', 'pay by card or PayPal, or book now and pay later.', 'pague com cartão ou PayPal, ou reserve agora e pague depois.') }}
+                                    @else
+                                        ✓ <b>{{ $L('Sin pago en línea por ahora', 'No online payment for now', 'Sem pagamento online por enquanto') }}:</b>
+                                        {{ $L('reservas y te confirmamos por WhatsApp o correo. Sin comisiones.', 'you book and we confirm via WhatsApp or email. No fees.', 'você reserva e confirmamos por WhatsApp ou e-mail. Sem taxas.') }}
+                                    @endif
                                 </div>
 
                                 <label class="lat-checkout-terms">
@@ -1346,6 +1357,21 @@ textarea.cart-real-input { padding-top: 12px; min-height: 90px; resize: vertical
                                         <a href="{{ route('legal.privacy', ['locale' => $locale]) }}">{{ $L('Política de Privacidad', 'Privacy Policy', 'Política de Privacidade') }}</a>.
                                     </span>
                                 </label>
+
+                                @if ($onlinePayment ?? false)
+                                    {{--
+                                        Enlace, no submit: el pago en línea vive en
+                                        /checkout/pago, que ya recoge los datos del
+                                        viajero y monta la pasarela. Este panel sigue
+                                        siendo el flujo de "reservar y confirmar".
+                                    --}}
+                                    <a href="{{ route('checkout.pay', ['locale' => $locale]) }}"
+                                       id="btn-pay-online"
+                                       class="lat-checkout-btn-pay">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+                                        <span>{{ $L('Pagar ahora', 'Pay now', 'Pagar agora') }} — {{ \App\Support\Money::format($total, \App\Support\Money::site(), 2) }}</span>
+                                    </a>
+                                @endif
 
                                 @if ($waPhoneDigits)
                                 <button type="submit" id="btn-whatsapp-confirm" class="lat-checkout-btn-wa">

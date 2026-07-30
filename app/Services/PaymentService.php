@@ -37,6 +37,24 @@ class PaymentService
     }
 
     /**
+     * Llave pública de Culqi (viaja al navegador para tokenizar la tarjeta:
+     * es pública a propósito). La vista de pago la pedía con
+     * config('services.culqi.public_key'), que ignoraba la del panel — con las
+     * claves cargadas en Configuración → Pagos, el formulario se quedaba con
+     * la del .env (o vacío) y la tokenización fallaba sin explicación.
+     */
+    public function publicKey(): string
+    {
+        return $this->publicKey;
+    }
+
+    /** ¿Hay llave pública cargada? Sin ella no se puede cobrar con tarjeta. */
+    public function isConfigured(): bool
+    {
+        return $this->publicKey !== '' && ! str_contains($this->publicKey, 'REPLACE_ME');
+    }
+
+    /**
      * Create a charge in Culqi.
      *
      * @param  array{

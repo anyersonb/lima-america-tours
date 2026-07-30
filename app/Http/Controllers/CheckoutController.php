@@ -55,6 +55,14 @@ class CheckoutController extends Controller
 
             $total = $this->cart->total();
 
+            // Qué pasarelas se pueden OFRECER de verdad. Se decide en el
+            // servidor y no en la vista: un método de pago pintado sin
+            // credenciales detrás lleva al cliente hasta el último clic para
+            // fallar ahí, que es peor que no ofrecerlo.
+            $culqiEnabled = $this->payment->isConfigured();
+            $paypalEnabled = $this->paypal->isConfigured()
+                && in_array(\App\Support\Money::site(), PayPalService::SUPPORTED_CURRENCIES, true);
+
             return view('checkout.payment', [
                 'items' => $items,
                 'subtotal' => $this->cart->subtotal(),
@@ -62,7 +70,14 @@ class CheckoutController extends Controller
                 'couponCode' => $this->cart->couponCode(),
                 'total' => $total,
                 'total_centavos' => (int) round($total * 100),
-                'public_key' => config('services.culqi.public_key'),
+                // La del panel primero (antes solo el .env: con las claves
+                // cargadas en Configuración → Pagos el formulario se quedaba
+                // con la del .env y la tokenización fallaba en silencio).
+                'public_key' => $this->payment->publicKey(),
+                'culqiEnabled' => $culqiEnabled,
+                'paypalEnabled' => $paypalEnabled,
+                'paypalClientId' => $paypalEnabled ? $this->paypal->clientId() : null,
+                'currency' => \App\Support\Money::site(),
             ]);
 
         } catch (\Throwable $e) {

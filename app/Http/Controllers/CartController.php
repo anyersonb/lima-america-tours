@@ -72,9 +72,20 @@ class CartController extends Controller
             $related    = collect();
         }
 
-        $public_key      = config('services.culqi.public_key');
+        // La llave del panel primero (Configuración → Pagos), .env de respaldo.
+        $public_key      = app(\App\Services\PaymentService::class)->publicKey();
         $total_centavos  = (int) round($total * 100);
         $firstTravelDate = optional($items->first())['travel_date'] ?? now()->addDays(7)->toDateString();
+
+        // ¿Hay alguna pasarela que pueda cobrar de verdad? De eso depende que
+        // el carrito ofrezca "pagar ahora" (que lleva a /checkout/pago) o se
+        // quede solo con el flujo de reservar y confirmar por WhatsApp/correo.
+        // Se decide acá y no en la vista: un botón de pago sin credenciales
+        // detrás lleva al cliente hasta el último clic para fallar ahí.
+        $paypal = app(\App\Services\PayPalService::class);
+        $onlinePayment = app(\App\Services\PaymentService::class)->isConfigured()
+            || ($paypal->isConfigured()
+                && in_array(\App\Support\Money::site(), \App\Services\PayPalService::SUPPORTED_CURRENCIES, true));
 
         return view('checkout', compact(
             'items',
@@ -86,6 +97,7 @@ class CartController extends Controller
             'public_key',
             'total_centavos',
             'firstTravelDate',
+            'onlinePayment',
         ));
     }
 

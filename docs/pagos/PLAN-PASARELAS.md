@@ -459,6 +459,24 @@ Culqi ahora se lee **igual que PayPal**: primero el Setting del panel, luego el 
 
 **Pendiente del cliente (bloquea la prueba de cobro real):** claves `pk_test_` / `sk_test_` de la cuenta Culqi y el Client ID + Secret de la app **sandbox** de PayPal. Sin ellas el cableado está completo pero **no hay cobro de prueba verificado**.
 
-#### 14.4 Lo que NO incluye este lote
+#### 14.4 UI de pago en línea (lote del 2026-07-29, tarde)
 
-El checkout público sigue siendo **"sin pago en línea"**: `payment_timing` está fijo en `later` y la vista no pinta formulario de tarjeta ni botón de PayPal (el flujo vivo crea la reserva y confirma por WhatsApp/correo). El cobro en línea existe entero del lado del servidor y probado, pero **falta el UI**: botón de PayPal con el SDK, formulario de tarjeta Culqi v4 (hay una implementación de referencia en `resources/views/checkout/payment.blade.php`) y el `frame-src`/`script-src` del CSP para ambos. Es el siguiente lote, y necesita las claves de §14.3 para poder validarse.
+El checkout público estaba en "sin pago en línea": `payment_timing` fijo en `later`, sin formulario de tarjeta ni botón de PayPal. El servidor sí sabía cobrar. Lo que faltaba era la vista — y resultó que **ya existía**: la ruta `/checkout/pago` (`checkout.pay` → `checkout/payment.blade.php`) montaba el formulario Culqi v4 completo con datos del viajero, recogida, timing y términos. Estaba viva y **nada la enlazaba**.
+
+Lo que se hizo:
+
+- **El carrito la enlaza**: botón rojo "Pagar ahora — $X" (`#btn-pay-online`) sobre el de WhatsApp, y el aviso de al lado cambia con él (prometer "sin pago en línea" debajo de un botón de pago es contradecirse). Rojo y no verde a propósito: el de WhatsApp reserva SIN pagar y con los dos del mismo color nadie distingue cuál cobra.
+- **Botón de PayPal real** con su SDK, en `#paypal-buttons`, cargado con el `client-id` del panel y `currency=Money::site()`. El importe **no viaja desde el navegador**: `createOrder` no manda monto, el servidor lo calcula del carrito. Mandarlo desde el cliente sería dejar que cualquiera pague 1 dólar por un tour de 300.
+- **Nada de "próximamente" escrito a mano**: cada método se ofrece si tiene credenciales cargadas (`PaymentService::isConfigured()` / `PayPalService::isConfigured()`, que exige Client ID **y** Secret). Sin ninguna pasarela, "pagar ahora" no se ofrece y el checkout queda en el flujo que funciona. Un método pintado sin claves detrás lleva al cliente a llenar todo para fallar en el último clic.
+- **PayPal no se ofrece si la moneda del sitio no es una que PayPal admita**, aunque las claves estén cargadas.
+- **Validación antes de abrir la pasarela** (datos del viajero, fecha y términos): si el cliente aprueba en PayPal y recién ahí el servidor rechaza la reserva por un campo vacío, el dinero queda autorizado sin reserva — el peor estado posible. Y si la captura falla después de aprobar, el error se muestra en pantalla pidiéndole que escriba antes de reintentar; nunca se traga en silencio.
+- **La llave pública de Culqi sale del panel**, no del `.env`: la vista la pedía con `config()` y con las claves cargadas en Configuración → Pagos se quedaba con la del `.env` (o vacía), fallando la tokenización sin explicación.
+- El CSP ya permitía Culqi y PayPal en `script-src`/`frame-src`/`connect-src`/`form-action`: no hizo falta tocarlo.
+
+**Trampa de tests anotada** (`OnlinePaymentUiTest`): no sirve pedir la página, cambiar Settings y volver a pedirla en el MISMO test. Laravel cachea la instancia del controller dentro del objeto `Route`, que vive todo el proceso de pruebas, así que el segundo request reusa los servicios con las credenciales viejas. Da un rojo que parece un bug de caché de la app y no lo es. Un escenario por test.
+
+#### 14.5 Lo que sigue pendiente
+
+**Cobro de prueba real, sin verificar.** Faltan las credenciales sandbox: `pk_test_`/`sk_test_` de Culqi (salen de CulqiPanel → Desarrollo → API Keys; **puede que Lima América no tenga cuenta Culqi todavía** — Lima View la tenía retirada, hay que confirmarlo con el cliente porque sin ella no hay tarjeta al lanzar) y Client ID + Secret de una app **sandbox** de PayPal (developer.paypal.com → Apps & Credentials → Sandbox). No existen claves sandbox públicas: lo único público de PayPal es `client-id=test`, que solo sirve para que el botón se pinte en desarrollo (sin secret no hay `create order` ni captura). Las tarjetas de prueba de Culqi sí son públicas y están en su doc.
+
+Yape y Plin siguen sin integrar (no es cuestión de claves).

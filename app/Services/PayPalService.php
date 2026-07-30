@@ -34,6 +34,24 @@ class PayPalService
     }
 
     /**
+     * Client ID (público: va en el <script> del SDK del navegador).
+     */
+    public function clientId(): string
+    {
+        return $this->clientId;
+    }
+
+    /**
+     * ¿Se puede ofrecer PayPal? Hacen falta AMBAS credenciales: con solo el
+     * Client ID el botón se pinta y luego revienta al crear la orden, que es
+     * peor que no ofrecerlo — el cliente llega hasta el final y falla ahí.
+     */
+    public function isConfigured(): bool
+    {
+        return $this->clientId !== '' && $this->secret !== '';
+    }
+
+    /**
      * Returns the PayPal API base URL based on the configured mode.
      */
     public function baseUrl(): string
