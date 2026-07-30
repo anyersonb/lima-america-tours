@@ -51,7 +51,7 @@ SSH_OPTS=(-i "$SSH_KEY" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15
 # ACTUALIZA `DEPLOYED_COMMIT` cada vez que despliegues, o pásalo por entorno.
 # El servidor no tiene repo git (el deploy es por copia), así que este valor es
 # la única memoria de qué hay publicado.
-DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-a287a0a}"  # moneda USD + PayPal reactivado (2026-07-29)
+DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-b4bf5c5}"  # UI de pago en línea + fixes de CRO/QA (2026-07-29)
 
 mapfile -t FILES < <(
   git -C "$LOCAL" diff --name-only "$DEPLOYED_COMMIT..HEAD" \
