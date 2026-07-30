@@ -17,10 +17,23 @@ class PaymentService
 
     public function __construct()
     {
-        $this->secretKey = config('services.culqi.secret_key', '');
-        $this->publicKey = config('services.culqi.public_key', '');
-        $this->webhookSecret = config('services.culqi.webhook_secret', '');
-        $this->apiUrl = rtrim(config('services.culqi.api_url', 'https://api.culqi.com/v2'), '/');
+        // Administrables desde el panel (Configuración → Pagos), igual que
+        // PayPal; el .env queda como respaldo. Antes solo se leían del .env, lo
+        // que obligaba a un deploy para cargar las claves de prueba del cliente.
+        // Se lee con try/catch porque este servicio se resuelve también en
+        // contextos sin BD (comandos de instalación, tests unitarios).
+        $fromDb = function (string $key): string {
+            try {
+                return (string) \App\Models\Setting::get($key, '');
+            } catch (\Throwable $e) {
+                return '';
+            }
+        };
+
+        $this->secretKey = $fromDb('culqi_secret_key') ?: (string) config('services.culqi.secret_key', '');
+        $this->publicKey = $fromDb('culqi_public_key') ?: (string) config('services.culqi.public_key', '');
+        $this->webhookSecret = (string) config('services.culqi.webhook_secret', '');
+        $this->apiUrl = rtrim((string) config('services.culqi.api_url', 'https://api.culqi.com/v2'), '/');
     }
 
     /**

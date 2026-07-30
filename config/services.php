@@ -31,6 +31,15 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /*
+     * Moneda en la que opera el sitio (front, pasarelas y bookings).
+     *
+     * Decisión del cliente 2026-07-29: USD. El Setting `site_currency` del
+     * panel manda sobre esto; ver App\Support\Money::site(), que es el único
+     * lugar que resuelve la moneda para toda la aplicación.
+     */
+    'site_currency' => env('SITE_CURRENCY', 'USD'),
+
     'culqi' => [
         'public_key'     => env('CULQI_PUBLIC_KEY'),
         'secret_key'     => env('CULQI_SECRET_KEY'),

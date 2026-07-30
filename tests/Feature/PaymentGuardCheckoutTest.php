@@ -69,16 +69,16 @@ class PaymentGuardCheckoutTest extends TestCase
     }
 
     /**
-     * PayPal is now paused server-side (routes/web.php disables
-     * checkout.paypal.capture / .create — see the "PayPal EN PAUSA" comment
-     * there, pending the currency decision in docs/pagos/PLAN-PASARELAS.md
-     * §13.2). That route-level block is a strictly stronger guarantee than
-     * the old scenario this test covered (a LIVE-mode leak being caught
-     * inside PayPalService::captureOrder via PaymentGuard): the request
-     * never reaches the controller/gateway at all, so PaymentGuard is not
-     * even exercised. This test now asserts that stronger invariant instead.
-     * PaymentGuard's own coverage for PayPal (isLive/assertChargeAllowed)
-     * remains intact and untouched in tests/Unit/PaymentGuardTest.php.
+     * PayPal volvió a estar activo (2026-07-29), así que la captura SÍ llega al
+     * controller y esta prueba vuelve a su escenario original: credenciales
+     * LIVE en un entorno no productivo tienen que morir dentro de
+     * PayPalService::captureOrder por PaymentGuard, sin que salga una sola
+     * request hacia PayPal y sin que ninguna reserva quede como pagada.
+     *
+     * Mientras PayPal estuvo en pausa esto se comprobaba por la vía de la ruta
+     * deshabilitada (404). Ese 404 ya no existe: si esta prueba se hubiera
+     * dejado como estaba, seguiría "verde" describiendo un mundo que no es el
+     * actual, o peor, en rojo tapando que el guard sí funciona.
      */
     public function test_paypal_live_mode_in_a_non_production_environment_blocks_the_capture_without_calling_paypal(): void
     {
@@ -101,10 +101,13 @@ class PaymentGuardCheckoutTest extends TestCase
             ]
         );
 
-        // The route itself is disabled while PayPal is paused — 404 before
-        // any controller/gateway/guard code runs.
-        $response->assertStatus(404);
+        // 500 con mensaje genérico: el controller atrapa la
+        // RealChargeBlockedException del guard como cualquier otro fallo de
+        // pago. Lo que importa no es el código, sino las dos líneas de abajo.
+        $response->assertStatus(500);
+        $response->assertJson(['success' => false]);
 
+        // Ni una request a PayPal: el guard corta ANTES de la red.
         Http::assertNothingSent();
 
         $this->assertDatabaseMissing('bookings', ['customer_email' => 'juan@example.com']);

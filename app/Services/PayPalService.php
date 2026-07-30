@@ -8,6 +8,18 @@ use Illuminate\Support\Facades\Log;
 
 class PayPalService
 {
+    /**
+     * Monedas de la lista oficial de PayPal que este sitio puede usar.
+     *
+     * PEN **no está** en la lista de PayPal (verificado en
+     * developer.paypal.com/api/rest/reference/currency-codes/): PayPal no sabe
+     * cobrar en soles. Por eso esto es una constante consultable y no un
+     * comentario — CheckoutController la usa para negarse a crear una orden en
+     * una moneda que la pasarela no admite, en vez de mandar el importe con
+     * otro código de moneda y cobrar de más.
+     */
+    public const SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'MXN', 'BRL'];
+
     private string $clientId;
     private string $secret;
     private string $mode;

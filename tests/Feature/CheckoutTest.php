@@ -89,7 +89,7 @@ class CheckoutTest extends TestCase
             'api.culqi.com/v2/charges' => Http::response([
                 'id' => 'chr_test_abc123',
                 'amount' => 45000,
-                'currency_code' => 'PEN',
+                'currency_code' => 'USD',
                 'object' => 'charge',
                 'outcome' => ['type' => 'venta_exitosa'],
             ], 201),
@@ -102,15 +102,16 @@ class CheckoutTest extends TestCase
 
         $response->assertRedirectToRoute('checkout.thanks', ['locale' => self::LOCALE]);
 
-        // Booking was created and marked paid, in soles (PEN) — never USD,
-        // to avoid a ~3.7x overcharge (the tour price is already in soles).
+        // El booking se graba con la moneda del sitio (USD desde 2026-07-29),
+        // la MISMA con la que se cobró: si divergen, el histórico miente sobre
+        // lo que pagó el cliente.
         $this->assertDatabaseHas('bookings', [
             'customer_email' => 'juan@example.com',
             'payment_status' => 'paid',
             'status' => 'confirmed',
             'payment_reference' => 'chr_test_abc123',
             'payment_method' => 'culqi',
-            'currency' => 'PEN',
+            'currency' => \App\Support\Money::site(),
         ]);
     }
 
@@ -214,7 +215,7 @@ class CheckoutTest extends TestCase
             'children' => 0,
             'unit_price' => 150.00,
             'total_price' => 300.00,
-            'currency' => 'PEN',
+            'currency' => 'USD',
             'status' => 'confirmed',
             'payment_status' => 'paid',
             'payment_method' => 'culqi',
@@ -241,7 +242,7 @@ class CheckoutTest extends TestCase
             'api.culqi.com/v2/charges' => Http::response([
                 'id' => 'chr_test_mail_check',
                 'amount' => 45000,
-                'currency_code' => 'PEN',
+                'currency_code' => 'USD',
                 'object' => 'charge',
             ], 201),
         ]);
@@ -259,14 +260,17 @@ class CheckoutTest extends TestCase
     }
 
     /**
-     * Bug crítico: el checkout completo estaba codificado en USD mientras los
-     * 26 tours reales (importados de WordPress) tienen currency=PEN y price
-     * en soles — esto cobraría el número de soles como si fueran dólares
-     * (~3.7x de sobrecobro real). Este test verifica que la página del
-     * carrito/checkout (checkout.blade.php, vía cart.index) muestra el
-     * símbolo de soles y no deja ningún "USD" visible sobre un monto.
+     * El símbolo que ve el cliente tiene que ser el de la moneda en la que se
+     * le va a cobrar, sea cual sea.
+     *
+     * Historia: el checkout estuvo codificado en USD mientras los tours tenían
+     * currency=PEN (habría cobrado el número de soles como dólares, ~3.7× de
+     * sobrecobro); se corrigió a soles; y el 2026-07-29 el cliente definió el
+     * cobro en USD. Tres estados en tres meses: por eso el test compara contra
+     * Money::prefix(Money::site()) en vez de fijar un símbolo, y exige que el
+     * de la OTRA moneda no aparezca por ningún lado.
      */
-    public function test_checkout_page_shows_soles_and_not_usd(): void
+    public function test_checkout_page_shows_the_site_currency_symbol(): void
     {
         $tour = $this->tour();
         $this->addTourToCart($tour);
@@ -274,8 +278,15 @@ class CheckoutTest extends TestCase
         $response = $this->get(route('cart.index', ['locale' => self::LOCALE]));
 
         $response->assertOk();
-        $response->assertSee('S/', false);
-        $response->assertDontSee('USD');
+        $response->assertSee(\App\Support\Money::prefix(\App\Support\Money::site()), false);
+
+        // Money::site() es USD hoy: el prefijo de soles no puede aparecer.
+        // Se compara con el PREFIJO completo ("S/ ", con espacio) y no con
+        // "S/": ese par de caracteres aparece dentro de texto legítimo de la
+        // página ("iOS/Android" en un comentario del CSS), y buscarlo suelto
+        // daba un rojo que no era un defecto de moneda.
+        $this->assertSame('USD', \App\Support\Money::site());
+        $response->assertDontSee(\App\Support\Money::prefix('PEN'), false);
     }
 
     /**
@@ -300,38 +311,41 @@ class CheckoutTest extends TestCase
     }
 
     /**
-     * Verifica que el payload enviado a Culqi (api.culqi.com/v2/charges) se
-     * construya con currency=PEN. Se prueba PaymentService::createCharge()
-     * directamente —el servicio ya existente que centraliza la llamada HTTP—
-     * en vez de a través de CheckoutController::processPayment(), porque hoy
-     * ese controller no invoca el cobro directo con Culqi para "pagar ahora"
-     * (ver nota de "4 fallos baseline" en el reporte): el flujo "now" fue
-     * migrado a PayPal y el cableado de Culqi sigue en curso (tarea aparte).
-     * Este test documenta y protege la moneda correcta del payload para
-     * cuando ese cableado se complete.
+     * El cobro a Culqi viaja con la moneda del sitio.
+     *
+     * Se prueba por el flujo real del controller (processPayment con
+     * payment_timing=now), no llamando a PaymentService con la moneda escrita
+     * a mano: la versión anterior de este test le pasaba 'PEN' al servicio y
+     * comprobaba que llegara 'PEN', así que habría seguido en verde aunque el
+     * controller mandara cualquier otra cosa. Lo que hay que proteger es que
+     * el CONTROLLER no vuelva a hardcodear una moneda.
      */
-    public function test_culqi_charge_payload_uses_pen_currency(): void
+    public function test_culqi_charge_payload_uses_the_site_currency(): void
     {
+        Mail::fake();
+
+        $tour = $this->tour();
+        $this->addTourToCart($tour);
+
         Http::fake([
             'api.culqi.com/v2/charges' => Http::response([
-                'id' => 'chr_test_pen_payload',
+                'id' => 'chr_test_site_currency',
                 'amount' => 45000,
-                'currency_code' => 'PEN',
+                'currency_code' => 'USD',
                 'object' => 'charge',
                 'outcome' => ['type' => 'venta_exitosa'],
             ], 201),
         ]);
 
-        app(\App\Services\PaymentService::class)->createCharge([
-            'amount' => 45000,
-            'currency' => 'PEN',
-            'email' => 'juan@example.com',
-            'source_id' => 'tkn_test_abc123',
-        ]);
+        $this->post(
+            route('checkout.process', ['locale' => self::LOCALE]),
+            $this->validPaymentPayload()
+        );
 
         Http::assertSent(function (\Illuminate\Http\Client\Request $request) {
             return $request->url() === 'https://api.culqi.com/v2/charges'
-                && $request['currency'] === 'PEN';
+                && $request['currency'] === \App\Support\Money::site()
+                && $request['currency'] === 'USD';
         });
     }
 }

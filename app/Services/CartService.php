@@ -42,9 +42,9 @@ class CartService
                 'group_type' => $tour->group_type,
                 'unit_price' => (float) $tour->price,
                 // Snapshot the tour's currency at add-time — used by
-                // currencies()/isPenOnly() to block a mixed-currency
+                // currencies()/isSiteCurrencyOnly() to block a mixed-currency
                 // checkout without needing to re-query the DB per item.
-                'currency' => $tour->currency ?: 'PEN',
+                'currency' => $tour->currency ?: \App\Support\Money::site(),
                 'adults' => $adults,
                 'children' => $children,
                 'quantity' => $adults + $children,
@@ -189,7 +189,7 @@ class CartService
      * 'currency' snapshotted on the item by add() (see above); falls back to
      * the live Tour record for older/legacy session items that predate the
      * snapshot (e.g. an abandoned cart restored via replace()), and finally
-     * to 'PEN' if the tour was deleted in the meantime.
+     * to the site currency if the tour was deleted in the meantime.
      *
      * @return Collection<int, string>
      */
@@ -201,23 +201,28 @@ class CartService
                     return $item['currency'];
                 }
 
-                return Tour::find($item['tour_id'] ?? null)?->currency ?: 'PEN';
+                return Tour::find($item['tour_id'] ?? null)?->currency ?: \App\Support\Money::site();
             })
             ->unique()
             ->values();
     }
 
     /**
-     * The business charges exclusively in soles (PEN) through Culqi — see
-     * docs/pagos/PLAN-PASARELAS.md §13. This is false the moment a single
-     * non-PEN tour (e.g. one of the USD drafts already sitting in the DB,
-     * currently unpublished) makes it into the cart, which CheckoutController
-     * uses to abort the payment flow before any total is calculated or
-     * charged. Relax this only when multi-currency / PayPal is reactivated.
+     * El sitio cobra en UNA moneda (hoy USD por decisión del cliente del
+     * 2026-07-29; ver docs/pagos/PLAN-PASARELAS.md §13). Esto es false en
+     * cuanto un tour etiquetado en otra moneda entra al carrito, y
+     * CheckoutController lo usa para abortar ANTES de calcular o cobrar
+     * cualquier total: sumar soles y dólares como si fueran el mismo número es
+     * el bug que produjo el sobrecobro de ~3.7× en la auditoría.
+     *
+     * Se compara contra Money::site(), no contra un literal: el día que la
+     * moneda cambie otra vez, esta guarda cambia con ella.
      */
-    public function isPenOnly(): bool
+    public function isSiteCurrencyOnly(): bool
     {
-        return $this->currencies()->reject(fn (string $currency): bool => $currency === 'PEN')->isEmpty();
+        $site = \App\Support\Money::site();
+
+        return $this->currencies()->reject(fn (string $currency): bool => strtoupper($currency) === $site)->isEmpty();
     }
 
     public function couponCode(): ?string

@@ -24,11 +24,11 @@ class TourFactory extends Factory
             'description_es' => $this->faker->paragraph(),
             'price' => $this->faker->randomElement([65, 100, 120, 200, 300, 420]),
             'price_before' => null,
-            // Business is 100% PEN (soles) — the 26 real tours imported from
-            // WP all carry currency=PEN. The `currency` column's own DB
-            // default is still 'USD' (legacy), so tests that don't override
-            // it here would otherwise silently charge/store USD.
-            'currency' => 'PEN',
+            // La moneda del sitio, no un literal: el cliente la definió en USD
+            // el 2026-07-29 (antes PEN) y un literal aquí obligaba a tocar cada
+            // test cuando la moneda cambia. Los tests que quieren probar una
+            // moneda distinta la pasan explícitamente.
+            'currency' => \App\Support\Money::site(),
             'duration' => $this->faker->randomElement(['Full Day', '2 Días', '4 horas']),
             'language' => 'Español / Inglés',
             'group_type' => 'Grupal',

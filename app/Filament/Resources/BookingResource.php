@@ -57,7 +57,7 @@ class BookingResource extends Resource
                             ->label('Tour del catálogo')
                             ->relationship('tour', 'title_es')
                             ->getOptionLabelFromRecordUsing(fn (\App\Models\Tour $record) => $record->title_es
-                                .' — '.\App\Support\Money::format((float) $record->price, $record->currency ?: 'PEN', 2)
+                                .' — '.\App\Support\Money::format((float) $record->price, $record->currency ?: \App\Support\Money::site(), 2)
                                 .' · cap. '.($record->max_capacity ?: '∞'))
                             ->searchable()
                             ->preload()
@@ -142,7 +142,7 @@ class BookingResource extends Resource
 
                         Forms\Components\TextInput::make('unit_price')
                             ->label('Precio por persona')
-                            ->prefix('S/')
+                            ->prefix(\App\Support\Money::prefix(\App\Support\Money::site()))
                             ->required()
                             ->numeric()
                             ->minValue(0)
@@ -162,16 +162,16 @@ class BookingResource extends Resource
                             ->label('Oferta / descuento especial')
                             ->options([
                                 'percent' => 'Porcentaje (%)',
-                                'fixed' => 'Monto fijo (S/)',
+                                'fixed' => 'Monto fijo ('.trim(\App\Support\Money::prefix(\App\Support\Money::site())).')',
                             ])
                             ->placeholder('Sin descuento')
                             ->live()
                             ->afterStateUpdated(fn (Forms\Set $set, Forms\Get $get) => self::recalcTotals($set, $get)),
                         Forms\Components\TextInput::make('discount_value')
-                            ->label(fn (Forms\Get $get) => $get('discount_type') === 'percent' ? 'Porcentaje a descontar (%)' : 'Monto a descontar (S/)')
+                            ->label(fn (Forms\Get $get) => $get('discount_type') === 'percent' ? 'Porcentaje a descontar (%)' : 'Monto a descontar ('.trim(\App\Support\Money::prefix(\App\Support\Money::site())).')')
                             ->numeric()
                             ->minValue(0)
-                            ->prefix(fn (Forms\Get $get) => $get('discount_type') === 'fixed' ? 'S/' : null)
+                            ->prefix(fn (Forms\Get $get) => $get('discount_type') === 'fixed' ? \App\Support\Money::prefix(\App\Support\Money::site()) : null)
                             ->suffix(fn (Forms\Get $get) => $get('discount_type') === 'percent' ? '%' : null)
                             ->visible(fn (Forms\Get $get) => filled($get('discount_type')))
                             ->live(onBlur: true)
@@ -180,11 +180,11 @@ class BookingResource extends Resource
                         Forms\Components\Placeholder::make('discount_amount_hint')
                             ->label('Descuento aplicado')
                             ->visible(fn (Forms\Get $get) => filled($get('discount_type')))
-                            ->content(fn (Forms\Get $get) => \App\Support\Money::format((float) $get('discount_amount'), 'PEN', 2)),
+                            ->content(fn (Forms\Get $get) => \App\Support\Money::format((float) $get('discount_amount'), \App\Support\Money::site(), 2)),
 
                         Forms\Components\TextInput::make('total_price')
                             ->label('TOTAL a cobrar')
-                            ->prefix('S/')
+                            ->prefix(\App\Support\Money::prefix(\App\Support\Money::site()))
                             ->required()
                             ->numeric()
                             ->readOnly()
@@ -196,7 +196,7 @@ class BookingResource extends Resource
                             ->label('Moneda')
                             ->required()
                             ->maxLength(3)
-                            ->default('PEN'),
+                            ->default(\App\Support\Money::site()),
                     ]),
 
                 // ── Estado y pago ───────────────────────────────────────────
@@ -354,17 +354,17 @@ class BookingResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('unit_price')
                     ->label('P. unitario')
-                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, 'PEN', 2))
+                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, \App\Support\Money::site(), 2))
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('discount_amount')
                     ->label('Descuento')
-                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, 'PEN', 2))
+                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, \App\Support\Money::site(), 2))
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('total_price')
                     ->label('Total')
-                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, 'PEN', 2))
+                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, \App\Support\Money::site(), 2))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')

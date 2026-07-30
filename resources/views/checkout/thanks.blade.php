@@ -73,7 +73,7 @@
                         </div>
                         <div class="text-right shrink-0">
                             <p class="font-price text-2xl text-lat-ink leading-none">
-                                {{ \App\Support\Money::format($booking['total_price'], $booking['currency'] ?? 'PEN', 2) }}
+                                {{ \App\Support\Money::format($booking['total_price'], $booking['currency'] ?? \App\Support\Money::site(), 2) }}
                             </p>
                         </div>
                     </div>

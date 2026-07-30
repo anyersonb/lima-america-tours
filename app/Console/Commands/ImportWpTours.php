@@ -119,7 +119,7 @@ class ImportWpTours extends Command
                 'recommendations_es' => WpTourParser::htmlToText($meta['que-llevar'] ?? ''),
                 'notes_es' => implode("\n", $notes) ?: null,
                 'price' => $price,
-                'currency' => 'PEN',
+                'currency' => \App\Support\Money::site(),
                 'duration' => trim((string) ($meta['duracion'] ?? '')) ?: null,
                 'language' => $this->normalizeLanguages($meta['idiomas'] ?? ''),
                 'departure_time' => trim((string) ($meta['salidas'] ?? '')) ?: null,

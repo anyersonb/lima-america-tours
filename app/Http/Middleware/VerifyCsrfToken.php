@@ -13,10 +13,11 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         'webhooks/*',
-        // PayPal está EN PAUSA (routes/web.php aborta 404 en el closure).
-        // Sin esta exclusión, un POST era interceptado por CSRF antes de
-        // llegar al closure y respondía 419 en vez de 404 (CRO #6).
-        '*/checkout/paypal/create',
-        '*/checkout/paypal/capture',
+        // OJO: las rutas de PayPal estuvieron exentas mientras eran closures
+        // muertos que abortaban 404 (la exclusión existía solo para que un POST
+        // respondiera 404 y no 419). Al reactivarlas (2026-07-29) vuelven a
+        // exigir CSRF: son endpoints que crean y capturan órdenes de pago, y
+        // exentos se podrían disparar desde otro sitio. El SDK de PayPal las
+        // llama por fetch con el header X-CSRF-TOKEN.
     ];
 }

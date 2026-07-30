@@ -77,14 +77,14 @@ class CheckoutController extends Controller
     /**
      * Single entry point for the checkout form submission.
      *
-     *  - payment_timing=now  -> charges the cart total via Culqi (PEN,
-     *    céntimos) using the culqi_token tokenised client-side
-     *    (chargeWithCulqi).
+     *  - payment_timing=now  -> charges the cart total via Culqi in the site
+     *    currency (Money::site(), hoy USD), in cents, using the culqi_token
+     *    tokenised client-side (chargeWithCulqi).
      *  - payment_timing=later -> creates a pending booking, sends emails,
      *    clears the cart and redirects to the thanks page (unchanged).
      *
-     * PayPal is on pause server-side (routes disabled) pending the currency
-     * decision — see docs/pagos/PLAN-PASARELAS.md §13.2.
+     * PayPal está activo desde que el cliente definió la moneda en USD
+     * (2026-07-29) — ver docs/pagos/PLAN-PASARELAS.md §13.
      */
     public function processPayment(ProcessPaymentRequest $request): RedirectResponse
     {
@@ -99,14 +99,14 @@ class CheckoutController extends Controller
                     ->with('error', __('cart.empty_checkout_redirect'));
             }
 
-            // CRO #1: el cobro es 100% PEN vía Culqi. Hoy los 26 tours
-            // públicos son PEN, pero ya hay 7 tours USD en borrador en la
-            // BD — si alguno llegara al carrito (publicación futura o error
-            // de captura), abortamos ANTES de calcular/cobrar nada, en vez
-            // de sumar soles y dólares como si fueran la misma moneda.
-            // Se relajará cuando se reactive PayPal/cobro multimoneda.
-            if (! $this->cart->isPenOnly()) {
-                Log::warning('checkout.process_payment: non-PEN currency in cart, aborting', [
+            // CRO #1: el sitio cobra en UNA moneda (Money::site(), hoy USD).
+            // Si un tour del carrito viene etiquetado en otra, abortamos ANTES
+            // de calcular/cobrar nada, en vez de sumar soles y dólares como si
+            // fueran el mismo número (ese fue el sobrecobro de ~3.7× de la
+            // auditoría). Se relajará cuando haya cobro multimoneda de verdad.
+            if (! $this->cart->isSiteCurrencyOnly()) {
+                Log::warning('checkout.process_payment: currency mismatch in cart, aborting', [
+                    'site_currency' => \App\Support\Money::site(),
                     'currencies' => $this->cart->currencies()->all(),
                     'tour_ids' => $items->pluck('tour_id')->all(),
                     'email' => $request->input('customer_email'),
@@ -114,7 +114,7 @@ class CheckoutController extends Controller
 
                 return redirect()
                     ->route('cart.index', ['locale' => $locale])
-                    ->with('error', 'No pudimos procesar tu reserva: uno de los tours de tu carrito aún no está habilitado para cobro en soles. Contáctanos por WhatsApp para completarla manualmente.');
+                    ->with('error', 'No pudimos procesar tu reserva: uno de los tours de tu carrito aún no está habilitado para cobro en línea. Contáctanos por WhatsApp para completarla manualmente.');
             }
 
             $validated = $request->validated();
@@ -167,7 +167,7 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Culqi "pay now" — charges the cart total in soles (PEN).
+     * Culqi "pay now" — charges the cart total in the site currency.
      *
      * 1. Locks on the session so a double form-submit (double click) can't
      *    fire two charges for the same cart.
@@ -210,7 +210,7 @@ class CheckoutController extends Controller
             try {
                 $charge = $this->payment->createCharge([
                     'amount' => $amountCents,
-                    'currency' => 'PEN',
+                    'currency' => \App\Support\Money::site(),
                     'email' => $customer['customer_email'],
                     'source_id' => $token,
                     'metadata' => [
@@ -270,10 +270,33 @@ class CheckoutController extends Controller
                 return response()->json(['error' => 'El carrito está vacío.'], 422);
             }
 
+            // Moneda del sitio, no un literal — pero PayPal NO admite PEN
+            // (verificado contra su lista oficial de monedas). Si algún día el
+            // sitio vuelve a soles, esto devuelve un error controlado en vez
+            // de crear una orden en dólares por el importe en soles, que sería
+            // cobrarle al cliente ~3.7× de lo que vio en pantalla.
+            $currency = \App\Support\Money::site();
+
+            if (! in_array($currency, \App\Services\PayPalService::SUPPORTED_CURRENCIES, true)) {
+                Log::warning('checkout.paypal_create_order.unsupported_currency', ['currency' => $currency]);
+
+                return response()->json(['error' => 'PayPal no está disponible para esta moneda. Usa tarjeta.'], 422);
+            }
+
+            // Si el carrito trae monedas mezcladas, el total no significa nada.
+            if (! $this->cart->isSiteCurrencyOnly()) {
+                Log::warning('checkout.paypal_create_order.currency_mismatch', [
+                    'site_currency' => $currency,
+                    'currencies' => $this->cart->currencies()->all(),
+                ]);
+
+                return response()->json(['error' => 'No pudimos iniciar el pago. Contáctanos por WhatsApp.'], 422);
+            }
+
             // Amount always calculated server-side — never trust the client
             $total = $this->cart->total();
 
-            $order = $this->paypal->createOrder($total, 'USD', [
+            $order = $this->paypal->createOrder($total, $currency, [
                 'locale' => $locale,
             ]);
 
@@ -480,8 +503,9 @@ class CheckoutController extends Controller
      * Resolves the currency to persist on a booking for a given cart item.
      *
      * Prefers the currency snapshotted on the cart item itself; falls back to
-     * the tour's current currency; and finally to 'PEN', since the business
-     * only operates in soles (never USD, to avoid an ~3.7x overcharge).
+     * the tour's current currency; and finally to the site currency
+     * (Money::site()) — nunca a un literal, para que la moneda del booking no
+     * pueda divergir de la que se cobró.
      */
     private function resolveItemCurrency(array $item): string
     {
@@ -491,7 +515,7 @@ class CheckoutController extends Controller
 
         $tour = Tour::find($item['tour_id'] ?? null);
 
-        return $tour?->currency ?: 'PEN';
+        return $tour?->currency ?: \App\Support\Money::site();
     }
 
     /**

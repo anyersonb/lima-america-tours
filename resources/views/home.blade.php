@@ -630,7 +630,7 @@
                                         {{-- Offer no siempre tiene tour_id (promos genéricas); el negocio
                                              opera en soles (PEN), así que ese es el fallback razonable
                                              cuando no hay tour vinculado del que heredar la moneda. --}}
-                                        <span class="lat-amt">{{ \App\Support\Money::format($offer->price, optional($offer->tour)->currency ?? 'PEN') }}</span>
+                                        <span class="lat-amt">{{ \App\Support\Money::format($offer->price, optional($offer->tour)->currency ?? \App\Support\Money::site()) }}</span>
                                     </div>
                                 @endif
                                 <a href="{{ $offerHref }}" class="lat-btn-out">{{ $offer->cta_label }}</a>

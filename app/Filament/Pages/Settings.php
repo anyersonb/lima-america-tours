@@ -43,6 +43,12 @@ class Settings extends Page implements HasForms
         $rows['paypal_mode'] = $rows['paypal_mode'] ?? config('services.paypal.mode', 'sandbox');
         $rows['paypal_webhook_id'] = $rows['paypal_webhook_id'] ?? config('services.paypal.webhook_id');
 
+        // Culqi y moneda del sitio: mismo criterio, .env como respaldo.
+        $rows['culqi_public_key'] = $rows['culqi_public_key'] ?? config('services.culqi.public_key');
+        $rows['culqi_secret_key'] = $rows['culqi_secret_key'] ?? config('services.culqi.secret_key');
+        $rows['culqi_env'] = $rows['culqi_env'] ?? config('services.culqi.env', 'sandbox');
+        $rows['site_currency'] = $rows['site_currency'] ?? config('services.site_currency', 'USD');
+
         // Pre-rellenar keys de Google y Tripadvisor desde .env si aún no están en la BD
         $rows['google_maps_api_key'] = $rows['google_maps_api_key'] ?? config('services.google.maps_api_key');
         $rows['google_place_id'] = $rows['google_place_id'] ?? config('services.google.place_id');
@@ -178,6 +184,19 @@ class Settings extends Page implements HasForms
                             ->helperText('Enlace al perfil de Tripadvisor. Usado en las tarjetas de rating de cada tour.'),
                     ]),
                     Tabs\Tab::make('Pagos')->icon('heroicon-o-credit-card')->schema([
+                        // Moneda del sitio: la lee App\Support\Money::site() y con
+                        // ella se pintan TODOS los precios, se cobra en Culqi/PayPal
+                        // y se graba bookings.currency. Cambiarla aquí no re-tarifa
+                        // los tours: los números guardados no se tocan, solo cambia
+                        // la moneda con la que se leen y se cobran.
+                        Select::make('site_currency')
+                            ->label('Moneda del sitio')
+                            ->options(['USD' => 'USD (Dólares)', 'PEN' => 'PEN (Soles)'])
+                            ->default('USD')
+                            ->native(false)
+                            ->required()
+                            ->rules(['in:USD,PEN'])
+                            ->helperText('Moneda en la que se muestran los precios y se cobra. OJO: no convierte los precios ya cargados — si cambias a soles, el número 720 pasa de $720 a S/ 720. PayPal NO admite soles: en PEN solo queda la tarjeta (Culqi).'),
                         Select::make('paypal_mode')
                             ->label('Modo de PayPal')
                             ->options(['sandbox' => 'Sandbox (pruebas)', 'live' => 'Live (producción)'])
@@ -198,6 +217,28 @@ class Settings extends Page implements HasForms
                             ->helperText('Se guarda en la base de datos. Si lo cambias en PayPal, actualízalo aquí.'),
                         TextInput::make('paypal_webhook_id')
                             ->label('Webhook ID (opcional)'),
+                        // Culqi: mismo criterio que PayPal — administrable aquí, con
+                        // el .env como respaldo (ver App\Services\PaymentService).
+                        // Las claves de PRUEBA empiezan por pk_test_/sk_test_; las de
+                        // producción por pk_live_/sk_live_.
+                        Select::make('culqi_env')
+                            ->label('Modo de Culqi (tarjeta)')
+                            ->options(['sandbox' => 'Sandbox (pruebas)', 'live' => 'Live (producción)'])
+                            ->default('sandbox')
+                            ->native(false)
+                            ->helperText('Sandbox = pruebas sin dinero real, con las claves pk_test_/sk_test_.'),
+                        TextInput::make('culqi_public_key')
+                            ->label('Culqi Public Key (pk_...)')
+                            ->columnSpanFull()
+                            ->autocomplete(false)
+                            ->helperText('Viaja al navegador para tokenizar la tarjeta: es pública a propósito.'),
+                        TextInput::make('culqi_secret_key')
+                            ->label('Culqi Secret Key (sk_...)')
+                            ->password()
+                            ->revealable()
+                            ->columnSpanFull()
+                            ->autocomplete('new-password')
+                            ->helperText('Privada: nunca sale del servidor. Se guarda en la base de datos.'),
                     ]),
                     Tabs\Tab::make('SEO')->icon('heroicon-o-magnifying-glass')->schema([
                         TextInput::make('seo_default_title')->label('Title por defecto'),
@@ -649,7 +690,7 @@ class Settings extends Page implements HasForms
                                         Textarea::make('desc_es')->label('Descripción (ES)')->rows(2)->columnSpanFull(),
                                         Textarea::make('desc_en')->label('Descripción (EN)')->rows(2)->columnSpanFull(),
                                         Textarea::make('desc_pt')->label('Descripción (PT)')->rows(2)->columnSpanFull(),
-                                        TextInput::make('price')->label('Precio desde (S/)')->numeric(),
+                                        TextInput::make('price')->label('Precio desde ('.trim(\App\Support\Money::prefix(\App\Support\Money::site())).')')->numeric(),
                                     ])
                                     ->columns(3)
                                     ->collapsible()

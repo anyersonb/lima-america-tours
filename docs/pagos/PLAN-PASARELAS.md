@@ -412,3 +412,53 @@ Hasta tener esas 5 respuestas, PayPal se deja **en pausa del lado del servidor**
 - `app/Services/PaymentService.php` y `app/Services/PayPalService.php`
 - `resources/views/checkout.blade.php` (wizard vivo) y `resources/views/checkout/payment.blade.php` (referencia Culqi huérfana)
 - `routes/web.php`, `app/Http/Requests/ProcessPaymentRequest.php`, `app/Models/Booking.php` y las migraciones de `bookings`
+
+---
+
+### 14. ✅ MONEDA DEFINIDA: USD — PayPal reactivado (2026-07-29)
+
+**Decisión del cliente, confirmada por Anyerson:** el cobro es en **dólares (USD)**. Sustituye a la decisión provisional de §13 (Culqi en PEN, PayPal en pausa).
+
+**Los números NO se convierten:** el cliente confirmó que el precio guardado de cada tour ya está en dólares. El `720` de un tour pasa de "S/ 720" a "$720" — la migración `2026_07_29_190000_set_site_currency_to_usd` cambia **solo la etiqueta** `tours.currency` de PEN a USD y **no toca `price`**. Queda dicho por escrito, porque el efecto práctico es que el sitio cobra ~3.7× lo que cobraba el día anterior: es intencional, no un bug de conversión.
+
+`bookings` **no se reescribe**: cada reserva conserva la moneda con la que se cobró. Reescribir el histórico haría que una reserva mienta sobre lo que pagó el cliente.
+
+#### 14.1 Una sola fuente de verdad para la moneda
+
+El problema de fondo de §13 no era la moneda elegida, sino que la respuesta estaba **copiada como literal `'PEN'` en ~30 sitios** (vistas del carrito y checkout, controller, recursos de Filament, correos, factory). Cambiarla obligaba a cazarlos uno a uno, y dejar la mitad en una moneda y la mitad en otra es exactamente el bug del sobrecobro.
+
+Ahora hay una sola función: **`App\Support\Money::site()`**, que resuelve
+`Setting('site_currency')` → `config('services.site_currency')` → `'USD'`, validando contra `Money::SUPPORTED`. Todo lo demás la consulta:
+
+| Punto | Antes | Ahora |
+|---|---|---|
+| Precios del carrito / checkout / correos / home / ficha | `'PEN'` literal ×~25 | `Money::site()` |
+| Payload de cobro a Culqi | `'PEN'` | `Money::site()` |
+| Orden de PayPal | `'USD'` hardcodeado | `Money::site()` + validación |
+| `bookings.currency` | `'PEN'` | `Money::site()` |
+| Guarda de carrito | `CartService::isPenOnly()` | `CartService::isSiteCurrencyOnly()` |
+| Prefijos del panel (`S/`) | literal | `Money::prefix(Money::site())` |
+| Default de `TourFactory` | `'PEN'` | `Money::site()` |
+
+**Editable por el cliente:** Configuración → Pagos → "Moneda del sitio". Cambiarla NO re-tarifa: sigue siendo la misma cifra con otro símbolo, y el helper del campo lo advierte.
+
+#### 14.2 PayPal reactivado, con la regla de §13 convertida en código
+
+Las rutas `checkout.paypal.create` / `.capture` vuelven a apuntar al controller (eran closures `abort(404)`), ahora **solo POST** y con `throttle:checkout`. Lo que antes garantizaba la ruta muerta lo garantiza ahora el código:
+
+- La orden se crea con `Money::site()`, no con `'USD'` escrito a mano.
+- Si la moneda del sitio no está en `PayPalService::SUPPORTED_CURRENCIES` (PEN no está: PayPal no cobra soles), el endpoint responde 422 y **no manda nada** a PayPal.
+- Si el carrito trae monedas mezcladas, 422 antes de calcular el total.
+- **CSRF vuelve a exigirse** en ambas rutas: estaban en `$except` solo para que un POST diera 404 en vez de 419 mientras eran closures. Exentas y vivas, se podrían disparar desde otro sitio.
+
+`PaymentGuard` sigue siendo el último cerrojo: credenciales LIVE fuera de producción abortan la captura antes de tocar la red (`PaymentGuardCheckoutTest`).
+
+#### 14.3 Credenciales de prueba
+
+Culqi ahora se lee **igual que PayPal**: primero el Setting del panel, luego el `.env`. Antes solo del `.env`, lo que obligaba a un deploy para cargar unas claves de prueba. Campos nuevos en Configuración → Pagos: `culqi_env`, `culqi_public_key`, `culqi_secret_key`.
+
+**Pendiente del cliente (bloquea la prueba de cobro real):** claves `pk_test_` / `sk_test_` de la cuenta Culqi y el Client ID + Secret de la app **sandbox** de PayPal. Sin ellas el cableado está completo pero **no hay cobro de prueba verificado**.
+
+#### 14.4 Lo que NO incluye este lote
+
+El checkout público sigue siendo **"sin pago en línea"**: `payment_timing` está fijo en `later` y la vista no pinta formulario de tarjeta ni botón de PayPal (el flujo vivo crea la reserva y confirma por WhatsApp/correo). El cobro en línea existe entero del lado del servidor y probado, pero **falta el UI**: botón de PayPal con el SDK, formulario de tarjeta Culqi v4 (hay una implementación de referencia en `resources/views/checkout/payment.blade.php`) y el `frame-src`/`script-src` del CSP para ambos. Es el siguiente lote, y necesita las claves de §14.3 para poder validarse.

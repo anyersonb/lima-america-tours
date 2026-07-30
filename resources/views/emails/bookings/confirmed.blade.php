@@ -8,7 +8,7 @@
     $first      = $bookings->first();
     $payingNow  = ($first?->payment_status === 'paid');
     $grandTotal = (float) $bookings->sum('total_price');
-    $currency   = $first?->currency ?? 'PEN';
+    $currency   = $first?->currency ?? \App\Support\Money::site();
     $cur        = \App\Support\Money::prefix($currency);
     // Sin fallback a otro teléfono/WhatsApp: ver App\Models\Setting::contactPhone()
     // / whatsappNumber(). Sin dato, el footer omite el teléfono y el botón de

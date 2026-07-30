@@ -8,7 +8,7 @@
     $items    = collect($cart->items ?? []);
     // El negocio es 100% PEN; el snapshot del carrito abandonado no guarda
     // moneda por ítem, así que se usa el prefijo de soles directamente.
-    $currency = \App\Support\Money::prefix('PEN');
+    $currency = \App\Support\Money::prefix(\App\Support\Money::site());
     $total    = (float) $cart->total;
 
     // Sin fallback a otro teléfono: ver App\Models\Setting::contactPhone().

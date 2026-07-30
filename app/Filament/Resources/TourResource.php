@@ -88,10 +88,11 @@ class TourResource extends Resource
                                                 ->label('Precio antes (oferta)')
                                                 ->helperText('Escribe aquí el precio original (más alto que el actual) para activar la OFERTA ESPECIAL con su % de descuento automático. Déjalo VACÍO si el tour NO tiene oferta.'),
                                             // CRO #2: era un TextInput libre — un editor podía escribir
-                                            // cualquier cosa (o "USD" por error) y el panel lo aceptaba
-                                            // sin avisar, aunque el negocio cobra 100% en soles (PEN)
-                                            // vía Culqi. Un Select con opciones fijas hace el error
-                                            // imposible de cometer por tipeo.
+                                            // cualquier cosa y el panel lo aceptaba sin avisar. Un Select
+                                            // con opciones fijas hace el error imposible por tipeo.
+                                            // El valor por defecto es la moneda del sitio (Configuración
+                                            // → Pagos, hoy USD): un tour etiquetado en OTRA moneda no se
+                                            // puede cobrar en línea, el checkout lo aborta a propósito.
                                             Forms\Components\Select::make('currency')
                                                 ->required()
                                                 ->options([
@@ -102,7 +103,7 @@ class TourResource extends Resource
                                                 // server-side on its own — the `in:` rule is what actually
                                                 // blocks it (the UI dropdown only restricts real browser use).
                                                 ->rules(['in:PEN,USD'])
-                                                ->default('PEN')
+                                                ->default(\App\Support\Money::site())
                                                 ->native(false)
                                                 ->label('Moneda'),
                                         ]),
@@ -134,7 +135,7 @@ class TourResource extends Resource
                                                 // Misma fórmula que usan la tabla y (a futuro) el front:
                                                 // Tour::offerDiscountPercent() es la única fuente de verdad.
                                                 $discount = Tour::offerDiscountPercent($price, $priceBefore);
-                                                $currency = (string) ($get('currency') ?: 'PEN');
+                                                $currency = (string) ($get('currency') ?: \App\Support\Money::site());
                                                 $before = Money::format($priceBefore, $currency, 2);
                                                 $now = Money::format($price, $currency, 2);
 
@@ -355,7 +356,7 @@ class TourResource extends Resource
         return Forms\Components\TextInput::make($name)
             ->type('text')
             ->inputMode('decimal')
-            ->prefix('S/')
+            ->prefix(\App\Support\Money::prefix(\App\Support\Money::site()))
             ->rule(function () use ($name) {
                 return function (string $attribute, $value, \Closure $fail) use ($name) {
                     if ($value === null || $value === '') {
@@ -452,7 +453,7 @@ class TourResource extends Resource
                     ->badge()->color('gray')
                     ->label('Categoría'),
                 Tables\Columns\TextColumn::make('price')
-                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, 'PEN', 2))->sortable()
+                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, \App\Support\Money::site(), 2))->sortable()
                     ->label('Precio'),
                 Tables\Columns\IconColumn::make('has_offer')
                     ->label('Oferta')

@@ -75,7 +75,7 @@ class AbandonedCartResource extends Resource
                     ->badge(),
                 Tables\Columns\TextColumn::make('total')
                     ->label('Total')
-                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, 'PEN', 2))
+                    ->formatStateUsing(fn ($state) => $state === null ? null : \App\Support\Money::format((float) $state, \App\Support\Money::site(), 2))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
