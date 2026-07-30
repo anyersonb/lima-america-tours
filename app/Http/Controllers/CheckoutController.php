@@ -445,9 +445,10 @@ class CheckoutController extends Controller
         // Resolve customer_id once before the map
         $customerId = $this->resolveCustomerId($customer, $locale);
 
-        // El negocio es 100% PEN. Si el carrito trajera monedas mixtas (fuera
-        // de alcance normal: los 26 tours reales son todos PEN), se registra
-        // un warning y se fuerza PEN de todas formas — nunca queda en USD.
+        // El sitio opera en una sola moneda (Money::site()). Un carrito con
+        // monedas mixtas no debería llegar hasta acá: processPayment lo aborta
+        // antes con isSiteCurrencyOnly(). Esto solo deja rastro en el log por
+        // si algún camino futuro se salta esa guarda — no fuerza nada.
         $cartCurrencies = $items
             ->map(fn (array $item) => $this->resolveItemCurrency($item))
             ->unique();

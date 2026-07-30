@@ -70,7 +70,15 @@
                 $defaultMethod = $culqiEnabled ? 'card' : ($paypalEnabled ? 'paypal' : 'card');
                 $defaultTiming = $onlinePayment ? 'now' : 'later';
             @endphp
-            <div class="space-y-4" x-data="{ paymentTiming: @json($defaultTiming), paymentMethod: @json($defaultMethod) }">
+            {{--
+                Atributo con comillas SIMPLES a propósito: @json() emite el string
+                con comillas dobles ("now"), y dentro de un x-data="..." también
+                delimitado por dobles el atributo se corta en el primer carácter.
+                Alpine no llegaba a inicializar (ReferenceError: paymentTiming is
+                not defined) y TODO el bloque de pago quedaba en display:none —
+                incluido "reservar y pagar luego", que sí funcionaba antes.
+            --}}
+            <div class="space-y-4" x-data='{ paymentTiming: @json($defaultTiming), paymentMethod: @json($defaultMethod) }'>
 
                 {{-- Cancellation policy banner --}}
                 <div class="bg-white rounded-2xl p-5 lg:p-6 shadow-sm flex items-start gap-4 border-l-4 border-state-success">

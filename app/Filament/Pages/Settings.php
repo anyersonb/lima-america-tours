@@ -1158,6 +1158,9 @@ class Settings extends Page implements HasForms
         // estado de FilePond sin resolver ({uuid:{}}) y no guardaba la imagen.
         $data = $this->form->getState();
 
+        // Moneda del sitio: se lee ANTES de guardar para saber si cambió.
+        $currencyBefore = strtoupper((string) Setting::get('site_currency', config('services.site_currency', 'USD')));
+
         foreach ($data as $key => $value) {
             // Serialize Repeater fields as JSON string
             $jsonRepeaterKeys = ['faqs', 'home_destinos', 'home_why_items', 'home_tour_type_tabs',
@@ -1177,9 +1180,57 @@ class Settings extends Page implements HasForms
             Setting::set($key, $value);
         }
 
+        $this->realignTourCurrency($currencyBefore, $data['site_currency'] ?? null);
+
         Notification::make()
             ->title('Configuración guardada correctamente')
             ->success()
+            ->send();
+    }
+
+    /**
+     * Cambiar "Moneda del sitio" re-etiqueta los tours que estaban en la moneda
+     * anterior. NO convierte importes.
+     *
+     * Por qué existe esto (hallazgo de QA, 2026-07-29): el Setting era editable
+     * sin nada que lo mantuviera alineado con la columna `tours.currency`.
+     * Poniendo el sitio en soles con los 33 tours etiquetados en dólares, el
+     * front pasaba a mostrar "S/" pero la guarda del checkout
+     * (CartService::isSiteCurrencyOnly) rechazaba TODOS los tours: el cobro en
+     * línea quedaba muerto para el catálogo entero, con un mensaje genérico y
+     * sin nada en pantalla que explicara por qué. Un clic en un select del
+     * panel no puede apagar el checkout en silencio.
+     *
+     * Solo re-etiqueta los tours que tenían exactamente la moneda anterior: uno
+     * cargado a mano en una tercera moneda se queda como está y el checkout lo
+     * sigue rechazando, que es lo correcto.
+     *
+     * El aviso dice explícitamente que los precios NO se convierten, porque es
+     * la parte que se malinterpreta: 720 pasa de $720 a S/ 720, no a S/ 2,700.
+     */
+    private function realignTourCurrency(string $before, mixed $after): void
+    {
+        $after = strtoupper(trim((string) $after));
+
+        if ($after === '' || $after === $before) {
+            return;
+        }
+
+        $retagged = \App\Models\Tour::where('currency', $before)->update(['currency' => $after]);
+
+        \Illuminate\Support\Facades\Log::info('settings.site_currency.changed', [
+            'from' => $before,
+            'to' => $after,
+            'tours_retagged' => $retagged,
+        ]);
+
+        Notification::make()
+            ->title("Moneda cambiada de {$before} a {$after}")
+            ->body($retagged === 0
+                ? 'Ningún tour estaba en la moneda anterior, así que no se re-etiquetó nada. Revisa la moneda de cada tour si el checkout rechaza reservas.'
+                : "Se re-etiquetaron {$retagged} tour(s) a {$after}. OJO: los precios NO se convirtieron — el número es el mismo, solo cambió la moneda (ej. 720 pasa de \$720 a S/ 720).")
+            ->warning()
+            ->persistent()
             ->send();
     }
 

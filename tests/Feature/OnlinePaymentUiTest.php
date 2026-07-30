@@ -146,4 +146,40 @@ class OnlinePaymentUiTest extends TestCase
             ->assertOk()
             ->assertSee('value="now"', false);
     }
+
+    /**
+     * El `x-data` de Alpine tiene que quedar bien formado en el HTML.
+     *
+     * Regresión real (CRO, 2026-07-29): al hacer dinámico el estado inicial se
+     * escribió `x-data="{ paymentTiming: @json(...) }"`. @json() emite el
+     * string con comillas DOBLES, y dentro de un atributo también delimitado
+     * por dobles el HTML se corta en el primer carácter: Alpine no inicializaba
+     * (ReferenceError) y TODO el bloque de pago quedaba en display:none,
+     * incluido "reservar y pagar luego", que sí funcionaba antes. Los tests
+     * pasaban igual porque miraban los `value="now"` de los radios, que están
+     * en el HTML aunque Alpine esté muerto.
+     *
+     * Se comprueba el HTML servido, que es lo único que ve el navegador.
+     */
+    public function test_alpine_state_attribute_is_not_broken_by_quotes(): void
+    {
+        $this->fillCart();
+        $this->enableCulqi();
+
+        $html = $this->get(route('checkout.pay', ['locale' => self::LOCALE]))->assertOk()->getContent();
+
+        // La forma rota: comilla doble abriendo el atributo Y en el valor.
+        $this->assertStringNotContainsString(
+            'x-data="{ paymentTiming: "',
+            $html,
+            'El atributo x-data se corta en la primera comilla doble: Alpine no inicializa y el bloque de pago desaparece.'
+        );
+
+        // La forma correcta: atributo con comillas simples.
+        $this->assertMatchesRegularExpression(
+            "/x-data='\\{ paymentTiming: \"(now|later)\", paymentMethod: \"(card|paypal)\" \\}'/",
+            $html,
+            'El estado inicial de Alpine no está en el HTML con el formato esperado.'
+        );
+    }
 }

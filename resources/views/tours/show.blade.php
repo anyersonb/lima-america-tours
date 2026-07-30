@@ -116,7 +116,7 @@
         'offers' => array_filter([
             '@type'         => 'Offer',
             'price'         => (float) $tour->price,
-            'priceCurrency' => $tour->currency ?: \App\Support\Money::site(),
+            'priceCurrency' => \App\Support\Money::site(),
             'availability'  => 'https://schema.org/InStock',
             'url'           => $canonicalUrl,
         ]),
@@ -348,12 +348,12 @@
                     <div class="lat-book-head">
                         @if ($hasOffer)
                             <div class="lat-book-head__offer">
-                                <span class="lat-book-head__before">{{ \App\Support\Money::format($offerBefore, $tour->currency) }}</span>
+                                <span class="lat-book-head__before">{{ \App\Support\Money::format($offerBefore, \App\Support\Money::site()) }}</span>
                                 <span class="lat-book-head__pct">-{{ $offerPct }}%</span>
                             </div>
                         @endif
                         <small>{{ $L('Desde', 'From', 'Desde') }}</small>
-                        <div class="lat-amt">{{ \App\Support\Money::format($tour->price, $tour->currency) }}<span> {{ $L('por persona', 'per person', 'por pessoa') }}</span></div>
+                        <div class="lat-amt">{{ \App\Support\Money::format($tour->price, \App\Support\Money::site()) }}<span> {{ $L('por persona', 'per person', 'por pessoa') }}</span></div>
                     </div>
                     <form class="lat-book-body" method="POST" action="{{ route('cart.store', ['locale' => $locale]) }}">
                         @csrf
@@ -396,7 +396,7 @@
                         </div>
                         <div class="lat-book-total">
                             <span class="lat-lbl">{{ $L('Precio total', 'Total price', 'Preço total') }}</span>
-                            <span class="lat-tot" id="bkTotal">{{ \App\Support\Money::format((float) $tour->price * 2, $tour->currency, 2) }}</span>
+                            <span class="lat-tot" id="bkTotal">{{ \App\Support\Money::format((float) $tour->price * 2, \App\Support\Money::site(), 2) }}</span>
                         </div>
                         @if (! is_null($tour->booking_advance_hours))
                             <div class="lat-book-advance">
@@ -420,7 +420,7 @@
                                 <div class="lat-mini-tour__img"><img src="{{ $rel->cover_url }}" alt="{{ $rel->title }}" loading="lazy" width="74" height="60"></div>
                                 <div>
                                     <h5 class="clamp-2">{{ $rel->title }}</h5>
-                                    <div class="lat-mprice">{{ \App\Support\Money::format($rel->price, $rel->currency) }}</div>
+                                    <div class="lat-mprice">{{ \App\Support\Money::format($rel->price, \App\Support\Money::site()) }}</div>
                                     <span class="lat-stars">
                                         <span class="lat-stars__s"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6L12 2z"/></svg></span>
                                         <span class="lat-stars__rate">{{ number_format((float) $rel->rating, 1) }}</span>
@@ -491,7 +491,7 @@
     var total = document.getElementById('bkTotal');
     if (pax && total) {
         var price = parseFloat(pax.getAttribute('data-price')) || 0;
-        var currency = @json(\App\Support\Money::prefix($tour->currency));
+        var currency = @json(\App\Support\Money::prefix(\App\Support\Money::site()));
         var update = function () {
             total.textContent = currency + (price * (parseInt(pax.value, 10) || 1)).toFixed(2);
         };

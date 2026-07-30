@@ -143,11 +143,11 @@
                                     <span class="lat-amt">{{ $L('Gratis', 'Free', 'Gratuito') }}</span>
                                 @else
                                     @if ($pct)
-                                        <span class="lat-tcard__before">{{ \App\Support\Money::format($tour->price_before, $tour->currency) }}</span>
+                                        <span class="lat-tcard__before">{{ \App\Support\Money::format($tour->price_before, \App\Support\Money::site()) }}</span>
                                     @else
                                         <small>{{ $L('Desde', 'From', 'Desde') }}</small>
                                     @endif
-                                    <span class="lat-amt">{{ \App\Support\Money::format($tour->price, $tour->currency) }}</span>
+                                    <span class="lat-amt">{{ \App\Support\Money::format($tour->price, \App\Support\Money::site()) }}</span>
                                     <span class="lat-per">{{ $L('por persona', 'per person', 'por pessoa') }}</span>
                                 @endif
                             </div>
