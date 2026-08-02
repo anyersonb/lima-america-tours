@@ -42,7 +42,7 @@ class HeroCmsIconsAndLabelsTest extends TestCase
         Setting::set('home_stat_3_value', '100%');
 
         $html = $this->get('/es')->assertOk()->getContent();
-        $this->assertStringContainsString('data-hero-icon="shield"', $html, 'El ícono por defecto del slot no llegó al hero.');
+        $this->assertStringContainsString('data-hero-icon="map"', $html, 'El ícono por defecto del slot no llegó al hero.');
 
         Setting::set('home_stat_3_icon', 'star');
 

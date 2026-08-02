@@ -73,7 +73,11 @@ class HomeStatsResolver
     private const DEFAULTS = [
         1 => ['source' => 'rating_real', 'value' => '', 'icon' => 'star', 'label' => ['es' => 'Valoración de viajeros', 'en' => 'Traveler rating', 'pt' => 'Avaliação dos viajantes']],
         2 => ['source' => 'reviews_count', 'value' => '', 'icon' => 'group', 'label' => ['es' => 'Opiniones de viajeros', 'en' => 'Traveler reviews', 'pt' => 'Avaliações de viajantes']],
-        3 => ['source' => 'tours_count', 'value' => '', 'icon' => 'shield', 'label' => ['es' => 'Tours disponibles', 'en' => 'Tours available', 'pt' => 'Tours disponíveis']],
+        // Ícono `map`, no el `shield` que heredaba del slot viejo ("Cancelación
+        // gratuita"): un escudo junto a "Tours disponibles" no dice nada
+        // (observación Bajo del CRO en la reverificación). Sigue siendo editable
+        // desde el panel.
+        3 => ['source' => 'tours_count', 'value' => '', 'icon' => 'map', 'label' => ['es' => 'Tours disponibles', 'en' => 'Tours available', 'pt' => 'Tours disponíveis']],
         4 => ['source' => 'years_active', 'value' => '', 'icon' => 'award', 'label' => ['es' => 'Años de experiencia', 'en' => 'Years of experience', 'pt' => 'Anos de experiência']],
     ];
 
