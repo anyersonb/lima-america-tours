@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Testimonial;
 use Illuminate\Support\Collection;
 
 /**
@@ -30,13 +31,13 @@ class ReviewAggregator
         }
 
         return collect($this->googleReviews->getReviews($locale))->map(fn (array $r) => (object) [
-            'name'        => $r['author'],
-            'rating'      => $r['rating'],
-            'quote'       => $r['text'],
-            'source'      => 'google',
-            'avatar'      => $r['profile_photo'],
-            'country'     => null,
-            'tour'        => null,
+            'name' => $r['author'],
+            'rating' => $r['rating'],
+            'quote' => $r['text'],
+            'source' => 'google',
+            'avatar' => $r['profile_photo'],
+            'country' => null,
+            'tour' => null,
             'is_featured' => false,
         ]);
     }
@@ -51,13 +52,13 @@ class ReviewAggregator
         }
 
         return collect($this->tripadvisorReviews->getReviews())->map(fn (array $r) => (object) [
-            'name'        => $r['author'],
-            'rating'      => $r['rating'],
-            'quote'       => $r['text'],
-            'source'      => 'tripadvisor',
-            'avatar'      => $r['profile_photo'] ?? null,
-            'country'     => null,
-            'tour'        => null,
+            'name' => $r['author'],
+            'rating' => $r['rating'],
+            'quote' => $r['text'],
+            'source' => 'tripadvisor',
+            'avatar' => $r['profile_photo'] ?? null,
+            'country' => null,
+            'tour' => null,
             'is_featured' => false,
         ]);
     }
@@ -75,7 +76,7 @@ class ReviewAggregator
      */
     public function merge(Collection $cms, string $locale): Collection
     {
-        $googleApi      = $this->googleApiReviews($locale);
+        $googleApi = $this->googleApiReviews($locale);
         $tripadvisorApi = $this->tripadvisorApiReviews();
 
         $dropSources = [];
@@ -105,10 +106,10 @@ class ReviewAggregator
         $s = strtolower(trim((string) $source));
 
         return match (true) {
-            str_contains($s, 'google')      => 'google',
+            str_contains($s, 'google') => 'google',
             str_contains($s, 'tripadvisor') => 'tripadvisor',
-            str_contains($s, 'trivago')     => 'trivago',
-            default                         => 'web',
+            str_contains($s, 'trivago') => 'trivago',
+            default => 'web',
         };
     }
 
@@ -116,6 +117,36 @@ class ReviewAggregator
     public function isGoogleEnabled(): bool
     {
         return $this->googleReviews->isEnabled();
+    }
+
+    /**
+     * Rating promedio + conteo total de reseñas del SITIO ENTERO: la misma
+     * mezcla (API + CMS, deduplicada por `merge()`) que ya usan /resenas
+     * (ReviewController) y el home. Cualquier consumidor nuevo que necesite
+     * "el rating real" o "cuántas reseñas hay" debe pasar por aquí — nunca
+     * recalcular aparte, porque terminaría mostrando un número distinto al
+     * resto del sitio (ver TAREA 1 del lote 2026-08: barra de stats del hero).
+     *
+     * `rating` es null cuando no hay ninguna reseña (nunca se inventa un
+     * "5.0 por defecto" aquí; ese fallback es decisión de cada vista/consumidor).
+     *
+     * @return array{rating: float|null, count: int}
+     */
+    public function overallStats(string $locale): array
+    {
+        $cms = Testimonial::active()->get();
+        $merged = $this->merge($cms, $locale);
+        $count = $merged->count();
+
+        if ($count === 0) {
+            return ['rating' => null, 'count' => 0];
+        }
+
+        $rating = round((float) $merged->avg(
+            fn ($t) => is_object($t) ? ($t->rating ?? 5) : ($t['rating'] ?? 5)
+        ), 1);
+
+        return ['rating' => $rating, 'count' => $count];
     }
 
     /**

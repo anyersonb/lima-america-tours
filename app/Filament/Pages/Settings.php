@@ -13,6 +13,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 
@@ -526,33 +527,124 @@ class Settings extends Page implements HasForms
                                     ->columnSpanFull(),
 
                                 \Filament\Forms\Components\Fieldset::make('Stat 1')->columns(3)->schema([
+                                    Select::make('home_stat_1_source')
+                                        ->label('Fuente del valor')
+                                        ->options(self::STAT_SOURCE_OPTIONS)
+                                        ->default('manual')
+                                        ->native(false)
+                                        ->live()
+                                        ->columnSpanFull(),
                                     Select::make('home_stat_1_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Estrella (por defecto)')->native(false),
-                                    TextInput::make('home_stat_1_value')->label('Valor')->placeholder('4.9')->columnSpan(2),
+                                    TextInput::make('home_stat_1_value')
+                                        ->label('Valor (manual)')
+                                        ->placeholder('4.9')
+                                        ->columnSpan(2)
+                                        ->disabled(fn (Get $get): bool => ($get('home_stat_1_source') ?: 'manual') !== 'manual')
+                                        ->dehydrated(true)
+                                        ->helperText(fn (Get $get): ?string => ($get('home_stat_1_source') ?: 'manual') !== 'manual'
+                                            ? '⚠️ Ignorado: la fuente elegida arriba calcula el valor automáticamente.'
+                                            : null),
                                     TextInput::make('home_stat_1_label_es')->label('Etiqueta (ES)')->placeholder('Valoración de viajeros'),
                                     TextInput::make('home_stat_1_label_en')->label('Etiqueta (EN)')->placeholder('Traveler rating'),
                                     TextInput::make('home_stat_1_label_pt')->label('Etiqueta (PT)')->placeholder('Avaliação dos viajantes'),
                                 ]),
                                 \Filament\Forms\Components\Fieldset::make('Stat 2')->columns(3)->schema([
+                                    Select::make('home_stat_2_source')
+                                        ->label('Fuente del valor')
+                                        ->options(self::STAT_SOURCE_OPTIONS)
+                                        ->default('manual')
+                                        ->native(false)
+                                        ->live()
+                                        ->columnSpanFull(),
                                     Select::make('home_stat_2_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Personas (por defecto)')->native(false),
-                                    TextInput::make('home_stat_2_value')->label('Valor')->placeholder('50K+')->columnSpan(2),
+                                    TextInput::make('home_stat_2_value')
+                                        ->label('Valor (manual)')
+                                        ->placeholder('50K+')
+                                        ->columnSpan(2)
+                                        ->disabled(fn (Get $get): bool => ($get('home_stat_2_source') ?: 'manual') !== 'manual')
+                                        ->dehydrated(true)
+                                        ->helperText(fn (Get $get): ?string => ($get('home_stat_2_source') ?: 'manual') !== 'manual'
+                                            ? '⚠️ Ignorado: la fuente elegida arriba calcula el valor automáticamente.'
+                                            : null),
                                     TextInput::make('home_stat_2_label_es')->label('Etiqueta (ES)')->placeholder('Viajeros felices'),
                                     TextInput::make('home_stat_2_label_en')->label('Etiqueta (EN)')->placeholder('Happy travelers'),
                                     TextInput::make('home_stat_2_label_pt')->label('Etiqueta (PT)')->placeholder('Viajantes felizes'),
                                 ]),
                                 \Filament\Forms\Components\Fieldset::make('Stat 3')->columns(3)->schema([
+                                    Select::make('home_stat_3_source')
+                                        ->label('Fuente del valor')
+                                        ->options(self::STAT_SOURCE_OPTIONS)
+                                        ->default('manual')
+                                        ->native(false)
+                                        ->live()
+                                        ->columnSpanFull(),
                                     Select::make('home_stat_3_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Escudo (por defecto)')->native(false),
-                                    TextInput::make('home_stat_3_value')->label('Valor')->placeholder('100%')->columnSpan(2),
+                                    TextInput::make('home_stat_3_value')
+                                        ->label('Valor (manual)')
+                                        ->placeholder('100%')
+                                        ->columnSpan(2)
+                                        ->disabled(fn (Get $get): bool => ($get('home_stat_3_source') ?: 'manual') !== 'manual')
+                                        ->dehydrated(true)
+                                        ->helperText(fn (Get $get): ?string => ($get('home_stat_3_source') ?: 'manual') !== 'manual'
+                                            ? '⚠️ Ignorado: la fuente elegida arriba calcula el valor automáticamente.'
+                                            : null),
                                     TextInput::make('home_stat_3_label_es')->label('Etiqueta (ES)')->placeholder('Cancelación gratuita'),
                                     TextInput::make('home_stat_3_label_en')->label('Etiqueta (EN)')->placeholder('Free cancellation'),
                                     TextInput::make('home_stat_3_label_pt')->label('Etiqueta (PT)')->placeholder('Cancelamento gratuito'),
                                 ]),
                                 \Filament\Forms\Components\Fieldset::make('Stat 4')->columns(3)->schema([
+                                    Select::make('home_stat_4_source')
+                                        ->label('Fuente del valor')
+                                        ->options(self::STAT_SOURCE_OPTIONS)
+                                        ->default('manual')
+                                        ->native(false)
+                                        ->live()
+                                        ->columnSpanFull(),
                                     Select::make('home_stat_4_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Medalla (por defecto)')->native(false),
-                                    TextInput::make('home_stat_4_value')->label('Valor')->placeholder('10+')->columnSpan(2),
+                                    TextInput::make('home_stat_4_value')
+                                        ->label('Valor (manual)')
+                                        ->placeholder('10+')
+                                        ->columnSpan(2)
+                                        ->disabled(fn (Get $get): bool => ($get('home_stat_4_source') ?: 'manual') !== 'manual')
+                                        ->dehydrated(true)
+                                        ->helperText(fn (Get $get): ?string => ($get('home_stat_4_source') ?: 'manual') !== 'manual'
+                                            ? '⚠️ Ignorado: la fuente elegida arriba calcula el valor automáticamente.'
+                                            : null),
                                     TextInput::make('home_stat_4_label_es')->label('Etiqueta (ES)')->placeholder('Años de experiencia'),
                                     TextInput::make('home_stat_4_label_en')->label('Etiqueta (EN)')->placeholder('Years of experience'),
                                     TextInput::make('home_stat_4_label_pt')->label('Etiqueta (PT)')->placeholder('Anos de experiência'),
                                 ]),
+                                TextInput::make('company_started_year')
+                                    ->label('Año de inicio de operaciones')
+                                    ->numeric()
+                                    ->placeholder('Ej: 2016')
+                                    ->helperText('Usado por la fuente "Años de operación" de arriba: calcula los años activos como (año actual − este año). Vacío = ese slot se oculta. No pongas un año que no puedas confirmar con el cliente.')
+                                    ->columnSpanFull(),
+
+                                \Filament\Forms\Components\Fieldset::make('Reseñas externas verificadas (Google/Tripadvisor)')
+                                    ->columns(3)
+                                    ->schema([
+                                        TextInput::make('reviews_external_rating')
+                                            ->label('Rating externo')
+                                            ->numeric()
+                                            ->step(0.1)
+                                            ->placeholder('5.0')
+                                            ->helperText('Ej: el snapshot público de Google+Tripadvisor de la ficha del negocio.'),
+                                        TextInput::make('reviews_external_count')
+                                            ->label('Cantidad de opiniones')
+                                            ->numeric()
+                                            ->placeholder('255'),
+                                        TextInput::make('reviews_external_url')
+                                            ->label('Enlace a la ficha real')
+                                            ->url()
+                                            ->placeholder('https://www.google.com/maps/place/...')
+                                            ->helperText('Obligatorio en la práctica: sin enlace verificable, el número es indistinguible de uno inventado.')
+                                            ->columnSpanFull(),
+                                        \Filament\Forms\Components\Placeholder::make('reviews_external_note')
+                                            ->label('')
+                                            ->content('Alimenta la fuente "Verificado: rating externo" de arriba. Se carga a mano mientras el sitio no tenga una integración propia con las APIs de reseñas.')
+                                            ->columnSpanFull(),
+                                    ]),
                             ]),
 
                         // ── Stats legados: RETIRADOS 2026-08-01 ───────────────
@@ -1265,6 +1357,20 @@ class Settings extends Page implements HasForms
             ])
             ->statePath('data');
     }
+
+    /**
+     * Opciones del selector "Fuente del valor" de cada slot de la barra de
+     * estadísticas. Deben coincidir exactamente con
+     * App\Services\HomeStatsResolver::SOURCES.
+     */
+    private const STAT_SOURCE_OPTIONS = [
+        'manual' => 'Manual (texto libre)',
+        'rating_real' => 'Calculado: rating real de las reseñas (esta base de datos)',
+        'reviews_count' => 'Calculado: cantidad de reseñas (esta base de datos)',
+        'rating_external' => 'Verificado: rating externo (Google/Tripadvisor, cargado abajo)',
+        'tours_count' => 'Calculado: tours publicados',
+        'years_active' => 'Calculado: años de operación',
+    ];
 
     /** Keys whose values are stored as boolean type in settings. */
     private const BOOLEAN_KEYS = [

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Guide;
 use App\Models\Offer;
 use App\Models\Region;
 use App\Models\Testimonial;
 use App\Models\Tour;
+use App\Services\HomeStatsResolver;
 use App\Services\ReviewAggregator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
@@ -14,6 +16,7 @@ class HomeController extends Controller
 {
     public function __construct(
         private readonly ReviewAggregator $reviews,
+        private readonly HomeStatsResolver $homeStats,
     ) {}
 
     public function index(): View
@@ -25,6 +28,9 @@ class HomeController extends Controller
         $regions = $this->fetchRegions();
         $testimonials = $this->fetchTestimonials();
         $offers = $this->fetchOffers();
+        $homeStatsResolved = $this->homeStats->resolve(app()->getLocale());
+        $activeGuides = $this->fetchActiveGuides();
+        $realTestimonials = $this->fetchRealTestimonials();
 
         return view('home', compact(
             'featuredTours',
@@ -34,6 +40,9 @@ class HomeController extends Controller
             'regions',
             'testimonials',
             'offers',
+            'homeStatsResolved',
+            'activeGuides',
+            'realTestimonials',
         ));
     }
 
@@ -139,6 +148,52 @@ class HomeController extends Controller
             return $this->reviews->merge($cms, app()->getLocale())->take(9);
         } catch (\Throwable $e) {
             Log::error('HomeController: failed to fetch testimonials', [
+                'exception' => $e->getMessage(),
+            ]);
+
+            return collect();
+        }
+    }
+
+    /**
+     * Guías/equipo activos para la sección "Conoce a tu guía" del home. La
+     * tabla `guides` arranca vacía (nada de sembrar personas de mentira —
+     * ver Guide migration/factory), así que en la mayoría de instalaciones
+     * esto devuelve una colección vacía a propósito: el maquetador debe
+     * ocultar la sección entera cuando `$activeGuides->isEmpty()`.
+     */
+    private function fetchActiveGuides(): \Illuminate\Support\Collection
+    {
+        try {
+            return Guide::active()->ordered()->limit(8)->get();
+        } catch (\Throwable $e) {
+            Log::error('HomeController: failed to fetch guides', [
+                'exception' => $e->getMessage(),
+            ]);
+
+            return collect();
+        }
+    }
+
+    /**
+     * Reseñas reales del CMS (sin mezclar con las de la API de Google/
+     * Tripadvisor, que no traen tour asociado ni una fecha confiable) para
+     * mostrar "Nombre · fecha · tour" en la portada. Ordenadas por
+     * destacadas primero y luego por fecha de reseña más reciente.
+     * Colección vacía si no hay ninguna activa: mismo criterio que los
+     * guías, la vista debe ocultar la sección.
+     */
+    private function fetchRealTestimonials(): \Illuminate\Support\Collection
+    {
+        try {
+            return Testimonial::active()
+                ->with('tour')
+                ->orderByDesc('is_featured')
+                ->orderByDesc('reviewed_at')
+                ->limit(12)
+                ->get();
+        } catch (\Throwable $e) {
+            Log::error('HomeController: failed to fetch real testimonials', [
                 'exception' => $e->getMessage(),
             ]);
 

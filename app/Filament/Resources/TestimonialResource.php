@@ -55,6 +55,12 @@ class TestimonialResource extends Resource
                     ->required()
                     ->numeric()
                     ->default(5.0),
+                Forms\Components\DatePicker::make('reviewed_at')
+                    ->label('Fecha de la reseña')
+                    ->native(false)
+                    ->displayFormat('d/m/Y')
+                    ->default(now())
+                    ->helperText('Se muestra en la portada como "Nombre · fecha · tour". Si se deja vacía, se usa la fecha de hoy.'),
                 Forms\Components\TextInput::make('source')
                     ->label('Origen')
                     ->required()
@@ -100,6 +106,10 @@ class TestimonialResource extends Resource
                 Tables\Columns\TextColumn::make('rating')
                     ->label('★')
                     ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('reviewed_at')
+                    ->label('Fecha reseña')
+                    ->date('d/m/Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('source')
                     ->label('Origen')
