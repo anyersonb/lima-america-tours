@@ -195,26 +195,36 @@
     // del hero (ver nota arriba). 4 slots numéricos, editables por
     // Settings con default en código; ícono del catálogo cerrado
     // App\Support\HeroIcons (mismo criterio que el resto del hero). ──
-    $statsEnabledRaw = \App\Models\Setting::get('home_stats_enabled');
-    $homeStatsEnabled = $statsEnabledRaw === null ? true : filter_var($statsEnabledRaw, FILTER_VALIDATE_BOOLEAN);
+    // 2026-08-02: el valor de cada slot ya NO se lee aquí desde Settings. Lo
+    // resuelve App\Services\HomeStatsResolver (expuesto por HomeController como
+    // $homeStatsResolved), porque cada slot puede venir de un texto libre o
+    // calcularse de la base (promedio y nº de reseñas vía ReviewAggregator —
+    // la misma mezcla que /resenas, para no publicar dos cifras distintas del
+    // mismo dato—, tours publicados, años operando, o un agregado externo con
+    // su enlace comprobable). Mientras esto se leyó de Settings, el selector
+    // "fuente" del panel no cambiaba nada en pantalla.
+    //
+    // Contrato: ['enabled' => bool, 'slots' => [['show','value','label','icon',
+    // 'count','url','source'], ...]]. `show=false` significa OCULTAR el slot:
+    // un dato que no existe no se imprime como "0". `url` solo viene en el
+    // agregado externo y convierte la cifra en enlace a la ficha real.
+    $statsResolved = $homeStatsResolved ?? null;
+    $homeStatsEnabled = $statsResolved['enabled'] ?? true;
 
-    $statDefaults = [
-        1 => ['value' => '4.9', 'label' => $L('Valoración de viajeros', 'Traveler rating', 'Avaliação dos viajantes'), 'icon' => 'star'],
-        2 => ['value' => '50K+', 'label' => $L('Viajeros felices', 'Happy travelers', 'Viajantes felizes'), 'icon' => 'group'],
-        3 => ['value' => '100%', 'label' => $L('Cancelación gratuita', 'Free cancellation', 'Cancelamento gratuito'), 'icon' => 'shield'],
-        4 => ['value' => '10+', 'label' => $L('Años de experiencia', 'Years of experience', 'Anos de experiência'), 'icon' => 'award'],
-    ];
-    $homeStats = collect([1, 2, 3, 4])->map(function (int $n) use ($statDefaults, $locale) {
-        $default = $statDefaults[$n];
-        $chosenIcon = \App\Models\Setting::get("home_stat_{$n}_icon");
-        $iconKey = (is_string($chosenIcon) && \App\Support\HeroIcons::exists($chosenIcon)) ? $chosenIcon : $default['icon'];
+    $homeStats = collect($statsResolved['slots'] ?? [])
+        ->filter(fn (array $slot): bool => ($slot['show'] ?? false) && ($slot['value'] ?? '') !== '')
+        ->map(fn (array $slot): array => [
+            'value' => $slot['value'],
+            'label' => $slot['label'],
+            'icon'  => \App\Support\HeroIcons::svg($slot['icon'] ?? 'star'),
+            'url'   => $slot['url'] ?? null,
+        ])
+        ->values();
 
-        return [
-            'value' => \App\Models\Setting::get("home_stat_{$n}_value") ?: $default['value'],
-            'label' => \App\Models\Setting::get("home_stat_{$n}_label_{$locale}") ?: $default['label'],
-            'icon'  => \App\Support\HeroIcons::svg($iconKey),
-        ];
-    });
+    // Si ningún slot tiene dato que mostrar, la barra entera sobra.
+    if ($homeStats->isEmpty()) {
+        $homeStatsEnabled = false;
+    }
 
     // ── Newsletter oscuro con foto (A5), antes del footer. Reutiliza el
     // MISMO endpoint/campos que el newsletter del footer
@@ -500,11 +510,24 @@
              Se oculta entera si home_stats_enabled es explícitamente falso. ── --}}
         @if ($homeStatsEnabled)
             <div class="lat-wrap lat-hero__stats-wrap">
-                <div class="lat-hero-stats">
+                {{-- --lat-stats-n: número de tarjetas con dato real. La barra
+                     puede traer menos de 4 porque el resolvedor oculta los slots
+                     sin dato; sin esto el grid dejaba columnas vacías. --}}
+                <div class="lat-hero-stats" style="--lat-stats-n:{{ $homeStats->count() }}">
                     @foreach ($homeStats as $stat)
                         <div class="lat-htc">
                             <span class="lat-htc__ic">{!! $stat['icon'] !!}</span>
-                            <span class="lat-hstat__value">{{ $stat['value'] }}</span>
+                            {{-- Cuando la cifra viene de un agregado externo (Google /
+                                 TripAdvisor) se pinta como enlace a la ficha pública: el
+                                 dato comprobable es lo que la separa de un número
+                                 inventado. Sin URL, el marcado es exactamente el de
+                                 antes. --}}
+                            @if (! empty($stat['url']))
+                                <a class="lat-hstat__value lat-hstat__value--src" href="{{ $stat['url'] }}"
+                                   target="_blank" rel="noopener nofollow">{{ $stat['value'] }}</a>
+                            @else
+                                <span class="lat-hstat__value">{{ $stat['value'] }}</span>
+                            @endif
                             <span class="lat-htc__label">{{ $stat['label'] }}</span>
                         </div>
                     @endforeach

@@ -1368,6 +1368,7 @@ class Settings extends Page implements HasForms
         'rating_real' => 'Calculado: rating real de las reseñas (esta base de datos)',
         'reviews_count' => 'Calculado: cantidad de reseñas (esta base de datos)',
         'rating_external' => 'Verificado: rating externo (Google/Tripadvisor, cargado abajo)',
+        'reviews_external_count' => 'Verificado: cantidad de opiniones externas (Google/Tripadvisor, cargada abajo)',
         'tours_count' => 'Calculado: tours publicados',
         'years_active' => 'Calculado: años de operación',
     ];

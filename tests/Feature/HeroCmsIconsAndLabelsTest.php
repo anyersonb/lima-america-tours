@@ -28,11 +28,23 @@ class HeroCmsIconsAndLabelsTest extends TestCase
 
     public function test_feature_icons_can_be_switched_from_settings(): void
     {
-        // Por defecto, el slot 2 es el escudo del mockup.
-        $html = $this->get('/es')->assertOk()->getContent();
-        $this->assertStringContainsString('data-hero-icon="shield"', $html);
+        // Este test miraba `home_hero_trust_2_icon`, la clave de los 4 "trust
+        // chips" del hero — que el rediseño de agosto retiró en favor de la
+        // barra de estadísticas. Seguía pasando de casualidad porque el escudo
+        // que buscaba también era el ícono por defecto del slot 3 de esa barra.
+        // Al pasar los slots a fuentes calculadas (2026-08-02), en una base
+        // vacía ese slot se oculta —correctamente, no hay tours publicados— y el
+        // escudo desaparecía. Se reapunta al selector que hoy existe de verdad.
+        //
+        // El slot se fija en `manual` con texto para que tenga algo que mostrar
+        // sin depender de los datos de la base: aquí se prueba el ÍCONO.
+        Setting::set('home_stat_3_source', 'manual');
+        Setting::set('home_stat_3_value', '100%');
 
-        Setting::set('home_hero_trust_2_icon', 'star');
+        $html = $this->get('/es')->assertOk()->getContent();
+        $this->assertStringContainsString('data-hero-icon="shield"', $html, 'El ícono por defecto del slot no llegó al hero.');
+
+        Setting::set('home_stat_3_icon', 'star');
 
         $html = $this->get('/es')->assertOk()->getContent();
         $this->assertStringContainsString('data-hero-icon="star"', $html, 'El ícono elegido en el panel no llegó al hero.');

@@ -34,15 +34,22 @@ class HomeStatsResolverTest extends TestCase
 
     public function test_manual_source_uses_the_free_text_setting_with_a_default_fallback(): void
     {
-        // Sin ningún Setting cargado: cae al default del slot (idéntico al
-        // que tenía el Blade antes de este lote).
+        // 2026-08-02: la fuente por defecto ya NO es `manual` con una cifra
+        // escrita en código (el slot 1 devolvía "4.9" sin que existiera ninguna
+        // reseña). Ahora hay que pedir `manual` explícitamente.
+        Setting::set('home_stat_1_source', 'manual');
+
+        // Manual SIN texto cargado: no hay nada que mostrar y el slot se oculta.
+        // Un hueco es honesto; un número inventado no.
         $slot = $this->resolver()->resolve('es')['slots'][0];
         $this->assertSame('manual', $slot['source']);
-        $this->assertTrue($slot['show']);
-        $this->assertSame('4.9', $slot['value']);
+        $this->assertFalse($slot['show']);
+        $this->assertNull($slot['value']);
 
+        // Con texto cargado, manual lo respeta tal cual.
         Setting::set('home_stat_1_value', '4.95');
         $slot = $this->resolver()->resolve('es')['slots'][0];
+        $this->assertTrue($slot['show']);
         $this->assertSame('4.95', $slot['value']);
     }
 
@@ -189,9 +196,14 @@ class HomeStatsResolverTest extends TestCase
     public function test_an_unknown_source_value_falls_back_to_manual_instead_of_breaking(): void
     {
         Setting::set('home_stat_3_source', 'algo-que-no-existe');
+        Setting::set('home_stat_3_value', '100%');
 
         $slot = $this->resolver()->resolve('es')['slots'][2];
 
+        // Una fuente desconocida degrada a `manual` sin reventar. Con texto
+        // cargado se muestra ese texto; sin él se ocultaría, que también es un
+        // final seguro (2026-08-02: los defaults en código ya no traen cifras
+        // inventadas de las que tirar).
         $this->assertSame('manual', $slot['source']);
         $this->assertTrue($slot['show']);
         $this->assertSame('100%', $slot['value']);

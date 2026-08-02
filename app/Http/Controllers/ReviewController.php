@@ -52,13 +52,21 @@ class ReviewController extends Controller
         }
 
         $totalCount = $testimonials->count();
+        // Sin reseñas NO hay promedio: `rating` viaja null y la vista oculta el
+        // bloque entero. Antes caía a un 5.0 fijo, así que con la tabla vacía
+        // esta página publicaba "5.0/5" pegado a "0 reseñas verificadas" — un
+        // sobresaliente perfecto respaldado por cero datos, en la misma línea.
+        // Es justo la clase de cifra sin respaldo que este trabajo existe para
+        // eliminar (hallazgo Crítico del CRO, 2026-08-02). El hero ya se
+        // portaba bien porque ReviewAggregator::overallStats() devuelve null en
+        // ese caso; el que mentía era este controlador.
         $overall = [
             'count'  => $totalCount,
             'rating' => $totalCount
                 ? round((float) $testimonials->avg(
                     fn ($t) => is_object($t) ? ($t->rating ?? 5) : ($t['rating'] ?? 5)
                 ), 1)
-                : 5.0,
+                : null,
         ];
 
         // Enlaces externos (para "déjanos tu reseña" / "ver todas")

@@ -61,17 +61,21 @@
             {{ $L('Comentarios de nuestros clientes', 'Reviews from our clients', 'Comentários dos nossos clientes') }}
         </h1>
 
-        {{-- Rating global --}}
-        <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
-            <span class="text-orange-400 text-2xl leading-none" aria-hidden="true">
-                @php $full = (int) round($overall['rating']); @endphp
-                {{ str_repeat('★', max(0, min(5, $full))) }}<span class="text-white/30">{{ str_repeat('★', 5 - max(0, min(5, $full))) }}</span>
-            </span>
-            <span class="text-lg font-semibold">{{ number_format($overall['rating'], 1) }}/5</span>
-            <span class="text-white/75 text-sm">
-                {{ $overall['count'] }} {{ $L('reseñas verificadas', 'verified reviews', 'avaliações verificadas') }}
-            </span>
-        </div>
+        {{-- Rating global — solo si hay reseñas de las que promediar. Con la
+             tabla vacía, `rating` llega null y aquí no se pinta nada: mostrar
+             "5.0/5 · 0 reseñas verificadas" era peor que no mostrar nada. --}}
+        @if (! is_null($overall['rating']) && $overall['count'] > 0)
+            <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <span class="text-orange-400 text-2xl leading-none" aria-hidden="true">
+                    @php $full = (int) round($overall['rating']); @endphp
+                    {{ str_repeat('★', max(0, min(5, $full))) }}<span class="text-white/30">{{ str_repeat('★', 5 - max(0, min(5, $full))) }}</span>
+                </span>
+                <span class="text-lg font-semibold">{{ number_format($overall['rating'], 1) }}/5</span>
+                <span class="text-white/75 text-sm">
+                    {{ $overall['count'] }} {{ $L('reseñas verificadas', 'verified reviews', 'avaliações verificadas') }}
+                </span>
+            </div>
+        @endif
     </div>
 </section>
 

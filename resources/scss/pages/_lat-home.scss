@@ -421,7 +421,16 @@
     // 780px, mucho más alta). Se ajustan solo gap/padding/tamaños para que
     // los 4 items sigan legibles y sin scroll horizontal a 390px — medido con
     // el texto real, ver reporte.
-    grid-template-columns: repeat(4, 1fr);
+    // El número de columnas lo manda el número de slots que REALMENTE tienen
+    // dato: HomeStatsResolver oculta los que no lo tienen, así que la barra
+    // puede salir con 1, 2, 3 o 4 tarjetas. Con `repeat(4, 1fr)` fijo, dos
+    // slots ocultos dejaban dos columnas muertas a la derecha y la barra
+    // descentrada (hallazgo Alto del CRO, 2026-08-02) — y ese es el estado MÁS
+    // probable en el arranque real, porque el año de inicio y el agregado
+    // externo dependen de datos que el cliente aún debe confirmar.
+    // `--lat-stats-n` la imprime home.blade.php con el conteo real; el 4 es
+    // solo la red de seguridad si por lo que sea no llega la variable.
+    grid-template-columns: repeat(var(--lat-stats-n, 4), 1fr);
     gap: 14px;
     padding: 22px 20px;
 
@@ -493,6 +502,19 @@
     line-height: 1.1;
 
     @media (max-width: 420px) { font-size: 1.3rem; }
+}
+
+// Variante enlazada: solo cuando la cifra viene de un agregado externo y hay
+// ficha pública a la que apuntar (Google / TripAdvisor). Hereda el mismo
+// aspecto que la versión en <span> para no alterar la barra — lo único que
+// cambia es que se puede pulsar, y el subrayado aparece al pasar el cursor.
+.lat-hstat__value--src {
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover, &:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
+    &:focus-visible { outline: 2px solid $lat-red; outline-offset: 3px; }
 }
 
 // ── Buscador — doble marco: contenedor oscuro grueso + barra clara ──────
