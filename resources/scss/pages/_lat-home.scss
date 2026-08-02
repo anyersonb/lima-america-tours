@@ -194,8 +194,14 @@
     display: block;
     font-family: $lat-font-serif;
     font-weight: 800;
-    line-height: 1.04;
-    font-size: clamp(2.3rem, 6.2vw, 3.9rem);
+    line-height: 1.02;
+    // Recalibrado con la serif real (Fix 1, informe CRO 2026-08-01): los
+    // tamaños viejos (36.8px móvil / 54.6px desktop) eran de Raleway. Hedvig
+    // Letters Serif es un display mucho más grande/contrastado — en el
+    // prototipo (WhatsApp Image 2026-07-31 13.09.04) "Lima América Tours"
+    // ocupa 3 líneas a sangre en móvil. 15vw fuerza ese tamaño y ese wrap sin
+    // hardcodear saltos de línea (el título sigue siendo editable en Settings).
+    font-size: clamp(2.6rem, 15vw, 4.6rem);
     color: #fff;
 
     em { font-style: normal; color: inherit; }
@@ -211,7 +217,7 @@
     font-family: $lat-font-serif;
     font-weight: 700;
     color: #ffb3b8;
-    font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+    font-size: clamp(1.5rem, 7vw, 2rem);
     line-height: 1.3;
     margin: 14px 0 0;
 }
@@ -248,6 +254,21 @@
 // texto: se saca del flujo y se ancla a la foto, centrada verticalmente,
 // para que nunca choque con el H1/párrafo sea cual sea su longitud (copy
 // editable desde Settings, no se puede asumir cuánto ocupa).
+//
+// Fix 7 (informe CRO 2026-08-01) — reintentado tras pasar el H1 a Hedvig
+// Letters Serif (Fix 1): el prototipo (WhatsApp Image 2026-07-31 13.09.04)
+// SÍ flota el badge a la altura del título incluso en 390px. Medido en el
+// navegador con la serif ya aplicada: a 390px el ancho de contenido es
+// 327px y la SOLA palabra "América" (la más corta de las 3 líneas del
+// brand por defecto) mide 225.5px a los 58.5px de font-size que resuelve
+// el clamp en ese ancho. Un badge flotante necesita ≥150px (170px máx-width
+// + gap) para no verse aplastado, lo que deja ≤160px de columna de texto —
+// menos que el ancho de esa única palabra, y el título es un Setting de
+// texto libre (el cliente puede escribir cualquier frase, no solo "Lima
+// América Tours"). Con esta tipografía, flotar el badge en mobile rompe el
+// wrap del H1 con el copy por defecto y con cualquier copy más largo con
+// más razón. Se mantiene en flujo — la serif más grande empeora el
+// problema que ya documentaba la nota anterior, no lo resuelve.
 .lat-hero__years {
     position: relative;
     align-self: flex-start;
@@ -262,9 +283,14 @@
 
     strong {
         display: block;
-        font-family: $lat-font-serif;
-        font-size: clamp(1.7rem, 3vw, 2.3rem);
-        font-weight: 800;
+        // Numeral (no titular): Instrument Serif, igual que el resto de cifras
+        // del sitio (stats, precios) — Fix 2, informe CRO 2026-08-01. Google
+        // Fonts solo sirve esta familia en 400 (ital@0;1, sin eje wght) — un
+        // font-weight distinto de 400 solo dispara negrita sintética del
+        // navegador, que rompe el trazo fino/alto-contraste de la fuente.
+        font-family: $font-price;
+        font-size: clamp(2rem, 9vw, 2.6rem);
+        font-weight: 400;
     }
 
     &-label {
@@ -348,7 +374,7 @@
 
     &__price {
         small { display: block; font-size: .68rem; color: rgba(255, 255, 255, .7); }
-        span { font-family: $lat-font-serif; font-size: 1.3rem; font-weight: 700; color: #fff; line-height: 1; }
+        span { font-family: $font-price; font-size: 1.5rem; font-weight: 400; color: #fff; line-height: 1; }
     }
 }
 
@@ -385,15 +411,24 @@
     border-radius: $lat-r-lg;
     box-shadow: $lat-shadow-lg;
     display: grid;
+    // Fix 4 (informe CRO 2026-08-01): el prototipo mantiene las 4 columnas en
+    // UNA fila también en móvil (antes se forzaba una 2×2 por debajo de
+    // 780px, mucho más alta). Se ajustan solo gap/padding/tamaños para que
+    // los 4 items sigan legibles y sin scroll horizontal a 390px — medido con
+    // el texto real, ver reporte.
     grid-template-columns: repeat(4, 1fr);
     gap: 14px;
     padding: 22px 20px;
 
     @media (max-width: 780px) {
-        grid-template-columns: 1fr 1fr;
-        gap: 18px 12px;
-        padding: 18px 14px;
+        gap: 6px;
+        padding: 16px 8px;
         border-radius: $lat-r-md;
+    }
+
+    @media (max-width: 420px) {
+        gap: 2px;
+        padding: 14px 4px;
     }
 }
 
@@ -404,6 +439,15 @@
     text-align: center;
     gap: 6px;
     min-width: 0;
+    padding: 0 4px;
+
+    // Separadores verticales finos entre stats (Fix 4): antes no existía
+    // ningún border-right, ni en móvil ni en desktop (medido: 0px). El grid
+    // estira cada item a la altura de la fila, así que el borde recorre todo
+    // el alto de la tarjeta, igual que en el prototipo.
+    &:not(:last-child) {
+        border-right: 1px solid $lat-line;
+    }
 
     &__ic {
         width: 42px; height: 42px; border-radius: 50%;
@@ -412,6 +456,11 @@
         margin-bottom: 2px;
 
         svg { width: 18px; height: 18px; }
+
+        @media (max-width: 420px) {
+            width: 30px; height: 30px;
+            svg { width: 14px; height: 14px; }
+        }
     }
 
     &__label {
@@ -419,6 +468,9 @@
         font-weight: 700;
         color: $lat-ink;
         line-height: 1.3;
+
+        @media (max-width: 480px) { font-size: .68rem; }
+        @media (max-width: 420px) { font-size: .6rem; }
     }
 }
 
@@ -426,11 +478,16 @@
 // bloque icono+valor+label; antes solo tenía icono+label (trust chips).
 .lat-hstat__value {
     display: block;
-    font-family: $lat-font-serif;
-    font-weight: 800;
-    font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+    // Instrument Serif (Fix 2): comparado contra el prototipo, las cifras de
+    // esta barra (4.9, 50K+, 100%, 10+) llevan la serif fina de precios/cifras,
+    // no la serif de titulares — 400 es el único peso que sirve Google Fonts.
+    font-family: $font-price;
+    font-weight: 400;
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
     color: $lat-ink;
     line-height: 1.1;
+
+    @media (max-width: 420px) { font-size: 1.3rem; }
 }
 
 // ── Buscador — doble marco: contenedor oscuro grueso + barra clara ──────
@@ -713,7 +770,7 @@
 
     &__price {
         small { display: block; font-size: .72rem; color: $lat-muted; }
-        .lat-amt { font-family: $lat-font-serif; font-size: 1.4rem; font-weight: 700; color: $lat-red; line-height: 1; }
+        .lat-amt { font-family: $font-price; font-size: 1.6rem; font-weight: 400; color: $lat-red; line-height: 1; }
     }
 }
 
@@ -989,10 +1046,33 @@
 // fila de 4 beneficios debajo. ──
 .lat-news {
     position: relative;
+    overflow: hidden;
     background-size: cover;
     background-position: center;
     padding: 64px 0 0;
     color: #fff;
+
+    // Silueta punteada del Perú (Fix 5b, informe CRO 2026-08-01) — mismo
+    // criterio que .lat-gallery__mark: SVG propio, decorativo, opacidad baja,
+    // por detrás del formulario. El punto rojo replica el "pin" del
+    // prototipo (WhatsApp Image 2026-07-31 13.09.05(3)).
+    &__mark {
+        position: absolute;
+        top: 6%;
+        right: 2%;
+        width: clamp(150px, 18vw, 240px);
+        height: auto;
+        color: rgba(255, 255, 255, .8);
+        opacity: .3;
+        z-index: 0;
+        pointer-events: none;
+
+        @media (max-width: 900px) { display: none; }
+    }
+
+    &__mark-pin { fill: $lat-red; }
+
+    &__inner, &__benefits { position: relative; z-index: 1; }
 
     &__inner {
         display: grid;

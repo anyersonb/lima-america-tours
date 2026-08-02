@@ -352,6 +352,19 @@
             'alt' => $slot['alt'][$locale] ?? $slot['alt']['es'],
         ];
     });
+
+    // Subtítulo bajo el H2 de la galería (Fix 6, informe CRO 2026-08-01): el
+    // prototipo (WhatsApp Image 2026-07-31 13.09.05(1)) trae una línea bajo
+    // "Descubre la belleza del Perú" que el sitio no pintaba. No existía
+    // ninguna clave de Settings para esto — se agrega `home_gallery_sub_{locale}`
+    // con el mismo patrón que el resto del home (default en código, editable
+    // sin deploy). NO se tocó app/**: Setting::get() ya es de uso general.
+    $gallerySub = \App\Models\Setting::get('home_gallery_sub_' . $locale)
+        ?: $L(
+            'Experiencias únicas en destinos increíbles que te enamorarán.',
+            'Unique experiences in incredible destinations that will win you over.',
+            'Experiências únicas em destinos incríveis que vão te encantar.'
+        );
 @endphp
 
 {{-- Precarga de la foto del hero (LCP del sitio). Mismo src/srcset/sizes que
@@ -689,10 +702,31 @@
          garantías y antes de "Explora por categoría".
          ============================================================ --}}
     <section class="lat-gallery" aria-labelledby="gallery-title">
+        {{-- Fix 5(a) — textura decorativa "mapamundi punteado" del prototipo
+             (WhatsApp Image 2026-07-31 13.09.05(1)): SVG inline propio (patrón
+             de puntos recortado por una silueta orgánica), sin CDN ni imagen de
+             terceros. Puramente decorativo: aria-hidden, opacidad muy baja,
+             detrás del contenido (z-index 0) y sin tapar texto ni bajar el
+             contraste de nada. --}}
+        <svg class="lat-gallery__mark" aria-hidden="true" viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <pattern id="latGalleryDots" width="11" height="11" patternUnits="userSpaceOnUse">
+                    <circle cx="2" cy="2" r="1.6" fill="currentColor"/>
+                </pattern>
+                <clipPath id="latGalleryBlob">
+                    <path d="M70,45 C130,10 225,15 285,55 C345,95 385,155 365,215 C348,270 295,300 235,322 C170,346 100,335 68,292 C38,252 18,198 30,148 C40,105 22,75 70,45 Z"/>
+                </clipPath>
+            </defs>
+            <g clip-path="url(#latGalleryBlob)">
+                <rect width="420" height="420" fill="url(#latGalleryDots)"/>
+            </g>
+        </svg>
+
         <div class="lat-wrap">
             <div class="lat-sec-head lat-sec-head--home">
                 <span class="lat-eyebrow is-center">{{ $L('Galería', 'Gallery', 'Galeria') }}</span>
                 <h2 id="gallery-title">{{ $L('Descubre la belleza del Perú', 'Discover the beauty of Peru', 'Descubra a beleza do Peru') }}</h2>
+                <p>{{ $gallerySub }}</p>
             </div>
         </div>
 
@@ -793,6 +827,26 @@
     @if ($homeNewsEnabled)
         <section class="lat-news" aria-labelledby="news-title"
                  style="background-image:linear-gradient(rgba(12,10,9,.72), rgba(12,10,9,.88)), url('{{ $newsImgUrl }}');">
+            {{-- Fix 5(b) — silueta punteada del Perú del prototipo (WhatsApp
+                 Image 2026-07-31 13.09.05(3)): mismo criterio que la galería
+                 (SVG inline propio, sin CDN), a la derecha detrás del
+                 formulario. Decorativo: aria-hidden, opacidad baja, no tapa
+                 texto ni controles. --}}
+            <svg class="lat-news__mark" aria-hidden="true" viewBox="0 0 300 420" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <pattern id="latNewsDots" width="10" height="10" patternUnits="userSpaceOnUse">
+                        <circle cx="2" cy="2" r="1.5" fill="currentColor"/>
+                    </pattern>
+                    <clipPath id="latPeruBlob">
+                        <path d="M155,8 C182,8 198,36 191,66 C228,88 248,128 233,166 C258,196 252,236 223,257 C232,296 208,328 179,338 C184,368 158,398 129,393 C101,388 91,359 101,330 C72,320 57,291 67,261 C43,241 38,202 57,177 C48,148 62,113 91,98 C87,63 118,12 155,8 Z"/>
+                    </clipPath>
+                </defs>
+                <g clip-path="url(#latPeruBlob)">
+                    <rect width="300" height="420" fill="url(#latNewsDots)"/>
+                </g>
+                <circle class="lat-news__mark-pin" cx="150" cy="150" r="4.5"/>
+            </svg>
+
             <div class="lat-wrap lat-news__inner">
                 <div class="lat-news__intro">
                     <span class="lat-eyebrow lat-eyebrow--on-dark">{{ $newsEyebrow }}</span>

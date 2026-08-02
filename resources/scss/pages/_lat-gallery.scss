@@ -14,9 +14,28 @@
 @use '../abstracts/variables' as *;
 
 .lat-gallery {
+    position: relative;
     padding: 70px 0;
     background: $lat-ink;
     overflow: hidden;
+
+    // Textura "mapamundi punteado" (Fix 5a, informe CRO 2026-08-01) — puro
+    // adorno detrás del encabezado y la tira de fotos, por eso z-index 0 y
+    // .lat-wrap/&__strip suben a 1. Opacidad muy baja: no compite con nada
+    // de lo que ya cumplía AA encima.
+    &__mark {
+        position: absolute;
+        top: -30px;
+        left: -70px;
+        width: clamp(240px, 34vw, 420px);
+        height: auto;
+        color: $lat-line-strong;
+        opacity: .16;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    > .lat-wrap, &__strip { position: relative; z-index: 1; }
 
     // $lat-muted/$lat-ink (pensados para fondo claro) no llegan a AA sobre
     // $lat-ink: se sobreescribe SOLO dentro de esta sección.

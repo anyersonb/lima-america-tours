@@ -63,7 +63,13 @@ $lat-r-md: 18px;
 $lat-r-lg: 26px;
 $lat-r-pill: 999px;
 
-$lat-font-serif: 'Raleway', system-ui, sans-serif; // Titulares
+// CAUSA RAÍZ (informe CRO 2026-08-01): esta variable se llamaba "serif" pero
+// apuntaba a Raleway (sans) — por eso NINGÚN titular de home/ficha cargaba la
+// serif de marca pese a que $font-display ya la definía correctamente arriba.
+// Se repunta a la MISMA familia que $font-display: el nombre vuelve a ser
+// cierto y las ~18 reglas de _lat-home.scss/_lat-tour.scss que ya usaban
+// $lat-font-serif quedan arregladas de una sola vez, sin tocar cada selector.
+$lat-font-serif: $font-display; // = 'Hedvig Letters Serif', Georgia, serif — Titulares
 $lat-font-sans:  'Roboto', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; // Cuerpo
 
 $lat-wrap: 1480px; // ancho máximo del contenedor
