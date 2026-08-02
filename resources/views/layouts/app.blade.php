@@ -151,7 +151,13 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@300;400;500;600;700&family=Hedvig+Letters+Serif:opsz@12..24&family=Instrument+Serif:ital@0;1&family=Raleway:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap">
+    {{-- Solo las dos familias que usa el sitio en producción (WordPress +
+         Hello Elementor): Raleway en titulares y Open Sans en cuerpo. Antes se
+         pedían CINCO (Albert Sans, Hedvig Letters Serif, Instrument Serif,
+         Raleway, Roboto) — tres de ellas ya no se usan tras alinear la
+         tipografía con producción el 2026-08-01, y cada familia de más es
+         descarga y render-blocking en el LCP. --}}
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Raleway:wght@400;500;600;700;800&display=swap">
 
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">

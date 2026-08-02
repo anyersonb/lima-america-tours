@@ -12,10 +12,16 @@ export default {
     ],
     theme: {
         extend: {
+            // Tipografía alineada con el sitio en producción (2026-08-01):
+            // limaamericatours.com (WordPress + Hello Elementor) usa Raleway en
+            // titulares y Open Sans en cuerpo, sin ninguna serif. Aquí vivía el
+            // default GLOBAL del sitio (`body` y `h1..h6` salen de estas claves,
+            // no del SCSS): mientras esto siguiera en Albert Sans/Hedvig, cambiar
+            // solo las variables SCSS dejaba media web con la tipografía vieja.
             fontFamily: {
-                sans: ['"Albert Sans"', ...defaultTheme.fontFamily.sans],
-                display: ['"Hedvig Letters Serif"', 'serif'],
-                price: ['"Instrument Serif"', 'serif'],
+                sans: ['"Open Sans"', ...defaultTheme.fontFamily.sans],
+                display: ['"Raleway"', ...defaultTheme.fontFamily.sans],
+                price: ['"Raleway"', ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 // "teal" — remapeado a neutros oscuros ("ink") de Lima América.

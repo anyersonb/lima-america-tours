@@ -94,13 +94,19 @@
     }
 }
 
-// Variante para usar sobre fotos oscuras (hero, galería, newsletter): rojo
-// puro mide ~3.2:1 contra un fondo casi negro (insuficiente AA para texto
-// de este tamaño) — #ffb3b8 es el mismo tono ya usado en el proyecto para
-// texto de marca sobre fotografía oscura (.lat-cat__sub b) y mide 10.8:1.
+// Variante para usar sobre fotos oscuras (hero, galería, newsletter).
+// 2026-08-01, pedido del jefe: aquí había un rosa (#ffb3b8) y pidió rojo.
+// El rojo de marca ($lat-red, #cb101e) NO se puede usar sobre foto oscura:
+// mide 3.1–3.4:1 contra los fondos reales de estas secciones, por debajo del
+// 4.5:1 que pide AA — y oscurecer más el scrim lo EMPEORA, porque el rojo de
+// marca es oscuro de por sí; lo único que sube el contraste es aclararlo.
+// #ff1f2d es el rojo más saturado que sí pasa: 5.09:1 sobre el scrim del
+// hero, 4.79:1 sobre el fondo de galería y 4.73:1 sobre el del newsletter
+// (calculado con la fórmula WCAG, no a ojo). Se lee como rojo, no como rosa.
+// Si algún día se acepta bajar de AA, aquí va $lat-red y se documenta.
 .lat-eyebrow--on-dark {
-    color: #ffb3b8;
-    &::before, &::after { background: #ffb3b8; }
+    color: #ff1f2d;
+    &::before, &::after { background: #ff1f2d; }
 }
 
 // ── Hero (rediseño 2026-08: mockup "foto a sangre" — WhatsApp Image
@@ -207,16 +213,15 @@
     em { font-style: normal; color: inherit; }
 }
 
-// $lat-red puro sobre la foto oscurecida mide ~3.2:1 (medido: rgb(203,16,30)
-// contra el degradado del scrim, que ronda rgb(15,12,11) en la zona del
-// texto) — insuficiente para AA en texto de este tamaño. #ffb3b8 es el
-// mismo tono ya usado en el proyecto para texto rojo DE MARCA sobre fotos
-// oscuras (.lat-cat__sub b, pages/_lat-home.scss) — mide 10.8:1 aquí.
+// Mismo criterio que .lat-eyebrow--on-dark (ver el comentario largo arriba):
+// $lat-red puro (rgb(203,16,30)) sobre el scrim del hero (~rgb(15,12,11))
+// mide 3.37:1, insuficiente para AA. #ff1f2d mide 5.09:1 en esta misma zona
+// y sigue leyéndose como rojo, no como rosa.
 .lat-hero__tagline {
     display: block;
     font-family: $lat-font-serif;
     font-weight: 700;
-    color: #ffb3b8;
+    color: #ff1f2d;
     font-size: clamp(1.5rem, 7vw, 2rem);
     line-height: 1.3;
     margin: 14px 0 0;
@@ -361,7 +366,7 @@
 
     &__body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1; color: #fff; }
 
-    &__eyebrow { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #ffb3b8; }
+    &__eyebrow { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #ff1f2d; }
 
     h3 { font-family: $lat-font-sans; font-weight: 700; font-size: 1.05rem; line-height: 1.28; color: #fff; margin: 0; }
 
@@ -873,7 +878,7 @@
         display: flex; align-items: center; gap: 7px;
 
         svg { width: 15px; height: 15px; transition: transform .25s ease; }
-        b { color: #ffb3b8; font-weight: 600; }
+        b { color: #ff1f2d; font-weight: 600; }
     }
 
     &:hover &__sub svg { transform: translateX(4px); }
@@ -1159,7 +1164,7 @@
     &__benefit-ic {
         width: 38px; height: 38px; border-radius: 10px; flex: none;
         background: rgba(203, 16, 30, .22);
-        color: #ffb3b8;
+        color: #ff1f2d;
         display: grid; place-items: center;
 
         svg { width: 18px; height: 18px; }

@@ -13,9 +13,18 @@ $cream-200: #e9e3da;  // = $lat-line (antes cream cálido #ece6e2)
 $state-error: #c81f21;
 $state-success: #145212;
 
-$font-sans: 'Albert Sans', system-ui, sans-serif;        // Cuerpo y botones
-$font-display: 'Hedvig Letters Serif', Georgia, serif;   // Titulares
-$font-price: 'Instrument Serif', Georgia, serif;         // Precios
+// TIPOGRAFÍA — alineada con el sitio en producción (2026-08-01, pedido del
+// jefe). limaamericatours.com corre WordPress con tema Hello Elementor, y su
+// kit declara: primary (titulares) = Raleway, text/accent (cuerpo) = Open Sans.
+// Ninguna serif. El sitio nuevo tenía Hedvig Letters Serif en titulares e
+// Instrument Serif en precios, tomadas de los prototipos: se retiran para que
+// la marca no tenga dos tipografías distintas según qué URL abra el visitante.
+// Si algún día se decide que manda el prototipo y no producción, se revierte
+// cambiando estas tres líneas (y las familias del <link> de Google Fonts en
+// layouts/app.blade.php).
+$font-sans: 'Open Sans', system-ui, sans-serif;          // Cuerpo y botones
+$font-display: 'Raleway', system-ui, sans-serif;         // Titulares
+$font-price: 'Raleway', system-ui, sans-serif;           // Precios
 
 // Breakpoints (mobile-first, mirror Tailwind)
 $bp-sm: 640px;
@@ -70,6 +79,6 @@ $lat-r-pill: 999px;
 // cierto y las ~18 reglas de _lat-home.scss/_lat-tour.scss que ya usaban
 // $lat-font-serif quedan arregladas de una sola vez, sin tocar cada selector.
 $lat-font-serif: $font-display; // = 'Hedvig Letters Serif', Georgia, serif — Titulares
-$lat-font-sans:  'Roboto', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; // Cuerpo
+$lat-font-sans:  $font-sans; // = 'Open Sans' — Cuerpo (era Roboto; producción usa Open Sans)
 
 $lat-wrap: 1480px; // ancho máximo del contenedor

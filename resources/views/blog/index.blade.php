@@ -86,7 +86,7 @@
                                 @endif
                                 @if ($post->published_at)
                                     <time datetime="{{ $post->published_at->toIso8601String() }}" itemprop="datePublished">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline;vertical-align:-3px;width:15px;height:15px;color:#ffb3b8;margin-right:6px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>{{ $post->published_at->translatedFormat('d M Y') }}
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline;vertical-align:-3px;width:15px;height:15px;color:#ff1f2d;margin-right:6px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>{{ $post->published_at->translatedFormat('d M Y') }}
                                     </time>
                                 @endif
                             </div>
