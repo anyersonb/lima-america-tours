@@ -51,7 +51,7 @@ SSH_OPTS=(-i "$SSH_KEY" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15
 # ACTUALIZA `DEPLOYED_COMMIT` cada vez que despliegues, o pásalo por entorno.
 # El servidor no tiene repo git (el deploy es por copia), así que este valor es
 # la única memoria de qué hay publicado.
-DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-43ecf53}"  # home+ficha según mockups y fidelidad tipográfica (2026-08-01)
+DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-7c4f10d}"  # tipografía de producción (Raleway/Open Sans) + rojo legible (2026-08-01)
 
 mapfile -t FILES < <(
   git -C "$LOCAL" diff --name-only "$DEPLOYED_COMMIT..HEAD" \
