@@ -193,7 +193,18 @@ class TourResource extends Resource
                                     Forms\Components\TextInput::make('time')->label('Hora'),
                                     Forms\Components\TextInput::make('title')->label('Título'),
                                     Forms\Components\Textarea::make('description')->label('Descripción')->rows(2),
-                                ])->columns(3)->collapsible()->reorderable(),
+                                    Forms\Components\FileUpload::make('image')
+                                        ->label('Imagen referencial')
+                                        ->image()
+                                        ->disk('public')
+                                        ->directory('itinerary')
+                                        ->imageEditor()
+                                        ->maxSize(4096)
+                                        ->saveUploadedFileUsing(ImageOptimizer::saver('itinerary', 1600))
+                                        ->helperText('Opcional. Se optimiza automáticamente a WebP. Si se deja vacía, la parada se muestra sin foto.')
+                                        ->columnSpanFull(),
+                                ])->columns(3)->collapsible()->reorderable()
+                                    ->itemLabel(fn (array $state): ?string => $state['title'] ?? null),
                                 Forms\Components\TagsInput::make('includes_es')->label('Incluye')->placeholder('Agregar item'),
                                 Forms\Components\TagsInput::make('excludes_es')->label('No incluye')->placeholder('Agregar item'),
                                 Forms\Components\Textarea::make('recommendations_es')->rows(3)->label('Recomendaciones'),
@@ -216,7 +227,18 @@ class TourResource extends Resource
                                     Forms\Components\TextInput::make('time')->label('Time'),
                                     Forms\Components\TextInput::make('title')->label('Title'),
                                     Forms\Components\Textarea::make('description')->label('Description')->rows(2),
-                                ])->columns(3)->collapsible(),
+                                    Forms\Components\FileUpload::make('image')
+                                        ->label('Reference image')
+                                        ->image()
+                                        ->disk('public')
+                                        ->directory('itinerary')
+                                        ->imageEditor()
+                                        ->maxSize(4096)
+                                        ->saveUploadedFileUsing(ImageOptimizer::saver('itinerary', 1600))
+                                        ->helperText('Optional. Automatically optimized to WebP. If left empty, the stop is shown without a photo.')
+                                        ->columnSpanFull(),
+                                ])->columns(3)->collapsible()->reorderable()
+                                    ->itemLabel(fn (array $state): ?string => $state['title'] ?? null),
                                 Forms\Components\TagsInput::make('includes_en')->label('Includes'),
                                 Forms\Components\TagsInput::make('excludes_en')->label('Excludes'),
                                 Forms\Components\Textarea::make('recommendations_en')->rows(3)->label('Recommendations'),
@@ -239,7 +261,18 @@ class TourResource extends Resource
                                     Forms\Components\TextInput::make('time')->label('Hora'),
                                     Forms\Components\TextInput::make('title')->label('Título'),
                                     Forms\Components\Textarea::make('description')->label('Descrição')->rows(2),
-                                ])->columns(3)->collapsible(),
+                                    Forms\Components\FileUpload::make('image')
+                                        ->label('Imagem de referência')
+                                        ->image()
+                                        ->disk('public')
+                                        ->directory('itinerary')
+                                        ->imageEditor()
+                                        ->maxSize(4096)
+                                        ->saveUploadedFileUsing(ImageOptimizer::saver('itinerary', 1600))
+                                        ->helperText('Opcional. Otimizada automaticamente para WebP. Se deixada vazia, a parada é exibida sem foto.')
+                                        ->columnSpanFull(),
+                                ])->columns(3)->collapsible()->reorderable()
+                                    ->itemLabel(fn (array $state): ?string => $state['title'] ?? null),
                                 Forms\Components\TagsInput::make('includes_pt')->label('Inclui')->placeholder('Adicionar item'),
                                 Forms\Components\TagsInput::make('excludes_pt')->label('Não inclui')->placeholder('Adicionar item'),
                                 Forms\Components\Textarea::make('recommendations_pt')->rows(3)->label('Recomendações'),

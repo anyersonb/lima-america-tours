@@ -83,6 +83,14 @@ class Settings extends Page implements HasForms
         $rows['cookie_text_en'] = $rows['cookie_text_en'] ?? '';
         $rows['cookie_text_pt'] = $rows['cookie_text_pt'] ?? '';
 
+        // Pre-fill new hero stats bar + newsletter block toggles (mockup 2026-08)
+        $rows['home_stats_enabled'] = isset($rows['home_stats_enabled'])
+            ? filter_var($rows['home_stats_enabled'], FILTER_VALIDATE_BOOLEAN)
+            : true;
+        $rows['home_news_enabled'] = isset($rows['home_news_enabled'])
+            ? filter_var($rows['home_news_enabled'], FILTER_VALIDATE_BOOLEAN)
+            : true;
+
         // Decode FAQs JSON for the Repeater
         if (isset($rows['faqs']) && is_string($rows['faqs'])) {
             $decoded = json_decode($rows['faqs'], true);
@@ -474,41 +482,91 @@ class Settings extends Page implements HasForms
                                     ->label('URL del video')
                                     ->url()
                                     ->placeholder('https://www.youtube.com/watch?v=XXXXXXXXXXX')
-                                    ->helperText('Pega el link tal como lo copias de YouTube o Vimeo (el normal, el que sale al darle "Compartir"): un link de youtube.com/watch, youtu.be, un Short, o de vimeo.com. Si se deja VACÍO, el botón "Ver video" del hero no se muestra en el sitio.')
+                                    ->helperText('Pega el link tal como lo copias de YouTube, Vimeo o un .mp4 directo (el normal, el que sale al darle "Compartir"): un link de youtube.com/watch, youtu.be, un Short, de vimeo.com, o una URL que termine en .mp4. Si se deja VACÍO, el botón "Ver video" del hero no se muestra en el sitio.')
                                     ->columnSpanFull(),
                             ]),
 
-                        // ── Stats ─────────────────────────────────────────────
-                        \Filament\Forms\Components\Section::make('Stats (4 indicadores)')
-                            ->description('Valores numéricos y etiquetas de los 4 indicadores. Las etiquetas son únicas (sin idioma).')
+                        // ── Hero — CTAs (botones) ──────────────────────────────
+                        // Mockup 2026-08: el hero pasa a tener un botón rojo
+                        // primario ("Reservar Ahora") y uno secundario ("Ver
+                        // Video"), ambos con texto editable por idioma. El botón
+                        // primario puede apuntar a una URL propia; vacío = el
+                        // blade cae al listado de tours.
+                        \Filament\Forms\Components\Section::make('Hero — botones (CTAs)')
+                            ->description('Textos y enlace de los dos botones del hero: el rojo primario y el secundario "Ver Video".')
                             ->collapsible()
-                            ->columns(2)
+                            ->columns(3)
                             ->schema([
-                                TextInput::make('stats_rating')
-                                    ->label('Stat 1 — Valor (Valoración)')
-                                    ->placeholder('4.8'),
-                                TextInput::make('home_stat_rating_label')
-                                    ->label('Stat 1 — Etiqueta')
-                                    ->placeholder('Valoración'),
-                                TextInput::make('home_stat_travelers')
-                                    ->label('Stat 2 — Valor (Viajeros)')
-                                    ->placeholder('+2,000'),
-                                TextInput::make('home_stat_travelers_label')
-                                    ->label('Stat 2 — Etiqueta')
-                                    ->placeholder('Viajeros felices'),
-                                TextInput::make('stats_years')
-                                    ->label('Stat 3 — Valor (Años)')
-                                    ->placeholder('+11'),
-                                TextInput::make('home_stat_years_label')
-                                    ->label('Stat 3 — Etiqueta')
-                                    ->placeholder('Años de experiencia'),
-                                TextInput::make('stats_tours')
-                                    ->label('Stat 4 — Valor (Tours)')
-                                    ->placeholder('+50'),
-                                TextInput::make('home_stat_tours_label')
-                                    ->label('Stat 4 — Etiqueta')
-                                    ->placeholder('Tours únicos'),
+                                TextInput::make('home_hero_cta_primary_es')->label('Botón primario — texto (ES)')->placeholder('Reservar Ahora'),
+                                TextInput::make('home_hero_cta_primary_en')->label('Botón primario — texto (EN)')->placeholder('Book Now'),
+                                TextInput::make('home_hero_cta_primary_pt')->label('Botón primario — texto (PT)')->placeholder('Reservar Agora'),
+                                TextInput::make('home_hero_cta_primary_url')
+                                    ->label('Botón primario — URL destino')
+                                    ->url()
+                                    ->placeholder('https://limaamericatours.com/tours')
+                                    ->helperText('Opcional. Si se deja vacía, el botón lleva al listado de tours.')
+                                    ->columnSpanFull(),
+                                TextInput::make('home_hero_cta_video_es')->label('Botón secundario — texto (ES)')->placeholder('Ver Video'),
+                                TextInput::make('home_hero_cta_video_en')->label('Botón secundario — texto (EN)')->placeholder('Watch Video'),
+                                TextInput::make('home_hero_cta_video_pt')->label('Botón secundario — texto (PT)')->placeholder('Ver Vídeo'),
                             ]),
+
+                        // ── Barra de estadísticas del hero (mockup) ────────────
+                        // Distinta de la sección "Stats (4 indicadores)" de más
+                        // abajo (esa es la legacy: valor + 1 sola etiqueta sin
+                        // idioma). Esta es la que lee el hero rediseñado: 4
+                        // slots con ícono + etiqueta en ES/EN/PT.
+                        \Filament\Forms\Components\Section::make('Barra de estadísticas del hero (nuevo diseño, 4 slots)')
+                            ->description('Los 4 indicadores con ícono que se muestran en la franja de estadísticas del hero rediseñado. Distinta de la sección "Stats (4 indicadores)" más abajo, que es la del diseño anterior.')
+                            ->collapsible()
+                            ->schema([
+                                Toggle::make('home_stats_enabled')
+                                    ->label('Mostrar la barra de estadísticas en el hero')
+                                    ->default(true)
+                                    ->columnSpanFull(),
+
+                                \Filament\Forms\Components\Fieldset::make('Stat 1')->columns(3)->schema([
+                                    Select::make('home_stat_1_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Estrella (por defecto)')->native(false),
+                                    TextInput::make('home_stat_1_value')->label('Valor')->placeholder('4.9')->columnSpan(2),
+                                    TextInput::make('home_stat_1_label_es')->label('Etiqueta (ES)')->placeholder('Valoración de viajeros'),
+                                    TextInput::make('home_stat_1_label_en')->label('Etiqueta (EN)')->placeholder('Traveler rating'),
+                                    TextInput::make('home_stat_1_label_pt')->label('Etiqueta (PT)')->placeholder('Avaliação dos viajantes'),
+                                ]),
+                                \Filament\Forms\Components\Fieldset::make('Stat 2')->columns(3)->schema([
+                                    Select::make('home_stat_2_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Personas (por defecto)')->native(false),
+                                    TextInput::make('home_stat_2_value')->label('Valor')->placeholder('50K+')->columnSpan(2),
+                                    TextInput::make('home_stat_2_label_es')->label('Etiqueta (ES)')->placeholder('Viajeros felices'),
+                                    TextInput::make('home_stat_2_label_en')->label('Etiqueta (EN)')->placeholder('Happy travelers'),
+                                    TextInput::make('home_stat_2_label_pt')->label('Etiqueta (PT)')->placeholder('Viajantes felizes'),
+                                ]),
+                                \Filament\Forms\Components\Fieldset::make('Stat 3')->columns(3)->schema([
+                                    Select::make('home_stat_3_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Escudo (por defecto)')->native(false),
+                                    TextInput::make('home_stat_3_value')->label('Valor')->placeholder('100%')->columnSpan(2),
+                                    TextInput::make('home_stat_3_label_es')->label('Etiqueta (ES)')->placeholder('Cancelación gratuita'),
+                                    TextInput::make('home_stat_3_label_en')->label('Etiqueta (EN)')->placeholder('Free cancellation'),
+                                    TextInput::make('home_stat_3_label_pt')->label('Etiqueta (PT)')->placeholder('Cancelamento gratuito'),
+                                ]),
+                                \Filament\Forms\Components\Fieldset::make('Stat 4')->columns(3)->schema([
+                                    Select::make('home_stat_4_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Medalla (por defecto)')->native(false),
+                                    TextInput::make('home_stat_4_value')->label('Valor')->placeholder('10+')->columnSpan(2),
+                                    TextInput::make('home_stat_4_label_es')->label('Etiqueta (ES)')->placeholder('Años de experiencia'),
+                                    TextInput::make('home_stat_4_label_en')->label('Etiqueta (EN)')->placeholder('Years of experience'),
+                                    TextInput::make('home_stat_4_label_pt')->label('Etiqueta (PT)')->placeholder('Anos de experiência'),
+                                ]),
+                            ]),
+
+                        // ── Stats legados: RETIRADOS 2026-08-01 ───────────────
+                        // Existía aquí una sección "Stats (4 indicadores)" con
+                        // las claves stats_rating / stats_years / stats_tours y
+                        // home_stat_{rating,travelers,years,tours}_label. Ninguna
+                        // vista las leía (grep en resources/ y app/: 0 usos), así
+                        // que la editora rellenaba campos que no salían en ningún
+                        // lado, justo al lado de la sección "Barra de estadísticas
+                        // del hero" que sí funciona — hallazgo del CRO en la
+                        // validación de este lote. Los valores que hubiera en la
+                        // tabla `settings` quedan huérfanos, pero inertes: nadie
+                        // los lee. Si algún día se necesitan, la barra viva usa
+                        // home_stat_{1..4}_value/_label_{locale}/_icon.
 
                         // ── Sección "Más Comprados" ───────────────────────────
                         \Filament\Forms\Components\Section::make('Sección "Más Comprados"')
@@ -875,6 +933,73 @@ class Settings extends Page implements HasForms
                                     ->addActionLabel('+ Agregar razón')
                                     ->columnSpanFull(),
                             ]),
+
+                        // ── Sección 9: Newsletter (bloque oscuro con foto) ───────────
+                        // Mockup 2026-08: sección oscura de suscripción con foto de
+                        // fondo, texto y 4 beneficios con ícono. Mismo patrón que el
+                        // resto del Home: toggle para mostrar/ocultar, imagen en el
+                        // disco "media" (igual que home_hero_image), y textos ES/EN/PT
+                        // con default en el blade si se dejan vacíos.
+                        \Filament\Forms\Components\Section::make('Newsletter (bloque oscuro con foto)')
+                            ->collapsible()->collapsed()
+                            ->schema([
+                                Toggle::make('home_news_enabled')
+                                    ->label('Mostrar el bloque de newsletter en el home')
+                                    ->default(true)
+                                    ->columnSpanFull(),
+                                FileUpload::make('home_news_image')
+                                    ->label('Imagen de fondo')
+                                    ->image()->disk('media')->directory('home')
+                                    ->saveUploadedFileUsing(\App\Support\ImageOptimizer::saver('home', 1920, disk: 'media', deletePrevious: true))
+                                    ->helperText('Opcional: el blade tiene una imagen por defecto si se deja vacía. Se optimiza a WebP (máx. 1920px).')
+                                    ->columnSpanFull(),
+                                TextInput::make('home_news_eyebrow_es')->label('Eyebrow (ES)')->placeholder('Viaja. Explora. Vive.'),
+                                TextInput::make('home_news_eyebrow_en')->label('Eyebrow (EN)')->placeholder('Travel. Explore. Live.'),
+                                TextInput::make('home_news_eyebrow_pt')->label('Eyebrow (PT)')->placeholder('Viaje. Explore. Viva.'),
+                                TextInput::make('home_news_title_es')->label('Título (ES)')->placeholder('Tu próxima aventura empieza aquí')->columnSpanFull(),
+                                TextInput::make('home_news_title_en')->label('Título (EN)')->placeholder('Your next adventure starts here')->columnSpanFull(),
+                                TextInput::make('home_news_title_pt')->label('Título (PT)')->placeholder('Sua próxima aventura começa aqui')->columnSpanFull(),
+                                Textarea::make('home_news_sub_es')->rows(2)->label('Subtítulo (ES)')->placeholder('Suscríbete a nuestro boletín para recibir noticias, ofertas y promociones especiales.')->columnSpanFull(),
+                                Textarea::make('home_news_sub_en')->rows(2)->label('Subtítulo (EN)')->placeholder('Subscribe to our newsletter to receive news, offers and special promotions.')->columnSpanFull(),
+                                Textarea::make('home_news_sub_pt')->rows(2)->label('Subtítulo (PT)')->placeholder('Assine nossa newsletter para receber notícias, ofertas e promoções especiais.')->columnSpanFull(),
+
+                                \Filament\Forms\Components\Fieldset::make('Beneficio 1')->columns(3)->schema([
+                                    Select::make('home_news_benefit_1_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Etiqueta (por defecto)')->native(false),
+                                    TextInput::make('home_news_benefit_1_title_es')->label('Título (ES)')->placeholder('Ofertas exclusivas'),
+                                    TextInput::make('home_news_benefit_1_title_en')->label('Título (EN)')->placeholder('Exclusive offers'),
+                                    TextInput::make('home_news_benefit_1_title_pt')->label('Título (PT)')->placeholder('Ofertas exclusivas'),
+                                    Textarea::make('home_news_benefit_1_text_es')->rows(2)->label('Texto (ES)')->placeholder('Accede a descuentos y promociones especiales.')->columnSpanFull(),
+                                    Textarea::make('home_news_benefit_1_text_en')->rows(2)->label('Texto (EN)')->placeholder('Get access to exclusive discounts and special promotions.')->columnSpanFull(),
+                                    Textarea::make('home_news_benefit_1_text_pt')->rows(2)->label('Texto (PT)')->placeholder('Acesse descontos e promoções especiais.')->columnSpanFull(),
+                                ]),
+                                \Filament\Forms\Components\Fieldset::make('Beneficio 2')->columns(3)->schema([
+                                    Select::make('home_news_benefit_2_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Mapa (por defecto)')->native(false),
+                                    TextInput::make('home_news_benefit_2_title_es')->label('Título (ES)')->placeholder('Novedades de viaje'),
+                                    TextInput::make('home_news_benefit_2_title_en')->label('Título (EN)')->placeholder('Travel updates'),
+                                    TextInput::make('home_news_benefit_2_title_pt')->label('Título (PT)')->placeholder('Novidades de viagem'),
+                                    Textarea::make('home_news_benefit_2_text_es')->rows(2)->label('Texto (ES)')->placeholder('Recibe inspiración y nuevas experiencias cada semana.')->columnSpanFull(),
+                                    Textarea::make('home_news_benefit_2_text_en')->rows(2)->label('Texto (EN)')->placeholder('Get inspiration and new experiences every week.')->columnSpanFull(),
+                                    Textarea::make('home_news_benefit_2_text_pt')->rows(2)->label('Texto (PT)')->placeholder('Receba inspiração e novas experiências toda semana.')->columnSpanFull(),
+                                ]),
+                                \Filament\Forms\Components\Fieldset::make('Beneficio 3')->columns(3)->schema([
+                                    Select::make('home_news_benefit_3_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Reloj (por defecto)')->native(false),
+                                    TextInput::make('home_news_benefit_3_title_es')->label('Título (ES)')->placeholder('Eventos especiales'),
+                                    TextInput::make('home_news_benefit_3_title_en')->label('Título (EN)')->placeholder('Special events'),
+                                    TextInput::make('home_news_benefit_3_title_pt')->label('Título (PT)')->placeholder('Eventos especiais'),
+                                    Textarea::make('home_news_benefit_3_text_es')->rows(2)->label('Texto (ES)')->placeholder('Sé el primero en enterarte de nuestros eventos y lanzamientos.')->columnSpanFull(),
+                                    Textarea::make('home_news_benefit_3_text_en')->rows(2)->label('Texto (EN)')->placeholder('Be the first to know about our events and launches.')->columnSpanFull(),
+                                    Textarea::make('home_news_benefit_3_text_pt')->rows(2)->label('Texto (PT)')->placeholder('Seja o primeiro a saber sobre nossos eventos e lançamentos.')->columnSpanFull(),
+                                ]),
+                                \Filament\Forms\Components\Fieldset::make('Beneficio 4')->columns(3)->schema([
+                                    Select::make('home_news_benefit_4_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Auriculares (por defecto)')->native(false),
+                                    TextInput::make('home_news_benefit_4_title_es')->label('Título (ES)')->placeholder('Atención preferente'),
+                                    TextInput::make('home_news_benefit_4_title_en')->label('Título (EN)')->placeholder('Priority support'),
+                                    TextInput::make('home_news_benefit_4_title_pt')->label('Título (PT)')->placeholder('Atendimento preferencial'),
+                                    Textarea::make('home_news_benefit_4_text_es')->rows(2)->label('Texto (ES)')->placeholder('Soporte prioritario para suscriptores en todo momento.')->columnSpanFull(),
+                                    Textarea::make('home_news_benefit_4_text_en')->rows(2)->label('Texto (EN)')->placeholder('Priority support for subscribers at all times.')->columnSpanFull(),
+                                    Textarea::make('home_news_benefit_4_text_pt')->rows(2)->label('Texto (PT)')->placeholder('Suporte prioritário para assinantes a qualquer momento.')->columnSpanFull(),
+                                ]),
+                            ]),
                     ]),
                     Tabs\Tab::make('GEO')->icon('heroicon-o-map-pin')->schema([
                         // docs/qa/F7-personas.md §labels #2 / §e: esta pestaña es puramente
@@ -1148,6 +1273,8 @@ class Settings extends Page implements HasForms
         'recaptcha_enabled',
         'cookie_banner_enabled',
         'pickup_enabled',
+        'home_stats_enabled',
+        'home_news_enabled',
     ];
 
     public function save(): void

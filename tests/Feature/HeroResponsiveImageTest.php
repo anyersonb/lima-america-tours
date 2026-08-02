@@ -26,11 +26,16 @@ class HeroResponsiveImageTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** Devuelve la etiqueta <img> del hero (la que está dentro de .lat-hero__media). */
+    /** Devuelve la etiqueta <img> del hero (la que está dentro de .lat-hero__bg).
+     *  Nota 2026-08: el contenedor de la foto del hero se renombró de
+     *  .lat-hero__media a .lat-hero__bg en el rediseño "foto a sangre"
+     *  (ver pages/_lat-home.scss) — el CONTRATO que protege este test
+     *  (WebP, srcset multi-ancho + sizes, preload coherente, fetchpriority
+     *  alto, dimensiones reales) no cambió, solo el nombre de la clase. */
     private function heroImgTag(string $html): string
     {
-        $mediaPos = strpos($html, 'lat-hero__media');
-        $this->assertNotFalse($mediaPos, 'No se encontró .lat-hero__media en el home.');
+        $mediaPos = strpos($html, 'lat-hero__bg');
+        $this->assertNotFalse($mediaPos, 'No se encontró .lat-hero__bg en el home.');
 
         $imgPos = strpos($html, '<img', $mediaPos);
         $this->assertNotFalse($imgPos, 'No se encontró ningún <img> dentro de .lat-hero__media.');

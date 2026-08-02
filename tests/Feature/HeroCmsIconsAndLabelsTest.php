@@ -59,7 +59,11 @@ class HeroCmsIconsAndLabelsTest extends TestCase
 
         $html = $this->get('/es')->assertOk()->getContent();
 
-        $heroStart = strpos($html, 'lat-hero__media');
+        // 2026-08: .lat-hero__media se renombró a .lat-hero__bg (rediseño
+        // "foto a sangre"); .lat-hero__search-wrap sigue existiendo justo
+        // después de que el <section class="lat-hero"> cierra, así que
+        // sigue delimitando el mismo tramo de HTML.
+        $heroStart = strpos($html, 'lat-hero__bg');
         $heroEnd = strpos($html, 'lat-hero__search-wrap');
         $hero = substr($html, (int) $heroStart, (int) $heroEnd - (int) $heroStart);
 

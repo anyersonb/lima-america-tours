@@ -9,12 +9,17 @@
     $rawItinerary = $tour->{"itinerary_{$locale}"} ?: $tour->itinerary_es ?: [];
     $itinerary = collect($rawItinerary)->map(function ($step) {
         if (! is_array($step)) {
-            return ['time' => '', 'title' => (string) $step, 'description' => ''];
+            return ['time' => '', 'title' => (string) $step, 'description' => '', 'image' => ''];
         }
         return [
             'time'        => trim((string) ($step['time'] ?? '')),
             'title'       => trim((string) ($step['title'] ?? '')),
             'description' => trim((string) ($step['description'] ?? '')),
+            // B2: campo nuevo del repeater (backend, en paralelo) — path
+            // relativo del disco `media` o vacío. Los 26 tours ya cargados
+            // no tienen ninguna imagen: ese es el estado por defecto hoy y
+            // el bloque debe verse igual de bien sin ella (sin hueco).
+            'image'       => trim((string) ($step['image'] ?? '')),
         ];
     })->filter(fn ($s) => $s['title'] !== '')->values();
 
@@ -64,6 +69,17 @@
             __('ui.rec_water'),
         ]);
     }
+
+    // B3: "Notas importantes" — campo real del CMS (notes_es/en/pt,
+    // TourResource::form, Textarea) que hoy se guarda pero no se muestra en
+    // ningún lado de la ficha pública. Se suma como panel adicional SOLO si
+    // trae contenido (mismo criterio que $bring/$includes: sin dato, sin
+    // panel — nunca un hueco vacío).
+    $rawNotes = $tour->{"notes_{$locale}"} ?? $tour->notes_es ?? '';
+    $notes = collect(preg_split('/\r\n|\r|\n/', (string) $rawNotes))
+        ->map(fn ($l) => trim($l))
+        ->filter(fn ($l) => $l !== '')
+        ->values();
 
     $related = ($related ?? collect())->take(3);
 
@@ -128,7 +144,7 @@
 @endpush
 
 @section('content')
-<div class="lat-page">
+<div class="lat-page lat-tour-page">
 
     {{-- ============================================================
          BREADCRUMB
@@ -152,23 +168,81 @@
         <div class="lat-detail-grid">
 
             <div class="lat-detail-main">
-                {{-- Galería --}}
+                {{-- ============================================================
+                     GALERÍA — slider (swipe + flechas + paginación) con
+                     miniaturas y lightbox (B1). $galleryUrls es el mismo
+                     array de siempre; solo cambia cómo se navega y se pinta
+                     en grande. Un único <img id="galMain"> cuyo `src` cambia
+                     al navegar (no un track con N <img>): más simple, cero
+                     riesgo de que las imágenes 2..N compitan por LCP con la
+                     primera, y sigue siendo swipeable/con flechas/paginación.
+                     ============================================================ --}}
                 <div class="lat-gal">
-                    <div class="lat-gal__main">
-                        <img id="galMain" src="{{ $galleryUrls[0] ?? $tour->cover_url }}" alt="{{ $titleDisplay }}" width="860" height="452">
+                    <div class="lat-gal__main" id="galMain__wrap">
+                        <button type="button" class="lat-gal__main-btn" id="galMainBtn"
+                                aria-label="{{ $L('Ampliar foto', 'Enlarge photo', 'Ampliar foto') }}">
+                            <img id="galMain" src="{{ $galleryUrls[0] ?? $tour->cover_url }}" alt="{{ $titleDisplay }}" width="860" height="452" fetchpriority="high">
+                        </button>
+
                         @if (count($galleryUrls) > 1)
+                            <button type="button" class="lat-gal__nav lat-gal__nav--prev" id="galPrev" aria-label="{{ $L('Foto anterior', 'Previous photo', 'Foto anterior') }}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+                            </button>
+                            <button type="button" class="lat-gal__nav lat-gal__nav--next" id="galNext" aria-label="{{ $L('Foto siguiente', 'Next photo', 'Próxima foto') }}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                            </button>
+
+                            <div class="lat-gal__dots" id="galDots" aria-hidden="true">
+                                @foreach ($galleryUrls as $i => $img)
+                                    <button type="button" class="lat-gal__dot {{ $i === 0 ? 'is-active' : '' }}" data-index="{{ $i }}" aria-label="{{ $L('Foto', 'Photo', 'Foto') }} {{ $i + 1 }}"></button>
+                                @endforeach
+                            </div>
+
                             <button type="button" class="lat-gal__more" id="galMoreBtn">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                                 {{ $L('Ver todas las fotos', 'View all photos', 'Ver todas as fotos') }}
                             </button>
                         @endif
                     </div>
-                    @foreach ($galleryUrls as $i => $img)
-                        <button type="button" class="lat-gal__thumb {{ $i === 0 ? 'is-active' : '' }}" data-img="{{ $img }}">
-                            <img src="{{ $img }}" alt="" loading="lazy" width="200" height="150">
-                        </button>
-                    @endforeach
+
+                    @if (count($galleryUrls) > 1)
+                        <div class="lat-gal__thumbs">
+                            @foreach ($galleryUrls as $i => $img)
+                                <button type="button" class="lat-gal__thumb {{ $i === 0 ? 'is-active' : '' }}" data-index="{{ $i }}" aria-label="{{ $L('Ver foto', 'View photo', 'Ver foto') }} {{ $i + 1 }}">
+                                    <img src="{{ $img }}" alt="" loading="lazy" width="200" height="150">
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
+
+                {{-- LIGHTBOX — overlay a pantalla completa; la imagen grande se
+                     carga diferida (sin `src` hasta el primer clic, igual que
+                     el iframe del modal "Ver video" del home) para no penalizar
+                     el LCP de la ficha. --}}
+                @if (count($galleryUrls) > 0)
+                    <div class="lat-lightbox" id="galLightbox" role="dialog" aria-modal="true"
+                         aria-label="{{ $L('Galería de fotos', 'Photo gallery', 'Galeria de fotos') }}" hidden>
+                        <div class="lat-lightbox__backdrop" data-lb-close></div>
+                        <button type="button" class="lat-lightbox__close" data-lb-close aria-label="{{ $L('Cerrar', 'Close', 'Fechar') }}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                        </button>
+                        @if (count($galleryUrls) > 1)
+                            <button type="button" class="lat-lightbox__nav lat-lightbox__nav--prev" id="lbPrev" aria-label="{{ $L('Foto anterior', 'Previous photo', 'Foto anterior') }}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+                            </button>
+                            <button type="button" class="lat-lightbox__nav lat-lightbox__nav--next" id="lbNext" aria-label="{{ $L('Foto siguiente', 'Next photo', 'Próxima foto') }}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                            </button>
+                        @endif
+                        <div class="lat-lightbox__stage">
+                            <img id="lbImg" alt="" loading="lazy" decoding="async">
+                        </div>
+                        @if (count($galleryUrls) > 1)
+                            <div class="lat-lightbox__count" id="lbCount" aria-live="polite"></div>
+                        @endif
+                    </div>
+                @endif
 
                 {{-- Barra de info --}}
                 <div class="lat-detail-info">
@@ -213,73 +287,128 @@
                     @endif
                 </div>
 
-                {{-- Tabs --}}
-                <div class="lat-tabs" role="tablist">
-                    <button type="button" class="lat-tab is-active" data-tab="about" role="tab">{{ $L('Acerca del Tour', 'About the Tour', 'Sobre o Tour') }}</button>
-                    <button type="button" class="lat-tab" data-tab="itin" role="tab">{{ $L('Itinerario', 'Itinerary', 'Itinerário') }}</button>
-                    <button type="button" class="lat-tab" data-tab="incl" role="tab">{{ $L('Qué incluye', "What's included", 'O que inclui') }}</button>
-                    <button type="button" class="lat-tab" data-tab="bring" role="tab">{{ $L('Qué llevar', 'What to bring', 'O que levar') }}</button>
-                </div>
+                {{-- ============================================================
+                     TABS (≥1024px) / ACORDEÓN (<1024px) — B3. MISMO marcado
+                     para ambos: cada `.lat-tab-item` empareja un botón con su
+                     panel (nunca se duplica el contenido de ningún panel). En
+                     desktop, CSS (`display:contents` + `order` en
+                     pages/_lat-tour.scss) saca visualmente los botones de su
+                     wrapper y los agrupa en una barra horizontal de tabs; en
+                     mobile cada par queda apilado en flujo normal (botón =
+                     cabecera del acordeón, con chevron). El JS (al final del
+                     archivo) decide, según el ancho actual, si un clic actúa
+                     como "tab exclusivo" o como "acordeón independiente".
+                     ============================================================ --}}
+                <div class="lat-tabs-wrap" id="tabsWrap">
+                    <h2 class="lat-tabs-wrap__mobile-heading">{{ $L('Detalles completos', 'Full details', 'Detalhes completos') }}</h2>
 
-                <div class="lat-tab-panel is-active" data-tab="about">
-                    @if ($tour->description)
-                        @foreach (explode("\n", $tour->description) as $para)
-                            @continue(trim($para) === '')
-                            <p>{{ $para }}</p>
-                        @endforeach
-                    @endif
-                    <div class="lat-detail-highlights">
-                        <span class="lat-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>{{ $L('Guía profesional', 'Professional guide', 'Guia profissional') }}</span>
-                        <span class="lat-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>{{ $L('Experiencia auténtica', 'Authentic experience', 'Experiência autêntica') }}</span>
-                        <span class="lat-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>{{ $L('Asistencia personalizada', 'Personalized support', 'Atendimento personalizado') }}</span>
-                    </div>
-                </div>
-
-                <div class="lat-tab-panel" data-tab="itin">
-                    @forelse ($itinerary as $i => $step)
-                        <div class="lat-itin-step">
-                            <div class="lat-itin-step__num">{{ $i + 1 }}</div>
-                            <div>
-                                @if ($step['time'])
-                                    <span class="lat-itin-step__time">{{ $step['time'] }}</span>
-                                @endif
-                                <h4>{{ $step['title'] }}</h4>
-                                @if ($step['description'])
-                                    <p>{{ $step['description'] }}</p>
-                                @endif
+                    <div class="lat-tab-item" data-tab="about">
+                        <button type="button" class="lat-tab is-active" data-tab="about" role="tab"
+                                id="tabbtn-about" aria-controls="panel-about" aria-selected="true" aria-expanded="true">
+                            <span class="lat-tab__label">{{ $L('Acerca del Tour', 'About the Tour', 'Sobre o Tour') }}</span>
+                            <svg class="lat-tab__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <div class="lat-tab-panel is-active" data-tab="about" id="panel-about" role="tabpanel" aria-labelledby="tabbtn-about">
+                            @if ($tour->description)
+                                @foreach (explode("\n", $tour->description) as $para)
+                                    @continue(trim($para) === '')
+                                    <p>{{ $para }}</p>
+                                @endforeach
+                            @endif
+                            <div class="lat-detail-highlights">
+                                <span class="lat-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>{{ $L('Guía profesional', 'Professional guide', 'Guia profissional') }}</span>
+                                <span class="lat-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>{{ $L('Experiencia auténtica', 'Authentic experience', 'Experiência autêntica') }}</span>
+                                <span class="lat-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>{{ $L('Asistencia personalizada', 'Personalized support', 'Atendimento personalizado') }}</span>
                             </div>
                         </div>
-                    @empty
-                        <p>{{ $L('El itinerario detallado de este tour estará disponible próximamente.', "This tour's detailed itinerary will be available soon.", 'O itinerário detalhado deste tour estará disponível em breve.') }}</p>
-                    @endforelse
-                </div>
+                    </div>
 
-                <div class="lat-tab-panel" data-tab="incl">
-                    @if ($excludes->isNotEmpty())
-                        <p class="lat-tab-panel__subtitle">{{ $L('Incluye', 'Includes', 'Inclui') }}</p>
+                    <div class="lat-tab-item" data-tab="itin">
+                        <button type="button" class="lat-tab" data-tab="itin" role="tab"
+                                id="tabbtn-itin" aria-controls="panel-itin" aria-selected="false" aria-expanded="false">
+                            <span class="lat-tab__label">{{ $L('Itinerario', 'Itinerary', 'Itinerário') }}</span>
+                            <svg class="lat-tab__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <div class="lat-tab-panel" data-tab="itin" id="panel-itin" role="tabpanel" aria-labelledby="tabbtn-itin">
+                            @forelse ($itinerary as $i => $step)
+                                @php $stepImgUrl = $step['image'] !== '' ? \App\Support\ImagePath::url($step['image']) : null; @endphp
+                                <div class="lat-itin-step {{ $stepImgUrl ? 'has-image' : '' }}">
+                                    @if ($stepImgUrl)
+                                        <img class="lat-itin-step__img" src="{{ $stepImgUrl }}" alt="{{ $step['title'] }}" loading="lazy" width="100" height="100">
+                                    @endif
+                                    <div class="lat-itin-step__num">{{ $i + 1 }}</div>
+                                    <div>
+                                        @if ($step['time'])
+                                            <span class="lat-itin-step__time">{{ $step['time'] }}</span>
+                                        @endif
+                                        <h4>{{ $step['title'] }}</h4>
+                                        @if ($step['description'])
+                                            <p>{{ $step['description'] }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+                            @empty
+                                <p>{{ $L('El itinerario detallado de este tour estará disponible próximamente.', "This tour's detailed itinerary will be available soon.", 'O itinerário detalhado deste tour estará disponível em breve.') }}</p>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div class="lat-tab-item" data-tab="incl">
+                        <button type="button" class="lat-tab" data-tab="incl" role="tab"
+                                id="tabbtn-incl" aria-controls="panel-incl" aria-selected="false" aria-expanded="false">
+                            <span class="lat-tab__label">{{ $L('Qué incluye', "What's included", 'O que inclui') }}</span>
+                            <svg class="lat-tab__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <div class="lat-tab-panel" data-tab="incl" id="panel-incl" role="tabpanel" aria-labelledby="tabbtn-incl">
+                            @if ($excludes->isNotEmpty())
+                                <p class="lat-tab-panel__subtitle">{{ $L('Incluye', 'Includes', 'Inclui') }}</p>
+                            @endif
+                            <ul>
+                                @foreach ($includes as $item)
+                                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>{{ $item }}</span></li>
+                                @endforeach
+                            </ul>
+
+                            @if ($excludes->isNotEmpty())
+                                <p class="lat-tab-panel__subtitle">{{ $L('No incluye', "Doesn't include", 'Não inclui') }}</p>
+                                <ul class="lat-tab-panel__excludes">
+                                    @foreach ($excludes as $item)
+                                        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span>{{ $item }}</span></li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="lat-tab-item" data-tab="bring">
+                        <button type="button" class="lat-tab" data-tab="bring" role="tab"
+                                id="tabbtn-bring" aria-controls="panel-bring" aria-selected="false" aria-expanded="false">
+                            <span class="lat-tab__label">{{ $L('Qué llevar', 'What to bring', 'O que levar') }}</span>
+                            <svg class="lat-tab__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <div class="lat-tab-panel" data-tab="bring" id="panel-bring" role="tabpanel" aria-labelledby="tabbtn-bring">
+                            <ul>
+                                @foreach ($bring as $item)
+                                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>{{ $item }}</span></li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+
+                    @if ($notes->isNotEmpty())
+                        <div class="lat-tab-item" data-tab="notes">
+                            <button type="button" class="lat-tab" data-tab="notes" role="tab"
+                                    id="tabbtn-notes" aria-controls="panel-notes" aria-selected="false" aria-expanded="false">
+                                <span class="lat-tab__label">{{ $L('Información importante', 'Important information', 'Informação importante') }}</span>
+                                <svg class="lat-tab__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                            </button>
+                            <div class="lat-tab-panel" data-tab="notes" id="panel-notes" role="tabpanel" aria-labelledby="tabbtn-notes">
+                                @foreach ($notes as $line)
+                                    <p>{{ $line }}</p>
+                                @endforeach
+                            </div>
+                        </div>
                     @endif
-                    <ul>
-                        @foreach ($includes as $item)
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>{{ $item }}</span></li>
-                        @endforeach
-                    </ul>
-
-                    @if ($excludes->isNotEmpty())
-                        <p class="lat-tab-panel__subtitle">{{ $L('No incluye', "Doesn't include", 'Não inclui') }}</p>
-                        <ul class="lat-tab-panel__excludes">
-                            @foreach ($excludes as $item)
-                                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span>{{ $item }}</span></li>
-                            @endforeach
-                        </ul>
-                    @endif
-                </div>
-
-                <div class="lat-tab-panel" data-tab="bring">
-                    <ul>
-                        @foreach ($bring as $item)
-                            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>{{ $item }}</span></li>
-                        @endforeach
-                    </ul>
                 </div>
 
                 {{-- Preguntas frecuentes: solo si el tour tiene FAQs cargadas en el CMS --}}
@@ -459,6 +588,35 @@
         </div>
     </div>
 
+    {{-- ============================================================
+         BARRA FIJA INFERIOR (B4) — solo visible <1024px (CSS). El precio
+         respeta el formateo/moneda del sitio y refleja la oferta tachada
+         igual que la caja de reserva. El botón NO envía el formulario: hace
+         scroll a la caja de reserva y enfoca el primer campo (la reserva
+         necesita fecha y pasajeros). Comparte clase .lat-btn con el resto
+         del sitio para que el FAB de WhatsApp (layouts/app.blade.php) la
+         detecte y no se solape (.lat-sticky-book ya está en su
+         CONTROL_SELECTOR).
+         ============================================================ --}}
+    <div class="lat-sticky-book" id="stickyBook">
+        <div class="lat-sticky-book__trust">
+            <span>{{ $L('Cancelación gratuita: hasta 24 h', 'Free cancellation: up to 24 h', 'Cancelamento gratuito: até 24 h') }}</span>
+            <span>{{ $L('Reserva ahora y paga después', 'Book now, pay later', 'Reserve agora e pague depois') }}</span>
+        </div>
+        <div class="lat-sticky-book__row">
+            <div class="lat-sticky-book__price">
+                @if ($hasOffer)
+                    <small class="lat-sticky-book__before">{{ \App\Support\Money::format($offerBefore, \App\Support\Money::site()) }}</small>
+                @endif
+                <span class="lat-sticky-book__amt">{{ \App\Support\Money::format($tour->price, \App\Support\Money::site()) }}</span>
+                <small>{{ $L('por persona', 'per person', 'por pessoa') }}</small>
+            </div>
+            <button type="button" class="lat-btn lat-btn--red" id="stickyBookBtn">
+                {{ $L('Reserva ahora', 'Book now', 'Reserve agora') }}
+            </button>
+        </div>
+    </div>
+
 </div>
 @endsection
 
@@ -468,23 +626,189 @@
     var root = document.querySelector('.lat-page');
     if (!root) return;
 
-    // Tabs
-    root.querySelectorAll('.lat-tab').forEach(function (tab) {
-        tab.addEventListener('click', function () {
-            var name = tab.getAttribute('data-tab');
-            root.querySelectorAll('.lat-tab').forEach(function (t) { t.classList.toggle('is-active', t === tab); });
-            root.querySelectorAll('.lat-tab-panel').forEach(function (p) { p.classList.toggle('is-active', p.getAttribute('data-tab') === name); });
+    // ── TABS (≥1024px) / ACORDEÓN (<1024px) — B3 ───────────────────────
+    // MISMO marcado para ambos modos (ver comentario en el HTML): lo único
+    // que cambia es cómo se interpreta un clic. `mq` decide en cada click
+    // cuál de los dos modos aplica — nunca se lee un valor cacheado viejo.
+    var mqDesktop = window.matchMedia('(min-width: 1024px)');
+    var tabButtons = Array.prototype.slice.call(root.querySelectorAll('.lat-tab'));
+    var tabPanels = Array.prototype.slice.call(root.querySelectorAll('.lat-tab-panel'));
+
+    function setTabState(btn, panel, active) {
+        btn.classList.toggle('is-active', active);
+        btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        btn.setAttribute('aria-expanded', active ? 'true' : 'false');
+        if (panel) panel.classList.toggle('is-active', active);
+    }
+
+    function panelFor(name) {
+        return tabPanels.filter(function (p) { return p.getAttribute('data-tab') === name; })[0] || null;
+    }
+
+    tabButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var name = btn.getAttribute('data-tab');
+            var panel = panelFor(name);
+
+            if (mqDesktop.matches) {
+                // Tabs exclusivos: solo el clicado queda activo.
+                tabButtons.forEach(function (b) { setTabState(b, panelFor(b.getAttribute('data-tab')), b === btn); });
+            } else {
+                // Acordeón independiente: alterna SOLO este panel.
+                setTabState(btn, panel, !btn.classList.contains('is-active'));
+            }
         });
     });
 
-    // Galería: miniaturas
-    var galMain = document.getElementById('galMain');
-    root.querySelectorAll('.lat-gal__thumb').forEach(function (th) {
-        th.addEventListener('click', function () {
-            if (galMain) galMain.src = th.getAttribute('data-img');
-            root.querySelectorAll('.lat-gal__thumb').forEach(function (t) { t.classList.toggle('is-active', t === th); });
-        });
+    // Al cruzar el punto de corte 1024px, normaliza el estado para no dejar
+    // paneles huérfanos: si venías de móvil con 2+ paneles abiertos (válido
+    // en acordeón) y la pantalla pasa a desktop (tabs exclusivos), deja
+    // activo solo el primero que ya estaba abierto — nunca los deja todos
+    // ocultos ni todos visibles a la vez.
+    mqDesktop.addEventListener('change', function (e) {
+        if (!e.matches) return; // mobile→desktop es el único caso que necesita normalizar
+        var activeButtons = tabButtons.filter(function (b) { return b.classList.contains('is-active'); });
+        var keep = activeButtons[0] || tabButtons[0];
+        tabButtons.forEach(function (b) { setTabState(b, panelFor(b.getAttribute('data-tab')), b === keep); });
     });
+
+    // ── GALERÍA: slider (B1) ────────────────────────────────────────────
+    var galUrls = @json($galleryUrls);
+    var galMain = document.getElementById('galMain');
+    var galIndex = 0;
+
+    function galShow(i) {
+        if (!galUrls.length) return;
+        galIndex = ((i % galUrls.length) + galUrls.length) % galUrls.length; // wrap circular
+        if (galMain) galMain.src = galUrls[galIndex];
+        root.querySelectorAll('.lat-gal__thumb').forEach(function (t) {
+            t.classList.toggle('is-active', parseInt(t.getAttribute('data-index'), 10) === galIndex);
+        });
+        root.querySelectorAll('.lat-gal__dot').forEach(function (d) {
+            d.classList.toggle('is-active', parseInt(d.getAttribute('data-index'), 10) === galIndex);
+        });
+    }
+
+    root.querySelectorAll('.lat-gal__thumb').forEach(function (th) {
+        th.addEventListener('click', function () { galShow(parseInt(th.getAttribute('data-index'), 10)); });
+    });
+
+    var galPrevBtn = document.getElementById('galPrev');
+    var galNextBtn = document.getElementById('galNext');
+    if (galPrevBtn) galPrevBtn.addEventListener('click', function () { galShow(galIndex - 1); });
+    if (galNextBtn) galNextBtn.addEventListener('click', function () { galShow(galIndex + 1); });
+
+    root.querySelectorAll('.lat-gal__dot').forEach(function (dot) {
+        dot.addEventListener('click', function () { galShow(parseInt(dot.getAttribute('data-index'), 10)); });
+    });
+
+    // Swipe táctil en el visor principal.
+    var galMainWrap = document.getElementById('galMain__wrap');
+    if (galMainWrap) {
+        var touchStartX = null;
+        galMainWrap.addEventListener('touchstart', function (e) {
+            touchStartX = e.changedTouches[0].clientX;
+        }, { passive: true });
+        galMainWrap.addEventListener('touchend', function (e) {
+            if (touchStartX === null) return;
+            var dx = e.changedTouches[0].clientX - touchStartX;
+            touchStartX = null;
+            if (Math.abs(dx) < 40) return; // umbral: evita disparar con un tap
+            if (dx < 0) galShow(galIndex + 1); else galShow(galIndex - 1);
+        }, { passive: true });
+    }
+
+    // ── LIGHTBOX (B1) ────────────────────────────────────────────────────
+    var lightbox = document.getElementById('galLightbox');
+    if (lightbox && galUrls.length) {
+        var lbImg = document.getElementById('lbImg');
+        var lbCount = document.getElementById('lbCount');
+        var lbPrevBtn = document.getElementById('lbPrev');
+        var lbNextBtn = document.getElementById('lbNext');
+        var lbClosers = lightbox.querySelectorAll('[data-lb-close]');
+        var lbIndex = 0;
+        var lbLastFocused = null;
+        var lbSavedScrollY = 0;
+
+        function lbRender() {
+            // `loading="lazy"` + src solo asignado aquí: la foto grande nunca
+            // se descarga hasta que el usuario abre el lightbox (no penaliza
+            // el LCP de la ficha).
+            lbImg.src = galUrls[lbIndex];
+            lbImg.alt = @json($titleDisplay) + ' — ' + (lbIndex + 1);
+            if (lbCount) lbCount.textContent = (lbIndex + 1) + ' / ' + galUrls.length;
+        }
+
+        function lbFocusables() {
+            return Array.prototype.slice
+                .call(lightbox.querySelectorAll('button, [href], [tabindex]:not([tabindex="-1"])'))
+                .filter(function (el) { return el.offsetParent !== null; });
+        }
+
+        function lbKeydown(e) {
+            if (e.key === 'Escape' || e.key === 'Esc') { lbClose(); return; }
+            if (e.key === 'ArrowLeft') { lbShow(lbIndex - 1); return; }
+            if (e.key === 'ArrowRight') { lbShow(lbIndex + 1); return; }
+            if (e.key !== 'Tab') return;
+            var els = lbFocusables();
+            if (!els.length) return;
+            var first = els[0], last = els[els.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+
+        function lbShow(i) {
+            lbIndex = ((i % galUrls.length) + galUrls.length) % galUrls.length;
+            lbRender();
+        }
+
+        function lbOpen(startIndex) {
+            lbLastFocused = document.activeElement;
+            lbSavedScrollY = window.scrollY;
+            lbIndex = startIndex || 0;
+            lbRender();
+            lightbox.hidden = false;
+            document.body.style.overflow = 'hidden';
+            document.addEventListener('keydown', lbKeydown);
+            var els = lbFocusables();
+            (els[0] || lightbox).focus();
+        }
+
+        function lbClose() {
+            lightbox.hidden = true;
+            document.body.style.overflow = '';
+            window.scrollTo(0, lbSavedScrollY); // restaura la posición exacta de scroll
+            document.removeEventListener('keydown', lbKeydown);
+            lbImg.removeAttribute('src'); // corta la carga si seguía en curso
+            if (lbLastFocused && typeof lbLastFocused.focus === 'function') lbLastFocused.focus();
+        }
+
+        var galMainBtn = document.getElementById('galMainBtn');
+        if (galMainBtn) galMainBtn.addEventListener('click', function () { lbOpen(galIndex); });
+
+        // Bug existente (brief): #galMoreBtn no tenía listener — no hacía nada.
+        var galMoreBtn = document.getElementById('galMoreBtn');
+        if (galMoreBtn) galMoreBtn.addEventListener('click', function () { lbOpen(0); });
+
+        if (lbPrevBtn) lbPrevBtn.addEventListener('click', function () { lbShow(lbIndex - 1); });
+        if (lbNextBtn) lbNextBtn.addEventListener('click', function () { lbShow(lbIndex + 1); });
+        lbClosers.forEach(function (el) { el.addEventListener('click', lbClose); });
+    }
+
+    // ── BARRA FIJA INFERIOR (B4) — scroll a la caja de reserva + foco en el
+    // primer campo. No envía el formulario: la reserva necesita fecha y
+    // pasajeros, que el usuario todavía no eligió. ──
+    var stickyBookBtn = document.getElementById('stickyBookBtn');
+    var bookCard = document.querySelector('.lat-book-card');
+    if (stickyBookBtn && bookCard) {
+        stickyBookBtn.addEventListener('click', function () {
+            bookCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            var firstField = document.getElementById('bkPax');
+            if (firstField) {
+                window.setTimeout(function () { firstField.focus(); }, 420);
+            }
+        });
+    }
 
     // Total automático: pax × precio
     var pax = document.getElementById('bkPax');

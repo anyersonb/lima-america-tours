@@ -94,185 +94,170 @@
     }
 }
 
-// ── Hero (calca de hero.png — mockup aprobado 2026-07) ──────────────────
-// Fondo crema. En lg+ la foto (.lat-hero__media) cubre TODO el banner de
-// borde a borde (absolute inset:0), con .lat-hero__media-fade como velo
-// lateral hacia el crema por encima (texto legible a la izquierda, foto
-// limpia a la derecha — cambio 2026-07: antes la foto era solo una columna
-// derecha). Contenido (texto + tarjeta de confianzas + buscador) en flujo
-// normal, ancho de columna de texto limitado para no crecer más allá de lo
-// que el velo cubre. Mobile (<1024): la foto pasa a bloque normal (arriba,
-// banner completo, sin texto superpuesto), todo lo demás apilado debajo a
-// ancho completo.
+// Variante para usar sobre fotos oscuras (hero, galería, newsletter): rojo
+// puro mide ~3.2:1 contra un fondo casi negro (insuficiente AA para texto
+// de este tamaño) — #ffb3b8 es el mismo tono ya usado en el proyecto para
+// texto de marca sobre fotografía oscura (.lat-cat__sub b) y mide 10.8:1.
+.lat-eyebrow--on-dark {
+    color: #ffb3b8;
+    &::before, &::after { background: #ffb3b8; }
+}
+
+// ── Hero (rediseño 2026-08: mockup "foto a sangre" — WhatsApp Image
+// 2026-07-31 13.09.04/05(2)) ─────────────────────────────────────────────
+// Antes: la foto solo cubría .lat-hero__top (columna/bloque superior) con
+// un velo lateral hacia el crema en desktop; en mobile iba en flujo normal
+// SIN texto superpuesto. El mockup nuevo pide la foto detrás de TODO el
+// hero (mobile Y desktop), con un degradado oscuro para contraste y el
+// contenido (eyebrow/H1/párrafo/botones/badge/promos/stats) siempre
+// superpuesto. `.lat-hero` mantiene el mismo nombre de clase: el script de
+// colisión del FAB (layouts/app.blade.php) la usa para saber cuándo está
+// "dentro del hero" en mobile.
 .lat-hero {
     position: relative;
-    background: $lat-paper;
-    color: $lat-ink;
-    padding-bottom: 32px;
+    isolation: isolate;
+    // visible (no hidden): la barra de stats (A2) sobresale del borde
+    // inferior con margin-top negativo y no debe recortarse.
+    overflow: visible;
+    color: #fff;
 
-    @media (min-width: $bp-lg) {
-        padding-bottom: 44px;
-
-        // Altura pedida por el jefe (2026-07-29): 90vh, para que el hero cubra
-        // casi toda la pantalla. Se aplica al BLOQUE COMPLETO (foto + buscador),
-        // no solo a la foto: dándole 90vh a .lat-hero__top, la barra de búsqueda
-        // —que cuelga 30 px por debajo— se iba fuera de la primera pantalla, y
-        // es el CTA principal. Medido con el buscador dentro del viewport en
-        // 1440×900 y en 1366×768. Subir más de 90vh lo empuja fuera en
-        // portátiles de 768 de alto: comprobar antes de tocarlo.
-        min-height: 90vh;
-        display: flex;
-        flex-direction: column;
-    }
+    // Piso de 86vh en escritorio (≥80vh exigido). Es un MÍNIMO, no un techo.
+    // NO conviertas esto en flex container: .lat-hero__content hereda
+    // .lat-wrap (margin:0 auto) y un auto-margin en el eje transversal de
+    // un flex item NO se estira, encoge a su contenido — bug real, ver
+    // commit de este lote (el texto quedaba angosto y centrado a 1440).
+    @media (min-width: $bp-lg) { min-height: 86vh; }
 }
 
-// Contenedor de la foto + texto + tarjeta de confianzas. La foto (absoluta
-// en lg+) solo cubre ESTE bloque, nunca el buscador — así no hay forma de
-// que el bloque rojo/los botones flotantes se solapen con la barra de
-// búsqueda, sea cual sea el alto real del texto.
-.lat-hero__top {
-    position: relative;
-    overflow: hidden;
-
-    @media (min-width: $bp-lg) {
-        overflow: visible;
-        // Absorbe el alto sobrante del hero (min-height:80vh) para que la foto,
-        // que es absolute inset:0 sobre este bloque, crezca con él. El
-        // contenido se centra vertically: con 80vh el texto quedaba pegado
-        // arriba y la mitad inferior de la foto vacía.
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-}
-
-// ── Columna/bloque de foto ───────────────────────────────────────────────
-// La foto es el fondo de TODO el banner (mockup hero.png), no solo de una
-// columna: se hace con el mismo <img> (nunca background-image de CSS — es
-// el LCP, con fetchpriority="high"; una imagen de fondo no se descubre
-// hasta procesar la hoja de estilos y perdería la precarga), en absoluto
-// cubriendo .lat-hero__top de borde a borde, con el degradado como capa
-// aparte por encima (.lat-hero__media-fade, pointer-events:none).
-.lat-hero__media {
-    position: relative;
-    width: 100%;
-    min-height: clamp(240px, 62vw, 380px);
+// Foto de fondo — el MISMO <img> con srcset/fetchpriority de siempre (LCP
+// del sitio), solo que ahora es una capa absoluta detrás de todo el hero
+// en vez de una columna en flujo. Nunca se reemplaza por un
+// background-image de CSS: eso perdería el <link rel="preload"> y el
+// srcset responsive.
+.lat-hero__bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
     overflow: hidden;
 
     img {
-        width: 100%; height: 100%; object-fit: cover; display: block;
-        // Encuadre de la panorámica de Machu Picchu (1920×960). En lg+ la caja
-        // es más alta que el ratio de la foto, así que `cover` recorta arriba y
-        // abajo: el 42% vertical deja la ciudadela y los picos dentro y se come
-        // parte del cielo. El 58% horizontal empuja el motivo hacia la mitad
-        // derecha, que es la zona que el velo NO tapa. Si se cambia la foto por
-        // otra con el motivo en otro sitio, esto se reajusta (y por eso el
-        // encuadre no está en el CMS: es una decisión por imagen).
-        object-position: 58% 42%;
-    }
-
-    &-fade {
-        position: absolute; inset: 0; pointer-events: none;
-        // El fundido "to bottom" lavaba ~42% de la foto y no está en el
-        // mockup (hero.png): se retira. Solo queda el fundido lateral hacia
-        // el crema (izquierda), que sí está en el mockup. En mobile el texto
-        // NO se superpone a la foto (va debajo, en flujo normal) — este es
-        // solo un remate estético del borde.
-        background: linear-gradient(to right, rgba(250, 247, 242, .85) 0%, rgba(250, 247, 242, 0) 18%);
-    }
-
-    @media (min-width: $bp-lg) {
-        position: absolute;
-        inset: 0;
         width: 100%;
-        min-height: 0;
-        overflow: visible; // el degradado y los flotantes pueden respirar sin recorte
-        z-index: 1;
-
-        // Ahora la foto cubre TODO .lat-hero__top (incluida la columna de
-        // texto), así que el degradado tiene que hacer de velo real, no de
-        // remate cosmético: mitad izquierda prácticamente crema plano (AA
-        // real medido contra eyebrow/H1/línea roja/párrafo — el diseño no
-        // puede depender de que la foto actual sea clara ahí, porque va a
-        // cambiar) y mitad derecha con la foto limpia, sin banda visible.
-        // La tarjeta de confianzas no depende de esto: es una caja opaca
-        // ($lat-surface) encima, su contraste no cambia con la foto.
-        // Ajuste 2026-07-29, foto nueva: la del mockup tenía el motivo (el faro)
-        // a la DERECHA, así que un velo opaco hasta el 58% no tapaba nada
-        // importante. La panorámica de Machu Picchu tiene la ciudadela al
-        // CENTRO: con el velo anterior quedaba debajo del crema y solo se veía
-        // la ladera derecha. Se cierra el velo antes (42%) y se termina antes
-        // (72%). La columna de texto mide como máximo clamp(300px,42vw,520px)
-        // —38% del ancho a 1440— así que sigue cayendo entera sobre crema
-        // prácticamente plano: el contraste del párrafo no cambia. Si alguien
-        // ensancha .lat-hero__text, hay que revisar estas paradas.
-        &-fade {
-            position: absolute; inset: 0;
-            background: linear-gradient(
-                to right,
-                rgba($lat-paper, .99) 0%,
-                rgba($lat-paper, .97) 42%,
-                rgba($lat-paper, .45) 60%,
-                rgba($lat-paper, 0) 72%
-            );
-        }
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        // Encuadre de la panorámica de Machu Picchu (1920×960): dentro del
+        // 55-60% horizontal / 35-42% vertical queda la ciudadela y los picos
+        // centrados en el recorte, sea cual sea el alto real del hero. Si se
+        // cambia la foto por otra con el motivo en otro sitio, reajustar.
+        object-position: 58% 38%;
     }
 }
 
-// Fila inferior sobre la foto: bloque "10+" (izq) + WhatsApp/Ver video (der).
-// En pantallas muy angostas no cabe todo en una fila (el pill de WhatsApp
-// con texto es ancho): se apila en columna, alineado a la derecha, con los
-// botones arriba y el bloque rojo abajo — mismo orden visual que el mockup,
-// solo que en columna en vez de en fila.
-.lat-hero__overlay-row {
+// Degradado oscuro sobre la foto — el texto (blanco / rosa claro) necesita
+// 4.5:1 en TODA la zona donde cae contenido, no solo donde "se ve oscura a
+// simple vista": medido con la foto real, no asumido. Doble capa: vertical
+// (progresivo hacia abajo, para que las tarjetas de promoción y la barra de
+// stats en el borde inferior tengan más densidad todavía) + un refuerzo
+// horizontal hacia la izquierda, que es donde cae el bloque de texto en
+// pantallas anchas.
+.lat-hero__scrim {
     position: absolute;
-    left: 12px; right: 12px; bottom: 12px;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 10px;
-
-    @media (min-width: 460px) {
-        flex-direction: row;
-        align-items: flex-end;
-        justify-content: space-between;
-    }
-
-    // Con el pill de WhatsApp fuera (2026-07-29) aquí queda SOLO el bloque rojo
-    // "10+". El ancho fijo que había antes —calc(clamp(380px,50vw,860px) - 40px),
-    // heredado de cuando la foto era una columna derecha y esta fila repartía
-    // "10+" a la izquierda y los pills a la derecha con space-between— dejaba el
-    // bloque pegado al borde IZQUIERDO de esa caja invisible, o sea flotando en
-    // mitad de la foto. Con `width:auto` la caja se ajusta al bloque y `right`
-    // lo pega al margen derecho, que es donde lo pone el mockup.
-    @media (min-width: $bp-lg) {
-        left: auto;
-        right: 45px;
-        width: auto;
-
-        // El buscador sube 30px sobre la foto (margin-top:-30px en
-        // .lat-hero__search-wrap, para cortarla en seco como el mockup), así
-        // que la franja inferior de .lat-hero__media queda TAPADA por la barra
-        // oscura. Con bottom:20px el bloque "10+" quedaba seccionado 10px por la
-        // barra (medido). El offset debe superar esos 30px con margen de respiro:
-        // 30 + 22 = 52. Si se cambia el margin-top negativo del buscador, hay
-        // que ajustar este valor en el mismo commit.
-        bottom: 52px;
-    }
+    inset: 0;
+    background:
+        linear-gradient(180deg, rgba(10, 8, 7, .58) 0%, rgba(10, 8, 7, .64) 45%, rgba(10, 8, 7, .86) 100%),
+        linear-gradient(100deg, rgba(10, 8, 7, .4) 0%, rgba(10, 8, 7, .08) 55%, rgba(10, 8, 7, 0) 78%);
 }
 
-.lat-hero__floating-actions { order: -1; }
-@media (min-width: 460px) { .lat-hero__floating-actions { order: initial; } }
+// ── Contenido superpuesto (eyebrow / H1 / párrafo / botones) ────────────
+.lat-hero__content {
+    position: relative;
+    z-index: 2;
+    padding: 108px 24px 64px;
 
+    @media (min-width: $bp-lg) { padding: 150px 24px 100px; }
+}
+
+.lat-hero__text { min-width: 0; max-width: 620px; }
+
+// El <h1> del hero envuelve DOS líneas visibles: la marca (grande, blanca) y
+// el subtitular rojo/rosa. Es una decisión de SEO explicada en
+// home.blade.php; para que el diseño no dependa de eso, el h1 no aporta
+// estilo propio y cada línea lleva su clase.
+.lat-hero__title {
+    margin: 0;
+    font-size: inherit;
+    font-weight: 400;
+    line-height: inherit;
+}
+
+.lat-hero__brand {
+    display: block;
+    font-family: $lat-font-serif;
+    font-weight: 800;
+    line-height: 1.04;
+    font-size: clamp(2.3rem, 6.2vw, 3.9rem);
+    color: #fff;
+
+    em { font-style: normal; color: inherit; }
+}
+
+// $lat-red puro sobre la foto oscurecida mide ~3.2:1 (medido: rgb(203,16,30)
+// contra el degradado del scrim, que ronda rgb(15,12,11) en la zona del
+// texto) — insuficiente para AA en texto de este tamaño. #ffb3b8 es el
+// mismo tono ya usado en el proyecto para texto rojo DE MARCA sobre fotos
+// oscuras (.lat-cat__sub b, pages/_lat-home.scss) — mide 10.8:1 aquí.
+.lat-hero__tagline {
+    display: block;
+    font-family: $lat-font-serif;
+    font-weight: 700;
+    color: #ffb3b8;
+    font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+    line-height: 1.3;
+    margin: 14px 0 0;
+}
+
+.lat-hero__desc {
+    margin: 16px 0 0;
+    font-size: .98rem;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, .86);
+    max-width: 460px;
+}
+
+.lat-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    margin-top: 28px;
+}
+
+.lat-hero__play-ic {
+    width: 27px; height: 27px; border-radius: 50%;
+    border: 1.5px solid #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: none;
+
+    svg { width: 11px; height: 11px; margin-left: 1px; }
+}
+
+// ── Badge rojo "10+ años", superpuesto a la foto ────────────────────────
+// En mobile va en flujo (debajo de los botones — el bloque completo ya
+// cae sobre la foto, así que sigue "sobre la foto" aunque no flote en
+// columna aparte). A partir de 640px hay espacio de sobra a la derecha del
+// texto: se saca del flujo y se ancla a la foto, centrada verticalmente,
+// para que nunca choque con el H1/párrafo sea cual sea su longitud (copy
+// editable desde Settings, no se puede asumir cuánto ocupa).
 .lat-hero__years {
+    position: relative;
+    align-self: flex-start;
+    margin-top: 26px;
     background: $lat-red;
     color: #fff;
-    padding: 12px 18px;
+    padding: 14px 20px;
     border-radius: $lat-r-md;
     box-shadow: $lat-shadow-lg;
-    max-width: 190px;
+    max-width: 210px;
     line-height: 1.2;
 
     strong {
@@ -284,128 +269,117 @@
 
     &-label {
         display: block;
-        font-size: .6rem;
+        font-size: .62rem;
         font-weight: 700;
         letter-spacing: .1em;
         text-transform: uppercase;
-        margin-top: 2px;
+        margin-top: 3px;
     }
 
     &-sub {
         display: block;
-        font-size: .72rem;
+        font-size: .74rem;
         color: rgba(255, 255, 255, .88);
         margin-top: 6px;
     }
 
+    @media (min-width: 640px) {
+        position: absolute;
+        top: 50%;
+        right: 24px;
+        transform: translateY(-50%);
+        margin-top: 0;
+    }
+
+    @media (min-width: $bp-lg) { right: 5%; }
+
     @media (max-width: 480px) {
-        padding: 9px 13px;
-        max-width: 130px;
-        strong { font-size: 1.4rem; }
-        &-sub { font-size: .66rem; margin-top: 4px; }
+        max-width: 170px;
+        padding: 11px 15px;
+        strong { font-size: 1.5rem; }
+        &-sub { font-size: .68rem; }
     }
 }
 
-.lat-hero__floating-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-
-    .lat-btn { white-space: nowrap; }
-
-    @media (max-width: 480px) {
-        .lat-btn--wa, .lat-btn--video { padding: 8px 12px; font-size: .72rem; }
-        .lat-btn--wa svg { width: 14px; height: 14px; }
-        .lat-btn--video__ic { width: 24px; height: 24px; svg { width: 11px; height: 11px; } }
-    }
-}
-
-// ── Texto + trust card, en flujo normal sobre/junto a la foto ───────────
-.lat-hero__top-content {
+// ── Tarjetas PROMOCIÓN (A3) — sobre la foto, dentro del hero ────────────
+.lat-hero__promos {
     position: relative;
     z-index: 2;
-    padding: 28px 0 32px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 0 24px 52px;
 
-    @media (min-width: $bp-lg) { padding: 48px 0 36px; }
-
-    // Bug crítico (QA, 2026-07): en lg+ el .lat-wrap interno (contenedor
-    // genérico compartido, ancho completo) queda por encima de la foto en
-    // el stacking (este bloque tiene z-index:2 vs. z-index:1 de
-    // .lat-hero__media) aunque su contenido visible (texto y tarjeta) sea
-    // más angosto — la caja invisible del .lat-wrap tapaba el link de
-    // WhatsApp y el botón "Ver video" flotantes sobre la foto (Playwright:
-    // "lat-wrap subtree intercepts pointer events"). No se toca el ancho de
-    // .lat-wrap (es compartido por todo el sitio) ni la altura de este
-    // bloque (eso fue lo que reintrodujo el choque tarjeta de confianzas /
-    // bloque rojo a 1024 en un intento anterior): se desactiva el
-    // pointer-events de todo el bloque y se reactiva solo en el contenido
-    // real, para que el resto del área (transparente) deje pasar el clic
-    // hacia la foto de abajo. Solo aplica en lg+: en mobile/tablet la foto
-    // va en flujo normal (sin superposición) y no hay nada que corregir.
-    @media (min-width: $bp-lg) {
-        pointer-events: none;
-
-        .lat-hero__text,
-        .lat-hero-trust {
-            pointer-events: auto;
-        }
+    @media (max-width: 900px) {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding-bottom: 40px;
     }
 }
 
-.lat-hero__text {
-    min-width: 0;
+.lat-promo {
+    background: rgba(23, 20, 18, .74);
+    border: 1px solid rgba(255, 255, 255, .16);
+    border-radius: $lat-r-md;
+    overflow: hidden;
+    backdrop-filter: blur(6px);
+    display: flex;
+    flex-direction: column;
+    transition: transform .25s ease, border-color .25s ease;
 
-    // El límite de ancho solo importa en lg+, cuando la foto pasa a columna
-    // absoluta a la derecha (ver el clamp gemelo en .lat-hero__media) — debe
-    // caber siempre a su izquierda sin invadirla. Por debajo de lg, la foto
-    // va en flujo normal arriba y el texto ocupa el ancho completo.
-    @media (min-width: $bp-lg) { max-width: clamp(300px, 42vw, 520px); }
+    &:hover { transform: translateY(-4px); border-color: $lat-red; }
+
+    &__media { display: block; aspect-ratio: 16 / 10; overflow: hidden; }
+    &__media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
+    &:hover &__media img { transform: scale(1.06); }
+
+    &__body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1; color: #fff; }
+
+    &__eyebrow { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #ffb3b8; }
+
+    h3 { font-family: $lat-font-sans; font-weight: 700; font-size: 1.05rem; line-height: 1.28; color: #fff; margin: 0; }
+
+    p { font-size: .84rem; color: rgba(255, 255, 255, .8); margin: 0; flex: 1; }
+
+    &__foot {
+        display: flex; align-items: flex-end; justify-content: space-between;
+        gap: 10px; padding-top: 12px; margin-top: 4px; border-top: 1px solid rgba(255, 255, 255, .18);
+    }
+
+    &__price {
+        small { display: block; font-size: .68rem; color: rgba(255, 255, 255, .7); }
+        span { font-family: $lat-font-serif; font-size: 1.3rem; font-weight: 700; color: #fff; line-height: 1; }
+    }
 }
 
-// El <h1> del hero envuelve DOS líneas visibles: la marca (grande, ink) y el
-// subtitular rojo. Es una decisión de SEO explicada en home.blade.php; para
-// que el diseño no dependa de eso, el h1 no aporta estilo propio y cada línea
-// lleva su clase. NO volver a estilar por etiqueta (`.lat-hero h1 {}`): si
-// mañana cambia la jerarquía de encabezados, el hero se movería de sitio.
-.lat-hero__title {
-    margin: 0;
-    font-size: inherit;   // el tamaño lo pone cada línea, no el h1
-    font-weight: 400;
-    line-height: inherit;
+// Variante de .lat-btn-out (definido más abajo) para usar sobre las
+// tarjetas oscuras de promoción: el mismo pill outline pero en blanco en
+// reposo (el rojo de marca sobre `rgba(23,20,18,.74)` mide igual que el
+// resto del texto rojo/rosa de este hero — se prefiere blanco aquí porque
+// convive con el precio, también blanco, y dos rojos age distintos al lado
+// del blanco leían "descuadrado").
+.lat-btn-out--on-dark {
+    border-color: rgba(255, 255, 255, .55);
+    color: #fff;
+
+    &:hover { background: $lat-red; border-color: $lat-red; color: #fff; }
 }
 
-.lat-hero__brand {
-    display: block;
-    font-family: $lat-font-serif;
-    font-weight: 800;
-    line-height: 1.06;
-    font-size: clamp(2.1rem, 5vw, 3.4rem);
-    color: $lat-ink;
+// ── Barra de stats clara (A2) — tarjeta blanca encimada al borde inferior
+// del hero. Mismo recurso que ya usaba el buscador (margin-top negativo):
+// la mitad "muerde" el degradado oscuro de arriba, la otra mitad cae sobre
+// la sección siguiente ($lat-paper). ──
+.lat-hero__stats-wrap {
+    position: relative;
+    z-index: 3;
+    padding: 0 24px;
+    margin-top: -46px;
+    padding-bottom: 46px;
 
-    em { font-style: normal; color: inherit; }
+    @media (max-width: 640px) { margin-top: -30px; padding-bottom: 30px; }
 }
 
-.lat-hero__tagline {
-    display: block;   // era un <p>; ahora es un <span> dentro del h1
-    font-family: $lat-font-serif;
-    font-weight: 700;
-    color: $lat-red;
-    font-size: clamp(1.15rem, 2.3vw, 1.5rem);
-    line-height: 1.28;
-    margin: 14px 0 0;
-}
-
-.lat-hero__desc {
-    margin: 16px 0 0;
-    font-size: .98rem;
-    line-height: 1.65;
-    color: $lat-muted;
-    max-width: 460px;
-}
-
-// ── Tarjeta blanca de confianzas (icono circular + texto centrado) ──────
-.lat-hero-trust {
+.lat-hero-stats {
     background: $lat-surface;
     border: 1px solid $lat-line;
     border-radius: $lat-r-lg;
@@ -413,18 +387,12 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 14px;
-    padding: 20px 18px;
-    margin-top: 24px;
+    padding: 22px 20px;
 
-    // Mismo límite que .lat-hero__text, y por la misma razón: solo aplica
-    // en lg+ (columna junto a la foto absoluta). Antes de eso, 2×2 a ancho
-    // completo (ya en flujo de una sola columna, con la foto arriba).
-    @media (min-width: $bp-lg) { max-width: clamp(300px, 42vw, 520px); }
-
-    @media (max-width: 900px) {
+    @media (max-width: 780px) {
         grid-template-columns: 1fr 1fr;
-        gap: 16px 10px;
-        padding: 16px 12px;
+        gap: 18px 12px;
+        padding: 18px 14px;
         border-radius: $lat-r-md;
     }
 }
@@ -434,13 +402,14 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 8px;
+    gap: 6px;
     min-width: 0;
 
     &__ic {
         width: 42px; height: 42px; border-radius: 50%;
         border: 1.5px solid $lat-red; color: $lat-red;
         display: grid; place-items: center; flex: none;
+        margin-bottom: 2px;
 
         svg { width: 18px; height: 18px; }
     }
@@ -453,31 +422,32 @@
     }
 }
 
+// Número grande de cada stat (A2) — el mismo .lat-htc se reutiliza para el
+// bloque icono+valor+label; antes solo tenía icono+label (trust chips).
+.lat-hstat__value {
+    display: block;
+    font-family: $lat-font-serif;
+    font-weight: 800;
+    font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+    color: $lat-ink;
+    line-height: 1.1;
+}
+
 // ── Buscador — doble marco: contenedor oscuro grueso + barra clara ──────
-// (mockup: no es una sola barra, es un marco casi negro con una barra
-// blanca redondeada adentro, sobresaliendo por los 4 lados).
+// (mockup original: un marco casi negro con una barra blanca redondeada
+// adentro). Vive FUERA del hero desde el rediseño 2026-08 (sección propia
+// .lat-hero-search-section) — ya no necesita el margin-top negativo que
+// antes lo hacía morder el borde inferior de la foto, porque ese lugar
+// ahora lo ocupa la barra de stats (A2).
+.lat-hero-search-section { padding: 30px 24px 0; }
+
 .lat-hero__search-wrap {
     position: relative;
-    // z-index > 1 (el z-index de .lat-hero__media en lg+) para que el marco
-    // oscuro del buscador pinte ENCIMA del borde inferior de la foto, no
-    // detrás — sin esto, un margin-top negativo solaparía visualmente pero
-    // la foto (positioned, z-index:1) seguiría ganando el pintado.
-    z-index: 2;
     background: $lat-ink;
     border-radius: $lat-r-lg;
     padding: 12px;
-    margin-top: 4px;
     box-shadow: $lat-shadow-lg;
     max-width: 100%;
-
-    // Mockup (hero.png): la barra oscura del buscador solapa/corta el borde
-    // inferior de la foto — no hay separación. Esto solo aplica en lg+,
-    // que es donde la foto es columna absoluta a la derecha cubriendo todo
-    // .lat-hero__top; en mobile la foto va en flujo normal arriba y no hay
-    // nada que solapar. A propósito NO se toca la altura de .lat-hero__top
-    // (eso fue lo que reintrodujo el choque tarjeta de confianzas / bloque
-    // rojo a 1024 en un intento anterior).
-    @media (min-width: $bp-lg) { margin-top: -30px; }
 }
 
 .lat-search {
@@ -1009,5 +979,109 @@
         padding: 56px 0;
 
         &__mark { opacity: .12; width: clamp(160px, 40vw, 220px); right: 2%; }
+    }
+}
+
+// ── Newsletter oscuro con foto (A5) — antes del footer. Calca del mockup
+// "Tu próxima aventura empieza aquí" (WhatsApp Image 2026-07-31
+// 13.09.05(3)); reutiliza el mismo formulario/endpoint que el newsletter
+// del footer, solo que con su propia superficie (foto + degradado) y una
+// fila de 4 beneficios debajo. ──
+.lat-news {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    padding: 64px 0 0;
+    color: #fff;
+
+    &__inner {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 40px;
+        align-items: center;
+        padding-bottom: 44px;
+
+        @media (max-width: 900px) {
+            grid-template-columns: 1fr;
+            gap: 28px;
+        }
+    }
+
+    &__intro h2 {
+        font-family: $lat-font-serif;
+        font-weight: 800;
+        font-size: clamp(1.9rem, 3.6vw, 2.7rem);
+        line-height: 1.15;
+        color: #fff;
+        margin: 14px 0 12px;
+    }
+
+    &__intro p {
+        color: rgba(255, 255, 255, .82);
+        font-size: 1rem;
+        max-width: 480px;
+        margin: 0;
+    }
+
+    &__flash {
+        border-radius: $lat-r-sm;
+        padding: 11px 16px;
+        font-size: .86rem;
+        margin: 0 0 14px;
+
+        &--ok { background: rgba(18, 138, 75, .22); border: 1px solid rgba(18, 138, 75, .4); color: #fff; }
+        &--err { background: rgba(200, 31, 33, .22); border: 1px solid rgba(200, 31, 33, .4); color: #fff; }
+    }
+
+    &__fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 14px;
+
+        @media (max-width: 480px) { grid-template-columns: 1fr; }
+    }
+
+    &__field input {
+        width: 100%;
+        border: 1px solid rgba(255, 255, 255, .28);
+        background: rgba(255, 255, 255, .08);
+        color: #fff;
+        border-radius: $lat-r-pill;
+        padding: 13px 20px;
+        font-family: $lat-font-sans;
+        font-size: .9rem;
+
+        &::placeholder { color: rgba(255, 255, 255, .55); }
+        &:focus { outline: 2px solid $lat-red; outline-offset: 1px; }
+    }
+
+    &__benefits {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 22px 20px;
+        padding: 26px 0 40px;
+        border-top: 1px solid rgba(255, 255, 255, .14);
+
+        @media (max-width: 900px) { grid-template-columns: 1fr 1fr; }
+        @media (max-width: 520px) { grid-template-columns: 1fr; }
+    }
+
+    &__benefit {
+        display: flex;
+        gap: 13px;
+        align-items: flex-start;
+
+        b { display: block; font-family: $lat-font-sans; font-weight: 700; font-size: .92rem; color: #fff; margin-bottom: 3px; }
+        span { font-size: .82rem; color: rgba(255, 255, 255, .74); line-height: 1.4; }
+    }
+
+    &__benefit-ic {
+        width: 38px; height: 38px; border-radius: 10px; flex: none;
+        background: rgba(203, 16, 30, .22);
+        color: #ffb3b8;
+        display: grid; place-items: center;
+
+        svg { width: 18px; height: 18px; }
     }
 }

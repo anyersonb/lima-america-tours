@@ -79,14 +79,22 @@
     $heroYearsSub = \App\Models\Setting::get('home_hero_years_sub_' . $locale)
         ?: $L('Miles de viajeros descubriendo el Perú', 'Thousands of travelers discovering Peru', 'Milhares de viajantes descobrindo o Peru');
 
+    // ── Los 4 "trust chips" del hero (guía experto / tours seguros / atención
+    // personalizada / mejor precio) quedan RETIRADOS del hero en el rediseño
+    // 2026-08 (mockup foto a sangre): esa tarjeta la reemplaza la barra de
+    // STATS (4.9 valoración / 50K+ viajeros / 100% cancelación / 10+ años),
+    // ver $homeStats más abajo. No se borra el código: Configuración → Home
+    // sigue teniendo esos 4 campos de texto + selector de ícono guardados en
+    // Settings, así que si algún día se quiere reactivar esta tarjeta (p.ej.
+    // en otra pantalla) el dato del cliente sigue ahí y no hay que
+    // pedírselo de nuevo. Ver reporte de este lote para más contexto.
+    /*
     $heroTrustDefaults = [
         $L('Guías expertos locales', 'Local expert guides', 'Guias locais especializados'),
         $L('Tours 100% seguros', '100% safe tours', 'Tours 100% seguros'),
         $L('Atención personalizada', 'Personalized support', 'Atendimento personalizado'),
         $L('Mejor precio garantizado', 'Best price guaranteed', 'Melhor preço garantido'),
     ];
-    // Íconos: catálogo cerrado (App\Support\HeroIcons), elegidos desde
-    // Configuración → Home. Clave desconocida o vacía → ícono del mockup.
     $heroTrustIcons = collect([1, 2, 3, 4])->map(function (int $slot) {
         $chosen = \App\Models\Setting::get("home_hero_trust_{$slot}_icon");
 
@@ -100,6 +108,14 @@
         $n = $i + 1;
         return \App\Models\Setting::get("home_hero_trust_{$n}_{$locale}") ?: $default;
     });
+    */
+
+    // ── CTA primario del hero "Reservar Ahora" — texto editable con default
+    // en código; URL editable con fallback al catálogo completo. ──
+    $heroPrimaryLabel = \App\Models\Setting::get('home_hero_cta_primary_' . $locale)
+        ?: $L('Reservar Ahora', 'Book Now', 'Reservar Agora');
+    $heroPrimaryUrlSetting = trim((string) (\App\Models\Setting::get('home_hero_cta_primary_url') ?: ''));
+    $heroPrimaryHref = $heroPrimaryUrlSetting !== '' ? $heroPrimaryUrlSetting : route('tours.index', ['locale' => $locale]);
 
     // ── Destinos reales para el select del buscador (mismo dataset que usa
     // el resto del home / tours.index — modelo Region, ya cargado por
@@ -155,8 +171,107 @@
         // simplemente no pinta el botón "Ver video".
     }
 
+    // Texto del botón "Ver video" — antes venía de __('ui.watch_video')
+    // (lang file, no editable desde el panel); ahora es un Setting con el
+    // mismo default, para que la clienta pueda cambiar el copy sin pedir
+    // un deploy.
+    $heroVideoLabel = \App\Models\Setting::get('home_hero_cta_video_' . $locale)
+        ?: $L('Ver Video', 'Watch Video', 'Ver Vídeo');
+
     // ── Tours destacados: reales, ya calculados por HomeController ──
     $destacados = $featuredTours->take(4);
+
+    // ── Ofertas especiales — modelo Offer real, ya calculado por
+    // HomeController::fetchOffers() (activas, sin vencer, orden manual,
+    // límite 3). Se sube aquí (antes vivía junto a su propia sección, más
+    // abajo en el archivo) porque el rediseño 2026-08 las pinta como
+    // tarjetas "PROMOCIÓN" DENTRO del hero (A3) y ya no en una sección
+    // aparte — la sección "Ofertas especiales" que existía después de
+    // "Explora por categoría" se retiró para no repetir las mismas 3
+    // tarjetas dos veces en la misma página (ver reporte). ──
+    $offers = $offers ?? collect();
+
+    // ── Barra de STATS clara (A2) — reemplaza la tarjeta de trust chips
+    // del hero (ver nota arriba). 4 slots numéricos, editables por
+    // Settings con default en código; ícono del catálogo cerrado
+    // App\Support\HeroIcons (mismo criterio que el resto del hero). ──
+    $statsEnabledRaw = \App\Models\Setting::get('home_stats_enabled');
+    $homeStatsEnabled = $statsEnabledRaw === null ? true : filter_var($statsEnabledRaw, FILTER_VALIDATE_BOOLEAN);
+
+    $statDefaults = [
+        1 => ['value' => '4.9', 'label' => $L('Valoración de viajeros', 'Traveler rating', 'Avaliação dos viajantes'), 'icon' => 'star'],
+        2 => ['value' => '50K+', 'label' => $L('Viajeros felices', 'Happy travelers', 'Viajantes felizes'), 'icon' => 'group'],
+        3 => ['value' => '100%', 'label' => $L('Cancelación gratuita', 'Free cancellation', 'Cancelamento gratuito'), 'icon' => 'shield'],
+        4 => ['value' => '10+', 'label' => $L('Años de experiencia', 'Years of experience', 'Anos de experiência'), 'icon' => 'award'],
+    ];
+    $homeStats = collect([1, 2, 3, 4])->map(function (int $n) use ($statDefaults, $locale) {
+        $default = $statDefaults[$n];
+        $chosenIcon = \App\Models\Setting::get("home_stat_{$n}_icon");
+        $iconKey = (is_string($chosenIcon) && \App\Support\HeroIcons::exists($chosenIcon)) ? $chosenIcon : $default['icon'];
+
+        return [
+            'value' => \App\Models\Setting::get("home_stat_{$n}_value") ?: $default['value'],
+            'label' => \App\Models\Setting::get("home_stat_{$n}_label_{$locale}") ?: $default['label'],
+            'icon'  => \App\Support\HeroIcons::svg($iconKey),
+        ];
+    });
+
+    // ── Newsletter oscuro con foto (A5), antes del footer. Reutiliza el
+    // MISMO endpoint/campos que el newsletter del footer
+    // (NewsletterController@subscribe + partials.recaptcha) — el del
+    // footer se suprime SOLO en esta página (ver $__env->share más abajo
+    // y footer.blade.php) para no dejar dos formularios del mismo canal
+    // en la misma pantalla. ──
+    $newsEnabledRaw = \App\Models\Setting::get('home_news_enabled');
+    $homeNewsEnabled = $newsEnabledRaw === null ? true : filter_var($newsEnabledRaw, FILTER_VALIDATE_BOOLEAN);
+
+    $newsImgSetting = \App\Models\Setting::get('home_news_image');
+    if (is_array($newsImgSetting)) { $newsImgSetting = $newsImgSetting[0] ?? ''; }
+    $newsImgSetting = trim((string) $newsImgSetting);
+    // Igual que home_hero_image: disco `media`, directorio "home" — se
+    // resuelve con ImagePath::homeImage() (NO ::url(), que es para el disco
+    // `public`/`assets` — con el helper equivocado la URL sale rota).
+    $newsImgUrl = ($newsImgSetting !== '' && $newsImgSetting !== '[]' && $newsImgSetting !== '""')
+        ? \App\Support\ImagePath::homeImage($newsImgSetting)
+        : \App\Support\ResponsiveImage::defaultPhotoUrl(960);
+
+    $newsEyebrow = \App\Models\Setting::get('home_news_eyebrow_' . $locale)
+        ?: $L('Viaja. Explora. Vive.', 'Travel. Explore. Live.', 'Viaje. Explore. Viva.');
+    $newsTitle = \App\Models\Setting::get('home_news_title_' . $locale)
+        ?: $L('Tu próxima aventura empieza aquí', 'Your next adventure starts here', 'Sua próxima aventura começa aqui');
+    $newsSub = \App\Models\Setting::get('home_news_sub_' . $locale)
+        ?: $L(
+            'Suscríbete a nuestro boletín para recibir noticias, ofertas y promociones especiales.',
+            'Subscribe to our newsletter to receive news, deals and special promotions.',
+            'Inscreva-se em nossa newsletter para receber notícias, ofertas e promoções especiais.'
+        );
+
+    $newsBenefitDefaults = [
+        1 => ['icon' => 'tag', 'title' => $L('Ofertas exclusivas', 'Exclusive deals', 'Ofertas exclusivas'), 'text' => $L('Accede a descuentos y promociones especiales.', 'Get access to special discounts and promotions.', 'Tenha acesso a descontos e promoções especiais.')],
+        2 => ['icon' => 'map', 'title' => $L('Novedades de viaje', 'Travel updates', 'Novidades de viagem'), 'text' => $L('Recibe inspiración y nuevas experiencias cada semana.', 'Get inspiration and new experiences every week.', 'Receba inspiração e novas experiências toda semana.')],
+        3 => ['icon' => 'clock', 'title' => $L('Eventos especiales', 'Special events', 'Eventos especiais'), 'text' => $L('Sé el primero en enterarte de nuestros eventos y lanzamientos.', 'Be the first to know about our events and launches.', 'Seja o primeiro a saber sobre nossos eventos e lançamentos.')],
+        4 => ['icon' => 'headset', 'title' => $L('Atención preferente', 'Priority support', 'Atendimento preferencial'), 'text' => $L('Soporte prioritario para suscriptores en todo momento.', 'Priority support for subscribers at all times.', 'Suporte prioritário para assinantes a qualquer momento.')],
+    ];
+    $newsBenefits = collect([1, 2, 3, 4])->map(function (int $n) use ($newsBenefitDefaults, $locale) {
+        $default = $newsBenefitDefaults[$n];
+        $chosenIcon = \App\Models\Setting::get("home_news_benefit_{$n}_icon");
+        $iconKey = (is_string($chosenIcon) && \App\Support\HeroIcons::exists($chosenIcon)) ? $chosenIcon : $default['icon'];
+
+        return [
+            'icon'  => \App\Support\HeroIcons::svg($iconKey),
+            'title' => \App\Models\Setting::get("home_news_benefit_{$n}_title_{$locale}") ?: $default['title'],
+            'text'  => \App\Models\Setting::get("home_news_benefit_{$n}_text_{$locale}") ?: $default['text'],
+        ];
+    });
+
+    if ($homeNewsEnabled) {
+        // Avisa a footer.blade.php (renderizado después de @yield('content')
+        // dentro de layouts/app.blade.php, mismo $__env) que NO repita el
+        // formulario de newsletter en esta página — evita dos formularios
+        // del mismo canal en la misma pantalla (footer.blade.php lee esto
+        // con $__env->shared()).
+        $__env->share('lat_hide_footer_newsletter', true);
+    }
 
     $badgeClass = fn (?string $type) => match ($type) {
         'success' => 'lat-dcard__badge--g',
@@ -256,18 +371,25 @@
 <div class="lat-page">
 
     {{-- ============================================================
-         HERO — foto a sangre (columna derecha, altura completa) + texto,
-         tarjeta de confianzas y buscador de 4 campos en doble marco.
-         Calca de hero.png (mockup aprobado 2026-07).
+         HERO — rediseño 2026-08 (mockup foto a sangre): foto de fondo
+         cubriendo TODO el hero en cualquier breakpoint (antes: foto solo
+         en la columna/bloque superior, con velo hacia crema en desktop).
+         Contenido superpuesto: eyebrow, H1 (marca + tagline roja),
+         párrafo, botones "Reservar Ahora" / "Ver Video", badge "10+ años",
+         tarjetas de PROMOCIÓN (A3) y barra de STATS clara (A2) encimada al
+         borde inferior. El buscador de 4 campos queda FUERA del hero, ya
+         en la sección siguiente (evita solapar la tarjeta de stats).
          ============================================================ --}}
     <section class="lat-hero" aria-labelledby="hero-title">
-      <div class="lat-hero__top">
-        <div class="lat-hero__media">
+        <div class="lat-hero__bg">
             {{-- LCP del sitio: variantes WebP por ancho (ResponsiveImage), carga
                  prioritaria y NUNCA lazy, con las dimensiones reales del archivo
                  que se sirve para que el navegador reserve la caja exacta. El
                  preload va en el <head> (más abajo, @push('preload')) con el
-                 mismo srcset: si difirieran, el navegador bajaría dos fotos. --}}
+                 mismo srcset: si difirieran, el navegador bajaría dos fotos.
+                 Sigue siendo el mismo <img> con srcset de siempre — SOLO cambia
+                 su posicionamiento (capa de fondo en vez de columna), nunca se
+                 reemplaza por un background-image de CSS. --}}
             <img
                 src="{{ $heroImg['src'] }}"
                 @if ($heroImg['srcset'] !== '')
@@ -279,82 +401,111 @@
                     width="{{ $heroImg['width'] }}" height="{{ $heroImg['height'] }}"
                 @endif
                 loading="eager" fetchpriority="high" decoding="async">
-            <span class="lat-hero__media-fade" aria-hidden="true"></span>
+            {{-- Degradado oscuro para contraste AA del texto blanco/rosa sobre la
+                 foto (medido: ver notas de contraste en pages/_lat-home.scss). --}}
+            <span class="lat-hero__scrim" aria-hidden="true"></span>
+        </div>
 
-            {{-- Fila inferior sobre la foto (mockup): bloque "10+" a la izquierda +
-                 WhatsApp/Ver video apilados a la derecha. Los botones comparten
-                 clase .lat-btn para que el FAB global de WhatsApp
-                 (layouts/app.blade.php) los detecte y se desplace hacia arriba
-                 sin solaparse en ningún breakpoint. --}}
-            <div class="lat-hero__overlay-row">
-                <div class="lat-hero__years">
-                    <strong>{{ $heroYearsNumber }}</strong>
-                    <span class="lat-hero__years-label">{{ $heroYearsLabel }}</span>
-                    <span class="lat-hero__years-sub">{!! nl2br(e($heroYearsSub)) !!}</span>
-                </div>
+        <div class="lat-hero__content lat-wrap">
+            <div class="lat-hero__text">
+                <span class="lat-eyebrow lat-eyebrow--on-dark">{{ $heroEyebrow }}</span>
 
-                {{-- El pill de WhatsApp del hero se retiró el 2026-07-29 por
-                     decisión del jefe: había DOS CTAs del mismo canal en la
-                     primera pantalla (este pill y el FAB flotante global). Queda
-                     el FAB, que acompaña en todo el sitio y no compite con el
-                     buscador. Consecuencia práctica: este contenedor solo se
-                     pinta si hay video cargado — sin él no queda un div vacío
-                     empujando layout sobre la foto. --}}
-                @if ($heroVideoUrl !== '')
-                    <div class="lat-hero__floating-actions">
-                        <button type="button" class="lat-btn lat-btn--video" id="heroVideoBtn"
+                {{-- El H1 envuelve marca + subtitular rojo, no solo la marca (motivo
+                     de SEO explicado en el commit original: la home es la página con
+                     más autoridad del dominio y el H1 debe reforzar el tema). --}}
+                <h1 id="hero-title" class="lat-hero__title">
+                    <span class="lat-hero__brand">{!! $heroTitleRaw !!}</span>
+                    <span class="lat-hero__tagline">{!! nl2br(e($heroTagline)) !!}</span>
+                </h1>
+
+                <p class="lat-hero__desc">{{ $heroSub }}</p>
+
+                <div class="lat-hero__actions">
+                    <a href="{{ $heroPrimaryHref }}" class="lat-btn lat-btn--red">{{ $heroPrimaryLabel }}</a>
+
+                    @if ($heroVideoUrl !== '')
+                        <button type="button" class="lat-btn lat-btn--outline-white" id="heroVideoBtn"
                                 aria-haspopup="dialog" aria-controls="heroVideoModal">
-                            {{ __('ui.watch_video') }}
-                            <span class="lat-btn--video__ic" aria-hidden="true">
+                            <span class="lat-hero__play-ic" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                             </span>
+                            {{ $heroVideoLabel }}
                         </button>
-                    </div>
-                @endif
+                    @endif
+                </div>
+            </div>
+
+            {{-- Badge rojo "10+ años", superpuesto a la foto (mockup mobile; se
+                 conserva también en desktop porque el brief lo pide como pieza
+                 fija del hero — ver reporte sobre el recorte del mockup desktop). --}}
+            <div class="lat-hero__years">
+                <strong>{{ $heroYearsNumber }}</strong>
+                <span class="lat-hero__years-label">{{ $heroYearsLabel }}</span>
+                <span class="lat-hero__years-sub">{!! nl2br(e($heroYearsSub)) !!}</span>
             </div>
         </div>
 
-        <div class="lat-hero__top-content">
-            <div class="lat-wrap">
-                <div class="lat-hero__text">
-                    <span class="lat-eyebrow">{{ $heroEyebrow }}</span>
+        {{-- ── Tarjetas PROMOCIÓN (A3) — mismas 3 ofertas reales ($offers,
+             modelo Offer, HomeController::fetchOffers()) que antes vivían en
+             la sección aparte "Ofertas especiales"; esa sección se retiró
+             para no repetir las mismas tarjetas dos veces en la página. Si
+             no hay ofertas activas, el hero no deja un hueco. ── --}}
+        @if ($offers->isNotEmpty())
+            <div class="lat-wrap lat-hero__promos">
+                @foreach ($offers as $offer)
+                    @php
+                        $offerImg = \App\Support\ImagePath::url($offer->image) ?? \App\Support\ResponsiveImage::defaultPhotoUrl(640);
+                        $offerHref = $offer->cta_url
+                            ?: ($offer->tour ? route('tours.show', ['locale' => $locale, 'slug' => $offer->tour->slug]) : route('tours.index', ['locale' => $locale]));
+                    @endphp
+                    <article class="lat-promo">
+                        <a href="{{ $offerHref }}" class="lat-promo__media">
+                            <img src="{{ $offerImg }}" alt="{{ $offer->title }}" loading="lazy" width="400" height="230">
+                        </a>
+                        <div class="lat-promo__body">
+                            <span class="lat-promo__eyebrow">{{ $L('Promoción', 'Promotion', 'Promoção') }}</span>
+                            <a href="{{ $offerHref }}"><h3 class="clamp-2">{{ $offer->title }}</h3></a>
+                            @if ($offer->description)
+                                <p class="clamp-2">{{ $offer->description }}</p>
+                            @endif
+                            <div class="lat-promo__foot">
+                                @if ($offer->price)
+                                    <div class="lat-promo__price">
+                                        <small>{{ $L('Desde', 'From', 'Desde') }}</small>
+                                        <span>{{ \App\Support\Money::format($offer->price, optional($offer->tour)->currency ?? \App\Support\Money::site()) }}</span>
+                                    </div>
+                                @endif
+                                <a href="{{ $offerHref }}" class="lat-btn-out lat-btn-out--on-dark">{{ $offer->cta_label ?: $L('Leer más', 'Read more', 'Leia mais') }}</a>
+                            </div>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+        @endif
 
-                    {{-- El H1 envuelve marca + subtitular rojo, no solo la marca.
-                         Los dos son elementos visibles y contiguos del mockup y
-                         conservan su copy exacto: no hay texto oculto ni cambia
-                         una sola medida del diseño. El motivo es de SEO — la home
-                         es la página con más autoridad del dominio y un H1 que
-                         solo dice el nombre de marca no refuerza el tema por el
-                         que compite el sitio; envolviendo también el subtitular,
-                         el H1 vuelve a contener Lima / Tours / Perú. La keyword
-                         exacta ("Tours en Lima") sigue en el <title>.
-                         Los estilos viven en .lat-hero__brand (clase, no
-                         etiqueta) justamente para que el texto se vea idéntico
-                         sin importar qué etiqueta HTML lo envuelva. --}}
-                    <h1 id="hero-title" class="lat-hero__title">
-                        <span class="lat-hero__brand">{!! $heroTitleRaw !!}</span>
-                        <span class="lat-hero__tagline">{!! nl2br(e($heroTagline)) !!}</span>
-                    </h1>
-
-                    <p class="lat-hero__desc">{{ $heroSub }}</p>
-                </div>
-
-                {{-- Tarjeta blanca flotante — 4 confianzas (icono + texto centrado) --}}
-                <div class="lat-hero-trust">
-                    @foreach ($heroTrust as $i => $label)
+        {{-- ── Barra de stats clara (A2), encimada al borde inferior del hero.
+             Se oculta entera si home_stats_enabled es explícitamente falso. ── --}}
+        @if ($homeStatsEnabled)
+            <div class="lat-wrap lat-hero__stats-wrap">
+                <div class="lat-hero-stats">
+                    @foreach ($homeStats as $stat)
                         <div class="lat-htc">
-                            <span class="lat-htc__ic">{!! $heroTrustIcons[$i] !!}</span>
-                            <span class="lat-htc__label">{{ $label }}</span>
+                            <span class="lat-htc__ic">{!! $stat['icon'] !!}</span>
+                            <span class="lat-hstat__value">{{ $stat['value'] }}</span>
+                            <span class="lat-htc__label">{{ $stat['label'] }}</span>
                         </div>
                     @endforeach
                 </div>
             </div>
-        </div>
-      </div>
+        @endif
+    </section>
 
-        {{-- Buscador — 4 campos reales (doble marco: contenedor oscuro + barra clara).
-             Fuera de .lat-hero__top a propósito: nunca debe solaparse con el
-             bloque rojo "10+" ni con los botones flotantes sobre la foto. --}}
+    {{-- ============================================================
+         BUSCADOR — 4 campos reales (doble marco: contenedor oscuro + barra
+         clara). Fuera del hero a propósito: nunca debe solaparse con la
+         tarjeta de stats que ahora cuelga del borde inferior del hero.
+         ============================================================ --}}
+    <section class="lat-hero-search-section" aria-label="{{ $L('Buscador de tours', 'Tour search', 'Busca de tours') }}">
         <div class="lat-wrap">
             <div class="lat-hero__search-wrap">
                     <form class="lat-search" role="search" method="GET" action="{{ route('tours.results', ['locale' => $locale]) }}">
@@ -424,18 +575,19 @@
                     </form>
                 </div>
             </div>
+        </div>
     </section>
 
     {{-- ============================================================
          MODAL "Ver video" — solo existe en el DOM si hay URL en Settings.
          El iframe NO se crea hasta el clic (evita cargar un player al
-         cargar la home y matar el LCP). Fuera de .lat-hero__top a
-         propósito: ese contenedor tiene overflow:hidden en mobile y el
-         modal es position:fixed a pantalla completa.
+         cargar la home y matar el LCP). Fuera del hero a propósito: el
+         modal es position:fixed a pantalla completa y no debe heredar
+         ningún overflow/stacking del contenedor del hero.
          ============================================================ --}}
     @if ($heroVideoUrl !== '')
         <div class="lat-video-modal" id="heroVideoModal" role="dialog" aria-modal="true"
-             aria-label="{{ __('ui.watch_video') }}" hidden>
+             aria-label="{{ $heroVideoLabel }}" hidden>
             <div class="lat-video-modal__backdrop" data-video-close></div>
             <div class="lat-video-modal__panel">
                 <button type="button" class="lat-video-modal__close" data-video-close
@@ -592,55 +744,12 @@
     @endif
 
     {{-- ============================================================
-         OFERTAS ESPECIALES — reales (modelo Offer, admin → Marketing →
-         Ofertas). $offers ya viene calculado por HomeController::fetchOffers()
-         (activas, sin vencer, orden manual, límite 3); antes se calculaba y
-         nunca se pintaba en ningún lugar del sitio (docs/qa/panel-filament.md
-         hallazgo #2).
+         OFERTAS ESPECIALES — retirada de aquí (rediseño 2026-08): las
+         mismas 3 tarjetas de $offers ahora se pintan como PROMOCIÓN dentro
+         del hero (A3, ver arriba) para no repetirlas dos veces en la misma
+         página. $offers sigue siendo el mismo modelo Offer real
+         (HomeController::fetchOffers()) — no se tocó ninguna consulta.
          ============================================================ --}}
-    @php $offers = $offers ?? collect(); @endphp
-    @if ($offers->isNotEmpty())
-        <section class="lat-wrap" style="padding:70px 24px" aria-labelledby="offers-title">
-            <div class="lat-sec-head lat-sec-head--home">
-                <span class="lat-eyebrow is-center">{{ $L('Aprovecha ahora', 'Grab it now', 'Aproveite agora') }}</span>
-                <h2 id="offers-title">{{ $L('Ofertas especiales', 'Special offers', 'Ofertas especiais') }}</h2>
-                <p>{{ $L('Promociones por tiempo limitado en nuestros tours más populares.', 'Limited-time promotions on our most popular tours.', 'Promoções por tempo limitado em nossos tours mais populares.') }}</p>
-            </div>
-
-            <div class="lat-dest-grid">
-                @foreach ($offers as $offer)
-                    @php
-                        $offerImg = \App\Support\ImagePath::url($offer->image) ?? \App\Support\ResponsiveImage::defaultPhotoUrl(640);
-                        $offerHref = $offer->cta_url
-                            ?: ($offer->tour ? route('tours.show', ['locale' => $locale, 'slug' => $offer->tour->slug]) : route('tours.index', ['locale' => $locale]));
-                    @endphp
-                    <article class="lat-dcard">
-                        <a href="{{ $offerHref }}" class="lat-dcard__media">
-                            <img src="{{ $offerImg }}" alt="{{ $offer->title }}" loading="lazy" width="400" height="275">
-                        </a>
-                        <div class="lat-dcard__body">
-                            <a href="{{ $offerHref }}"><h3 class="clamp-2">{{ $offer->title }}</h3></a>
-                            @if ($offer->description)
-                                <p class="lat-dcard__desc clamp-2">{{ $offer->description }}</p>
-                            @endif
-                            <div class="lat-dcard__foot">
-                                @if ($offer->price)
-                                    <div class="lat-dcard__price">
-                                        <small>{{ $L('Desde', 'From', 'Desde') }}</small>
-                                        {{-- Offer no siempre tiene tour_id (promos genéricas); el negocio
-                                             opera en soles (PEN), así que ese es el fallback razonable
-                                             cuando no hay tour vinculado del que heredar la moneda. --}}
-                                        <span class="lat-amt">{{ \App\Support\Money::format($offer->price, optional($offer->tour)->currency ?? \App\Support\Money::site()) }}</span>
-                                    </div>
-                                @endif
-                                <a href="{{ $offerHref }}" class="lat-btn-out">{{ $offer->cta_label }}</a>
-                            </div>
-                        </div>
-                    </article>
-                @endforeach
-            </div>
-        </section>
-    @endif
 
     {{-- ============================================================
          FAQ (AEO) — se mantiene por su valor SEO; solo renderiza si hay
@@ -672,6 +781,67 @@
         </div>
     </section>
 
+    {{-- ============================================================
+         NEWSLETTER (A5) — bloque oscuro con foto, antes del footer.
+         Reutiliza el MISMO endpoint/campos que el newsletter del footer
+         (NewsletterController@subscribe); el del footer se suprime en esta
+         página (ver $__env->share arriba y footer.blade.php) para no dejar
+         dos formularios del mismo canal en la misma pantalla. El CTA "Ver
+         todos los tours" del bloque rojo de arriba (.lat-home-cta) NO se
+         tocó y sigue visible antes de este bloque.
+         ============================================================ --}}
+    @if ($homeNewsEnabled)
+        <section class="lat-news" aria-labelledby="news-title"
+                 style="background-image:linear-gradient(rgba(12,10,9,.72), rgba(12,10,9,.88)), url('{{ $newsImgUrl }}');">
+            <div class="lat-wrap lat-news__inner">
+                <div class="lat-news__intro">
+                    <span class="lat-eyebrow lat-eyebrow--on-dark">{{ $newsEyebrow }}</span>
+                    <h2 id="news-title">{{ $newsTitle }}</h2>
+                    <p>{{ $newsSub }}</p>
+                </div>
+
+                <div class="lat-news__form">
+                    @if (session('newsletter_success'))
+                        <p class="lat-news__flash lat-news__flash--ok" role="status">{{ session('newsletter_success') }}</p>
+                    @elseif ($errors->has('email') || $errors->has('name'))
+                        <p class="lat-news__flash lat-news__flash--err" role="alert">{{ $errors->first('email') ?: $errors->first('name') }}</p>
+                    @endif
+                    <form action="{{ route('newsletter.subscribe') }}" method="post" id="form-newsletter-home">
+                        @csrf
+                        <input type="text" name="website" tabindex="-1" autocomplete="off"
+                               style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+                        <div class="lat-news__fields">
+                            <label class="lat-news__field">
+                                <span class="sr-only">{{ __('footer.newsletter_name') }}</span>
+                                <input type="text" name="name" required placeholder="{{ $L('Nombre', 'Name', 'Nome') }}">
+                            </label>
+                            <label class="lat-news__field">
+                                <span class="sr-only">{{ __('footer.newsletter_email') }}</span>
+                                <input type="email" name="email" required placeholder="{{ $L('Correo', 'Email', 'E-mail') }}">
+                            </label>
+                        </div>
+                        @include('partials.recaptcha', ['recaptchaAction' => 'newsletter', 'recaptchaFormId' => 'form-newsletter-home'])
+                        <button type="submit" class="lat-btn lat-btn--red" style="width:100%">
+                            {{ $L('Quiero suscribirme', 'I want to subscribe', 'Quero me inscrever') }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="lat-wrap lat-news__benefits">
+                @foreach ($newsBenefits as $benefit)
+                    <div class="lat-news__benefit">
+                        <span class="lat-news__benefit-ic">{!! $benefit['icon'] !!}</span>
+                        <div>
+                            <b>{{ $benefit['title'] }}</b>
+                            <span>{{ $benefit['text'] }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
 </div>
 
 @endsection
@@ -691,7 +861,7 @@
     var frame = modal.querySelector('[data-video-frame]');
     var closers = modal.querySelectorAll('[data-video-close]');
     var videoUrl = @json($heroVideoUrl);
-    var videoTitle = @json(__('ui.watch_video'));
+    var videoTitle = @json($heroVideoLabel);
     var lastFocused = null;
 
     function focusableEls() {

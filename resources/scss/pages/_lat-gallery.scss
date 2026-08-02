@@ -1,39 +1,63 @@
 // ═══════════════════════════════════════════════════════════════════════
 // LIMA AMÉRICA TOURS — Galería "Descubre la belleza del Perú" (home)
-// Tira horizontal edge-to-edge de fotos de destinos. Reutiliza .lat-wrap,
-// .lat-eyebrow y .lat-sec-head (ver pages/lat-home); tokens $lat-* (rojo/
-// ink/paper), nada de teal.
+// Rediseño 2026-08 (mockup WhatsApp Image 2026-07-31 13.09.05(1)): tarjetas
+// REDONDEADAS con separación entre ellas sobre fondo OSCURO (antes: tira a
+// sangre, fotos pegadas sin radio ni gap, sobre $lat-paper). Mismo número
+// de fotos y mismo comportamiento responsive (scroll-snap en mobile/tablet,
+// grid fijo en desktop) — solo cambia la piel visual. Reutiliza .lat-wrap,
+// .lat-eyebrow y .lat-sec-head (ver pages/lat-home).
+//
+// El mockup trae un motivo de mapamundi tenue sobre el fondo oscuro; ese
+// asset NO existe en el proyecto y no se inventa uno externo (instrucción
+// explícita del brief) — queda como fondo oscuro liso. Ver reporte.
 // ═══════════════════════════════════════════════════════════════════════
 @use '../abstracts/variables' as *;
 
 .lat-gallery {
     padding: 70px 0;
-    background: $lat-paper;
+    background: $lat-ink;
     overflow: hidden;
 
-    .lat-sec-head { margin-bottom: 32px; }
+    // $lat-muted/$lat-ink (pensados para fondo claro) no llegan a AA sobre
+    // $lat-ink: se sobreescribe SOLO dentro de esta sección.
+    .lat-sec-head {
+        margin-bottom: 32px;
+
+        .lat-eyebrow { color: #ffb3b8; &::before, &::after { background: #ffb3b8; } }
+        h2 { color: #fff; }
+        p { color: rgba(255, 255, 255, .78); }
+    }
 
     &__strip {
         display: grid;
         grid-auto-flow: column;
         grid-auto-columns: minmax(72%, 1fr);
-        gap: 4px;
+        gap: 16px;
         overflow-x: auto;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
+        padding: 0 24px;
 
         &::-webkit-scrollbar { display: none; }
 
-        @media (min-width: $bp-sm) { grid-auto-columns: minmax(46%, 1fr); gap: 6px; }
-        @media (min-width: $bp-md) { grid-auto-columns: minmax(31%, 1fr); gap: 6px; }
-        @media (min-width: $bp-lg) { grid-auto-columns: minmax(0, 1fr); gap: 8px; overflow-x: visible; scroll-snap-type: none; }
+        @media (min-width: $bp-sm) { grid-auto-columns: minmax(46%, 1fr); gap: 18px; }
+        @media (min-width: $bp-md) { grid-auto-columns: minmax(31%, 1fr); gap: 18px; }
+        @media (min-width: $bp-lg) {
+            grid-auto-columns: minmax(0, 1fr);
+            gap: 20px;
+            overflow-x: visible;
+            scroll-snap-type: none;
+            max-width: $lat-wrap;
+            margin: 0 auto;
+        }
     }
 
     &__item {
         position: relative;
         isolation: isolate;
         overflow: hidden;
+        border-radius: $lat-r-md;
         aspect-ratio: 3 / 4;
         scroll-snap-align: start;
 

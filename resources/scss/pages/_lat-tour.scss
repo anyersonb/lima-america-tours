@@ -53,30 +53,97 @@
     @media (max-width: 980px) { grid-template-columns: 1fr; }
 }
 
-// ── Galería ──────────────────────────────────────────────────────────────
+// ── Galería: slider + miniaturas (B1) ───────────────────────────────────
+// .lat-gal ya no es un grid de 4 columnas con el visor ocupando toda la
+// fila superior: ahora es una columna simple (visor arriba, tira de
+// miniaturas debajo) porque el visor pasó a ser un slider real
+// (flechas/paginación/swipe), no una celda de grid fija.
 .lat-gal {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 12px;
 
     &__main {
-        grid-column: 1 / -1;
         aspect-ratio: 16 / 8.4;
         border-radius: $lat-r-md;
         overflow: hidden;
         position: relative;
+        background: $lat-surface-2;
+        touch-action: pan-y; // el swipe horizontal no debe robarle el scroll vertical a la página
+
+        @media (max-width: 640px) { aspect-ratio: 4 / 3; }
+    }
+
+    &__main-btn {
+        display: block;
+        width: 100%; height: 100%;
+        padding: 0; border: none; background: none; cursor: zoom-in;
 
         img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        &:focus-visible { outline: 2px solid $lat-red; outline-offset: -2px; }
+    }
+
+    &__nav {
+        position: absolute; top: 50%; transform: translateY(-50%);
+        z-index: 3;
+        width: 40px; height: 40px; border-radius: 50%;
+        background: rgba($lat-ink, .55); color: #fff; border: none;
+        display: grid; place-items: center; cursor: pointer;
+        backdrop-filter: blur(3px);
+        transition: background .2s, transform .2s;
+
+        svg { width: 18px; height: 18px; }
+
+        &:hover { background: rgba($lat-ink, .8); }
+        &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+        &--prev { left: 14px; }
+        &--next { right: 14px; }
+
+        @media (max-width: 480px) { width: 34px; height: 34px; svg { width: 15px; height: 15px; } }
+    }
+
+    &__dots {
+        position: absolute; left: 0; right: 0; bottom: 14px; z-index: 3;
+        display: flex; justify-content: center; gap: 7px;
+        // Dejan de estorbar el swipe/clic de la foto: son decorativos y a la
+        // vez interactivos (se puede pulsar un punto), pero no deben tapar
+        // toda la franja inferior de la foto para el gesto de swipe.
+        pointer-events: none;
+
+        @media (max-width: 900px) { display: none; } // paginación solo en desktop (mockup); mobile usa swipe/flechas
+    }
+
+    &__dot {
+        pointer-events: auto;
+        width: 8px; height: 8px; border-radius: 50%;
+        background: rgba(255, 255, 255, .55); border: none; padding: 0; cursor: pointer;
+        transition: background .2s, transform .2s;
+
+        &.is-active { background: #fff; transform: scale(1.3); }
     }
 
     &__more {
-        position: absolute; right: 12px; bottom: 12px;
+        position: absolute; right: 12px; bottom: 12px; z-index: 3;
         background: rgba($lat-ink, .7); color: #fff;
         font-size: .78rem; font-weight: 600; padding: 8px 14px;
         border-radius: $lat-r-pill; backdrop-filter: blur(4px);
         display: inline-flex; gap: 7px; align-items: center; border: none; cursor: pointer;
+        transition: background .2s;
 
         svg { width: 15px; height: 15px; }
+        &:hover { background: rgba($lat-ink, .88); }
+        &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+        @media (max-width: 900px) { right: 10px; bottom: 10px; font-size: .72rem; padding: 7px 11px; }
+    }
+
+    &__thumbs {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 10px;
+
+        @media (max-width: 640px) { grid-template-columns: repeat(4, 1fr); }
     }
 
     &__thumb {
@@ -94,11 +161,77 @@
 
         &:hover img { transform: scale(1.08); }
         &.is-active { border-color: $lat-red; }
+        &:focus-visible { outline: 2px solid $lat-red; outline-offset: 1px; }
+    }
+}
+
+// ── Lightbox (B1) — overlay a pantalla completa ─────────────────────────
+.lat-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 9500; // por encima del FAB global de WhatsApp (9000), igual que el modal de video del home
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &[hidden] { display: none; }
+
+    &__backdrop {
+        position: absolute; inset: 0;
+        background: rgba(8, 6, 5, .92);
+        cursor: pointer;
     }
 
-    @media (max-width: 640px) {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        &__main { aspect-ratio: 4 / 3; }
+    &__stage {
+        position: relative;
+        z-index: 1;
+        max-width: min(92vw, 1100px);
+        max-height: 82vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        img {
+            max-width: 100%;
+            max-height: 82vh;
+            border-radius: $lat-r-sm;
+            display: block;
+            object-fit: contain;
+        }
+    }
+
+    &__close {
+        position: absolute; top: 18px; right: 18px; z-index: 2;
+        width: 42px; height: 42px; border-radius: 50%;
+        background: rgba(255, 255, 255, .12); color: #fff; border: 1px solid rgba(255, 255, 255, .3);
+        display: grid; place-items: center; cursor: pointer;
+        transition: background .2s, transform .2s;
+
+        svg { width: 19px; height: 19px; }
+        &:hover { background: rgba(255, 255, 255, .22); transform: scale(1.06); }
+        &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+    }
+
+    &__nav {
+        position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+        width: 46px; height: 46px; border-radius: 50%;
+        background: rgba(255, 255, 255, .12); color: #fff; border: 1px solid rgba(255, 255, 255, .3);
+        display: grid; place-items: center; cursor: pointer;
+        transition: background .2s;
+
+        svg { width: 20px; height: 20px; }
+        &:hover { background: rgba(255, 255, 255, .22); }
+        &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+        &--prev { left: 16px; }
+        &--next { right: 16px; }
+
+        @media (max-width: 640px) { width: 38px; height: 38px; svg { width: 16px; height: 16px; } }
+    }
+
+    &__count {
+        position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 2;
+        background: rgba(255, 255, 255, .12); color: #fff; border: 1px solid rgba(255, 255, 255, .25);
+        font-size: .82rem; font-weight: 600; padding: 6px 14px; border-radius: $lat-r-pill;
     }
 }
 
@@ -174,22 +307,90 @@
     &--o { background: #e07a1a; }
 }
 
-// ── Tabs ─────────────────────────────────────────────────────────────────
-.lat-tabs {
-    display: flex; gap: 6px; border-bottom: 1px solid $lat-line; margin-bottom: 24px; overflow-x: auto;
+// ── TABS (≥1024px) / ACORDEÓN (<1024px) — B3 ────────────────────────────
+// MISMO marcado en los dos modos (ver comentario en tours/show.blade.php):
+// cada `.lat-tab-item` empareja un botón (`.lat-tab`) con su panel
+// (`.lat-tab-panel`). En mobile es flujo normal (cada par apilado = una fila
+// de acordeón). En desktop, `display:contents` en `.lat-tab-item` saca
+// button+panel de su wrapper y los deja como hijos flex directos de
+// `.lat-tabs-wrap`; `order` los reagrupa: todos los botones (order:1) antes
+// que todos los paneles (order:2), formando la barra horizontal de tabs.
+.lat-tabs-wrap {
+    margin-top: 4px;
+
+    @media (min-width: $bp-lg) {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+}
+
+.lat-tabs-wrap__mobile-heading {
+    font-family: $lat-font-serif;
+    font-weight: 800;
+    color: $lat-ink;
+    font-size: 1.2rem;
+    margin: 0 0 14px;
+
+    @media (min-width: $bp-lg) { display: none; }
+}
+
+.lat-tab-item {
+    @media (min-width: $bp-lg) { display: contents; }
 }
 
 .lat-tab {
-    padding: 13px 4px; margin-right: 22px; font-family: $lat-font-sans;
-    font-weight: 600; color: $lat-muted; cursor: pointer; border: none; background: none;
-    border-bottom: 2px solid transparent; white-space: nowrap; transition: color .2s, border-color .2s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 16px 2px;
+    border-bottom: 1px solid $lat-line;
+    font-family: $lat-font-sans;
+    font-weight: 700;
+    font-size: .92rem;
+    color: $lat-ink;
+    text-align: left;
+    cursor: pointer;
+    border-top: none; border-left: none; border-right: none;
+    background: none;
+    transition: color .2s;
 
-    &:hover { color: $lat-ink; }
-    &.is-active { color: $lat-red; border-color: $lat-red; }
+    &:hover { color: $lat-red; }
+    &:focus-visible { outline: 2px solid $lat-red; outline-offset: -2px; }
+
+    @media (min-width: $bp-lg) {
+        order: 1;
+        width: auto;
+        padding: 13px 4px;
+        margin-right: 22px;
+        border-bottom: 2px solid transparent;
+        font-weight: 600;
+        color: $lat-muted;
+
+        &.is-active { color: $lat-red; border-color: $lat-red; }
+    }
+}
+
+.lat-tab__label { min-width: 0; }
+
+// Chevron — visible SOLO en el modo acordeón (mobile); en desktop es una
+// barra de tabs y no tiene sentido (ni contenido que "expandir/colapsar"
+// visualmente, los tabs son exclusivos).
+.lat-tab__chev {
+    flex: none;
+    width: 18px; height: 18px; color: $lat-muted;
+    transition: transform .25s ease;
+
+    .lat-tab.is-active & { transform: rotate(180deg); color: $lat-red; }
+
+    @media (min-width: $bp-lg) { display: none; }
 }
 
 .lat-tab-panel {
     display: none;
+    padding: 4px 2px 22px;
 
     &.is-active { display: block; }
 
@@ -211,8 +412,19 @@
     }
 
     &__excludes svg { color: $lat-red; }
+
+    @media (min-width: $bp-lg) {
+        order: 2;
+        flex-basis: 100%;
+        width: 100%;
+        padding: 0;
+        border-top: 1px solid $lat-line;
+        padding-top: 24px;
+        margin-top: 2px;
+    }
 }
 
+// ── Itinerario con imagen por parada (B2) ───────────────────────────────
 .lat-itin-step {
     display: flex; gap: 16px; padding-bottom: 20px; position: relative;
 
@@ -220,6 +432,24 @@
         content: ""; position: absolute; left: 15px; top: 34px; bottom: 0; width: 2px; background: $lat-line;
     }
 
+    // Con foto, el conector/numeración se alinean respecto a la miniatura
+    // cuadrada (no al círculo de número, que pasa a superponerse en la
+    // esquina de la foto — mockup de referencia).
+    &.has-image {
+        &:not(:last-child)::before { left: 33px; top: 100px; }
+    }
+
+    &__img {
+        width: 72px; height: 72px; border-radius: $lat-r-sm; object-fit: cover;
+        flex: none; z-index: 1;
+
+        @media (min-width: $bp-sm) { width: 100px; height: 100px; }
+    }
+
+    // El número se dibuja pegado a la esquina inferior de la miniatura
+    // cuando hay foto (mockup: número superpuesto), o como círculo normal
+    // en flujo cuando no la hay (estado por defecto hoy: los 26 tours
+    // cargados no tienen ninguna imagen de itinerario).
     &__num {
         // Ink en vez de rojo: se repite un círculo por paso del itinerario y
         // varios juntos leían como "mucho rojo"; el rojo queda en __time.
@@ -227,11 +457,23 @@
         font-weight: 700; font-size: .9rem; display: grid; place-items: center; flex: none; z-index: 1;
     }
 
+    &.has-image &__num {
+        position: absolute;
+        left: 72px - 14px;
+        top: 72px - 14px;
+        width: 28px; height: 28px; font-size: .8rem;
+        border: 2px solid $lat-surface;
+
+        @media (min-width: $bp-sm) { left: 100px - 14px; top: 100px - 14px; }
+    }
+
     &__time {
         font-size: .74rem; font-weight: 700; color: $lat-red; letter-spacing: .04em; display: block; margin-bottom: 2px;
     }
 
-    h4 { font-family: $lat-font-sans; font-size: 1rem; margin-bottom: 5px; color: $lat-ink; }
+    // Título en mayúsculas (referencia visual del brief B2), sin tocar el
+    // copy real del CMS (text-transform, no mb_strtoupper en PHP).
+    h4 { font-family: $lat-font-sans; font-weight: 700; font-size: 1rem; margin-bottom: 5px; color: $lat-ink; text-transform: uppercase; letter-spacing: .01em; }
     p { font-size: .92rem; color: $lat-muted; margin: 0; }
 }
 
@@ -480,3 +722,91 @@
 }
 
 // ── Franja de garantías (bottom) — reutiliza .lat-guarantee/.lat-gt de Home ──
+
+// ── Barra fija inferior en móvil (B4) ────────────────────────────────────
+// Oculta por defecto (solo <1024px, ver mediaquery abajo). Comparte clase
+// .lat-btn con el resto del sitio para que el FAB de WhatsApp la detecte
+// (layouts/app.blade.php ya tiene .lat-sticky-book en su CONTROL_SELECTOR).
+.lat-sticky-book {
+    display: none;
+
+    @media (max-width: 1023.98px) {
+        display: block;
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        z-index: 800; // por debajo del FAB (9000) y del lightbox/modal (9500)
+        background: $lat-surface;
+        border-top: 1px solid $lat-line;
+        box-shadow: 0 -8px 24px rgba(15, 11, 10, .12);
+    }
+
+    &__trust {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 7px 16px;
+        background: $lat-surface-2;
+        border-bottom: 1px solid $lat-line;
+        font-size: .68rem;
+        font-weight: 600;
+        color: $lat-ink-soft;
+
+        span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        @media (max-width: 380px) { font-size: .62rem; }
+    }
+
+    &__row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 12px 16px;
+    }
+
+    &__price {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.1;
+        min-width: 0;
+
+        small { color: $lat-muted; font-size: .68rem; order: 3; }
+    }
+
+    &__before {
+        text-decoration: line-through;
+        color: $lat-muted;
+        order: 0 !important;
+    }
+
+    &__amt {
+        font-family: $lat-font-serif;
+        font-weight: 700;
+        font-size: 1.35rem;
+        color: $lat-red;
+    }
+
+    .lat-btn { padding: 12px 22px; white-space: nowrap; }
+}
+
+// El contenedor de la página necesita el mismo alto de padding-bottom que
+// mide la barra fija (~118px con la franja de confianza incluida), solo en
+// el rango donde la barra existe — si no, la barra tapa el último bloque
+// de contenido (franja de garantías) al llegar al final del scroll.
+.lat-tour-page {
+    @media (max-width: 1023.98px) { padding-bottom: 118px; }
+}
+
+// …pero ese padding no alcanza: el <footer> es HERMANO de .lat-tour-page, no
+// su hijo (layouts/app.blade.php pinta <x-footer /> después de @yield). Al
+// llegar al final del scroll la barra fija tapaba los últimos 105px del
+// footer, que es justo donde viven la franja legal (Términos y condiciones,
+// Política de privacidad), el copyright y el selector de idioma — o sea,
+// enlaces legales inalcanzables en móvil. Medido el 2026-08-01 con
+// getBoundingClientRect + elementFromPoint a 1023px y 390px.
+// Se usa :has() para no tener que ensuciar el <body> del layout con una clase
+// por página: si un navegador viejo no lo soporta, simplemente se comporta
+// como hoy (no hay regresión, solo se pierde la mejora).
+body:has(.lat-sticky-book) footer {
+    @media (max-width: 1023.98px) { padding-bottom: 118px; }
+}

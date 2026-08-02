@@ -166,7 +166,9 @@ class HeroAccessibilityTest extends TestCase
     {
         $html = $this->get('/es')->assertOk()->getContent();
 
-        $mediaPos = strpos($html, 'lat-hero__media');
+        // 2026-08: .lat-hero__media se renombró a .lat-hero__bg (rediseño
+        // "foto a sangre") — mismo contrato, solo cambia el nombre.
+        $mediaPos = strpos($html, 'lat-hero__bg');
         $imgPos = strpos($html, '<img', (int) $mediaPos);
         $img = substr($html, (int) $imgPos, strpos($html, '>', (int) $imgPos) - $imgPos + 1);
 

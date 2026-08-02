@@ -363,7 +363,13 @@
             '.lat-btn-out',
             '.cart-cta-btn', '.cart-sticky', '.cart-coupon-submit',
             'button[type="submit"]', '.btn--primary', '.tour-card a[href]:last-child',
-            '.lat-footer__newsletter input', '.lat-footer__newsletter button'
+            '.lat-footer__newsletter input', '.lat-footer__newsletter button',
+            // 2026-08: newsletter propio del home (A5, antes del footer) y
+            // barra fija de reserva en móvil de la ficha de tour (B4) —
+            // mismo motivo que el newsletter del footer: son campos/CTA
+            // pegados al borde inferior, la zona donde aparca el FAB.
+            '.lat-news__form input', '.lat-news__form button',
+            '.lat-sticky-book', '.lat-sticky-book button'
         ].join(', ');
 
         // En mobile/tablet (<HERO_BP) el hero de Home apila foto + texto + tarjeta

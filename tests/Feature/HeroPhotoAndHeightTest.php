@@ -23,9 +23,12 @@ class HeroPhotoAndHeightTest extends TestCase
 {
     use RefreshDatabase;
 
+    // 2026-08: .lat-hero__media se renombró a .lat-hero__bg en el rediseño
+    // "foto a sangre" — el contrato (derivadas de la foto, alt editable,
+    // 80vh mínimo) no cambió, solo el nombre del contenedor.
     private function heroImgTag(string $html): string
     {
-        $mediaPos = strpos($html, 'lat-hero__media');
+        $mediaPos = strpos($html, 'lat-hero__bg');
         $imgPos = strpos($html, '<img', (int) $mediaPos);
 
         return substr($html, (int) $imgPos, strpos($html, '>', (int) $imgPos) - $imgPos + 1);

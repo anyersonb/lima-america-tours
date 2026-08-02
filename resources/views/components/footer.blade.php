@@ -61,11 +61,21 @@
     } catch (\Throwable $e) {
         $hasBlogPosts = false;
     }
+
+    // home.blade.php avisa aquí (mismo $__env, compartido entre vistas de la
+    // misma request) cuando ya pintó su propio bloque de newsletter (A5,
+    // "Viaja. Explora. Vive.", antes del footer): en esa página este bloque
+    // se omite para no dejar dos formularios del mismo canal (mismo
+    // endpoint NewsletterController@subscribe) en la misma pantalla. En
+    // cualquier otra página, $__env->shared(...) devuelve false y el
+    // footer se ve exactamente igual que siempre.
+    $hideFooterNewsletter = (bool) $__env->shared('lat_hide_footer_newsletter', false);
 @endphp
 <footer class="lat-footer" role="contentinfo"
         style="background-image:linear-gradient(rgba(16,13,11,.9), rgba(16,13,11,.96)), url('{{ $footBg }}');">
 
     {{-- Newsletter --}}
+    @unless ($hideFooterNewsletter)
     <div class="lat-wrap">
         <section aria-labelledby="newsletter-title" class="lat-footer__newsletter">
             <div>
@@ -109,6 +119,7 @@
             </div>
         </section>
     </div>
+    @endunless
 
     {{-- Columnas principales --}}
     <div class="lat-wrap">
