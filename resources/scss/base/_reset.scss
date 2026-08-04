@@ -1,6 +1,14 @@
 html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+
+    // El header es sticky (71px en escritorio, 67 en móvil). Sin esto, cualquier
+    // salto a un ancla deja el borde superior del destino DEBAJO del header y su
+    // primera línea tapada: se vio al activar el ítem "Servicios" del menú, que
+    // apunta a #servicios en el home. Afecta igual al enlace de accesibilidad
+    // "Saltar al contenido" (#main) y a los scrollIntoView de la ficha de tour,
+    // así que se arregla una vez aquí y no ancla por ancla.
+    scroll-padding-top: 92px;
 }
 
 body {
