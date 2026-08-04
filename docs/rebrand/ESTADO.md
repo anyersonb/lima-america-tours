@@ -1,6 +1,6 @@
 # Estado del rebrand "anti-IA" y del lote de mockups
 
-Actualizado: 2026-08-02 · Rama `feat/mockup-home-ficha` · Publicado en staging: **f3c4f8e**
+Actualizado: 2026-08-03 · Rama `feat/mockup-home-ficha` · Publicado en staging: **e1e3c38**
 
 Este archivo existe para que el siguiente que abra el proyecto (o yo mismo dentro
 de un mes) no tenga que reconstruir de memoria en qué quedó todo.
@@ -29,6 +29,14 @@ El número de columnas del grid lo manda el número de tarjetas visibles.
 **Modelo `Guide`** con su panel, y `reviewed_at` en `testimonials` para poder
 mostrar "nombre · fecha · tour". Ninguno trae datos sembrados y ambas secciones
 se ocultan vacías: inventar personas es el defecto que este trabajo corrige.
+
+**Menú completo otra vez (2026-08-03).** La cabecera vuelve a ofrecer Servicios,
+Blog y Contacto, y el footer lo espeja añadiendo Términos y Privacidad; queda
+derogada la reducción a Inicio · Nosotros · Tours del 2026-07-29. **"Free Tours"
+no vuelve sin condición**: no es una sección, es la búsqueda `?q=free`, y hoy
+ningún tour lleva "free" en título ni descripción, así que aterrizaría en un
+listado de 0 resultados. Usa el guard `$hasFreeTours` que ya existía en el
+footer, así que aparecerá solo cuando haya algo detrás. Efecto hoy: 6 ítems.
 
 ## Decisiones tomadas que conviene no revertir sin pensar
 
