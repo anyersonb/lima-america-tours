@@ -143,15 +143,16 @@
                 <h4 id="footer-links">{{ __('footer.links') }}</h4>
                 <div class="lat-footer__links">
                     {{--
-                        Decisión del jefe (2026-07-29): el footer solo lista
-                        Inicio · Nosotros · Tours, igual que el menú.
-                        Los demás quedan COMENTADOS, no borrados: sus rutas y
-                        vistas siguen vivas y accesibles por URL.
+                        Menú completo (2026-08-03), espejo del header. Inicio,
+                        Nosotros, Tours, Contacto, Términos y Privacidad van
+                        siempre. Free Tours y Blog dependen de su guard
+                        ($hasFreeTours / $hasBlogPosts, arriba): sin free tours
+                        publicados el primero enlaza a una búsqueda de 0
+                        resultados, y sin entradas el segundo a un listado vacío.
                     --}}
                     <a href="{{ route('home', ['locale' => $locale]) }}">{{ __('nav.home') }}</a>
                     <a href="{{ route('about', ['locale' => $locale]) }}">{{ __('footer.about_short') }}</a>
                     <a href="{{ route('tours.index', ['locale' => $locale]) }}">{{ __('nav.tours') }}</a>
-                    {{--
                     @if ($hasFreeTours)
                         <a href="{{ route('tours.results', ['locale' => $locale, 'q' => 'free']) }}">{{ __('nav.free_tours') }}</a>
                     @endif
@@ -161,7 +162,6 @@
                     <a href="{{ route('contact', ['locale' => $locale]) }}">{{ __('nav.contact') }}</a>
                     <a href="{{ route('legal.terms', ['locale' => $locale]) }}">{{ __('footer.terms') }}</a>
                     <a href="{{ route('legal.privacy', ['locale' => $locale]) }}">{{ __('footer.privacy') }}</a>
-                    --}}
                 </div>
             </nav>
 

@@ -150,11 +150,32 @@ presente "buscador con los 4 campos"    'id="s-q".*id="s-dest"|id="s-dest"'
 ausente  "sin pill de WhatsApp"         'lat-btn--wa'
 ausente  "sin el PNG de 2.5 MB"         'hero-machu-picchu\.png'
 
-NAV="$(sed -n 's/.*<div class="lat-nav-links">\(.*\)<\/div>.*/\1/p' <<<"$HTML" | head -1)"
-if grep -qE 'Blog|Contacto|Free Tours' <<<"$NAV"; then
-  echo "   FALLA menú reducido (aparece Blog/Contacto/Free Tours)"
+# Menú completo desde el 2026-08-03 (antes se comprobaba que estuviera reducido
+# a Inicio/Nosotros/Tours).
+#
+# El `sed` anterior operaba línea a línea y el nav se sirve en varias: devolvía
+# SIEMPRE vacío, así que el check imprimía "OK menú reducido" sin haber mirado
+# nada. Un check que no puede fallar no es un check. Hay que aplanar el HTML
+# primero, y que la extracción vacía sea un FALLA explícito.
+NAV="$(tr '\n' ' ' <<<"$HTML" | sed -n 's/.*<div class="lat-nav-links">\(.*\)<div class="lat-nav-cta">.*/\1/p')"
+if [ -z "$NAV" ]; then
+  echo "   FALLA no se pudo extraer el nav (¿cambió el marcado del header?)"
 else
-  echo "   OK    menú reducido a Inicio/Nosotros/Tours"
+  for etiqueta in Inicio Nosotros Tours Servicios Blog Contacto; do
+    if grep -qE ">[[:space:]]*$etiqueta[[:space:]]*<" <<<"$NAV"; then
+      echo "   OK    menú: $etiqueta"
+    else
+      echo "   FALLA menú: falta $etiqueta"
+    fi
+  done
+  # "Free Tours" se oculta solo mientras no exista ningún tour con "free" en
+  # título/descripción (guard $hasFreeTours en header y footer): apunta a la
+  # búsqueda ?q=free y sin resultados sería un enlace a una página vacía.
+  if grep -qiE 'Free Tours' <<<"$NAV"; then
+    echo "   AVISO menú: aparece Free Tours (¿ya hay tours 'free' publicados?)"
+  else
+    echo "   OK    menú: Free Tours oculto (no hay tours 'free')"
+  fi
 fi
 
 echo "   noindex del staging:"

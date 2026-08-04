@@ -15,24 +15,38 @@
     $sTa  = \App\Models\Setting::get('social_tripadvisor');
     $norm = fn ($u) => $u ? (\Illuminate\Support\Str::startsWith($u, ['http://', 'https://']) ? $u : 'https://' . ltrim($u, '/')) : null;
 
-    // Menú reducido por decisión del jefe (2026-07-29): solo Inicio, Nosotros y
-    // Tours, porque esas otras secciones no se van a mostrar por ahora.
-    //
-    // Los 4 ítems retirados quedan COMENTADOS, no borrados: las rutas, las vistas
-    // y las traducciones siguen existiendo y funcionando (/blog, /contacto y las
-    // páginas siguen respondiendo si se entra por URL directa, y el footer las
-    // sigue enlazando). Volver a mostrar cualquiera es descomentar su línea.
+    // "Free Tours" no es una sección propia: es la búsqueda ?q=free. Mismo guard
+    // que footer.blade.php (no duplicar la query ahí, esta es la del header). El
+    // try/catch importa: este componente también se pinta en páginas de error
+    // (404, 500) donde la BD puede no estar disponible, y una excepción aquí
+    // tumbaría el sitio entero.
+    try {
+        $hasFreeTours = \App\Models\Tour::published()->where(function ($q) {
+            $q->where('title_es', 'like', '%free%')
+                ->orWhere('title_en', 'like', '%free%')
+                ->orWhere('description_es', 'like', '%free%');
+        })->exists();
+    } catch (\Throwable $e) {
+        $hasFreeTours = false;
+    }
+
+    // Menú completo (2026-08-03): Inicio, Nosotros, Tours, Servicios, Blog y
+    // Contacto siempre; Free Tours solo si $hasFreeTours (hoy no, 0 resultados).
     // Esta lista alimenta el nav de escritorio Y el drawer de móvil: no hay que
     // tocar dos sitios.
     $navItems = [
         ['label' => __('nav.home'),       'url' => route('home', ['locale' => $locale]),                          'active' => request()->routeIs('home')],
         ['label' => __('nav.about'),      'url' => route('about', ['locale' => $locale]),                         'active' => request()->routeIs('about')],
         ['label' => __('nav.tours'),      'url' => route('tours.index', ['locale' => $locale]),                   'active' => request()->routeIs('tours.index', 'tours.category', 'tours.show')],
-        // ['label' => __('nav.free_tours'), 'url' => route('tours.results', ['locale' => $locale, 'q' => 'free']),  'active' => request()->routeIs('tours.results') && request('q') === 'free'],
-        // ['label' => __('nav.services'),   'url' => route('home', ['locale' => $locale]) . '#servicios',            'active' => false],
-        // ['label' => 'Blog',               'url' => route('blog.index', ['locale' => $locale]),                    'active' => request()->routeIs('blog.index', 'blog.show')],
-        // ['label' => __('nav.contact'),    'url' => route('contact', ['locale' => $locale]),                       'active' => request()->routeIs('contact')],
     ];
+
+    if ($hasFreeTours) {
+        $navItems[] = ['label' => __('nav.free_tours'), 'url' => route('tours.results', ['locale' => $locale, 'q' => 'free']), 'active' => request()->routeIs('tours.results') && request('q') === 'free'];
+    }
+
+    $navItems[] = ['label' => __('nav.services'), 'url' => route('home', ['locale' => $locale]) . '#servicios', 'active' => false];
+    $navItems[] = ['label' => 'Blog',             'url' => route('blog.index', ['locale' => $locale]),         'active' => request()->routeIs('blog.index', 'blog.show')];
+    $navItems[] = ['label' => __('nav.contact'),  'url' => route('contact', ['locale' => $locale]),            'active' => request()->routeIs('contact')];
 @endphp
 
 <div class="lat-topbar">

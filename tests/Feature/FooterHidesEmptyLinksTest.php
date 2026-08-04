@@ -8,20 +8,22 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Bloque "Enlaces" del footer (`<nav aria-labelledby="footer-links">`).
+ * Navegación completa: bloque "Enlaces" del footer (`<nav
+ * aria-labelledby="footer-links">`) y menú de cabecera (`.lat-nav-links`).
  *
- * Decisión del jefe (2026-07-29): ese bloque lista SOLO Inicio · Nosotros ·
- * Tours, igual que el menú de cabecera. Los demás enlaces quedan comentados en
- * la vista, no borrados: rutas y vistas siguen vivas y accesibles por URL.
+ * Decisión de Anyerson (2026-08-03): se reactivan todos los botones del menú y
+ * el footer lo espeja. Deroga la reducción a Inicio · Nosotros · Tours del
+ * 2026-07-29, que es lo que fijaba la versión anterior de este archivo.
  *
- * Términos y Política de privacidad NO desaparecen del footer: viven en la
- * barra inferior (`.lat-footer__legal`), que es lo que exige la pasarela de
- * pago y espera Google. Este test lo fija para que un futuro "limpiemos el
- * footer" no se los lleve por delante.
+ * Lo que NO cambió es el criterio de fondo, y es lo que estos tests protegen:
+ * un enlace de navegación no puede llevar a una sección vacía. Por eso
+ * "Free Tours" (que no es una sección, es la búsqueda ?q=free) y "Blog"
+ * dependen de que exista contenido detrás — guards `$hasFreeTours` y
+ * `$hasBlogPosts` en header.blade.php y footer.blade.php.
  *
- * Antes vivía aquí el fix de "Free Tours"/"Blog" condicionales (enlaces que
- * llevaban a "Sin resultados"). Ahora esos enlaces no se pintan nunca, así que
- * los tests comprueban lo más fuerte: que no aparezcan ni con contenido detrás.
+ * Términos y Política de privacidad aparecen ahora en el bloque de enlaces Y
+ * siguen en la barra inferior (`.lat-footer__legal`), que es lo que exige la
+ * pasarela de pago y espera Google.
  */
 class FooterHidesEmptyLinksTest extends TestCase
 {
@@ -49,31 +51,80 @@ class FooterHidesEmptyLinksTest extends TestCase
         return substr($footer, $start, $end - $start);
     }
 
-    public function test_links_block_lists_exactly_home_about_and_tours(): void
+    /** El menú de cabecera, que comparte lista con el drawer de móvil. */
+    private function headerNav(string $html): string
+    {
+        $start = strpos($html, '<div class="lat-nav-links">');
+        $this->assertNotFalse($start, 'No se encontró el menú de cabecera.');
+
+        $end = strpos($html, '</div>', $start);
+        $this->assertNotFalse($end, 'El menú de cabecera no cierra.');
+
+        return substr($html, $start, $end - $start);
+    }
+
+    /** @return string[] Rutas (sin dominio ni query) de los href del fragmento. */
+    private function paths(string $fragment): array
+    {
+        preg_match_all('/href="([^"]*)"/', $fragment, $m);
+
+        return array_map(fn ($h) => parse_url($h, PHP_URL_PATH), $m[1]);
+    }
+
+    public function test_links_block_lists_the_full_menu(): void
     {
         Tour::factory()->create(['title_es' => 'City Tour Centro Histórico', 'is_published' => true]);
 
         $nav = $this->linksNav($this->get('/es')->assertOk()->getContent());
 
-        preg_match_all('/href="([^"]*)"/', $nav, $m);
-
+        // Sin tours "free" ni entradas de blog: esos dos no deben estar.
         $this->assertSame(
-            ['/es', '/es/nosotros', '/es/tours'],
-            array_map(fn ($h) => parse_url($h, PHP_URL_PATH), $m[1]),
-            'El bloque "Enlaces" del footer debe listar solo Inicio, Nosotros y Tours.'
+            ['/es', '/es/nosotros', '/es/tours', '/es/contacto', '/es/terminos', '/es/privacidad'],
+            $this->paths($nav),
+            'El bloque "Enlaces" del footer no lista el menú completo.'
         );
     }
 
-    public function test_free_tours_link_is_not_shown_even_with_a_free_tour(): void
+    public function test_header_menu_lists_the_full_menu(): void
+    {
+        Tour::factory()->create(['title_es' => 'City Tour Centro Histórico', 'is_published' => true]);
+
+        $nav = $this->headerNav($this->get('/es')->assertOk()->getContent());
+
+        // "Servicios" es un ancla al bloque de garantías del home, no una ruta:
+        // por eso su path es "/es" igual que Inicio.
+        $this->assertSame(
+            ['/es', '/es/nosotros', '/es/tours', '/es', '/es/blog', '/es/contacto'],
+            $this->paths($nav),
+            'El menú de cabecera no lista Inicio, Nosotros, Tours, Servicios, Blog y Contacto.'
+        );
+    }
+
+    public function test_free_tours_link_appears_when_a_free_tour_exists(): void
     {
         Tour::factory()->create(['title_es' => 'Free Walking Tour por Miraflores', 'is_published' => true]);
 
-        $nav = $this->linksNav($this->get('/es')->assertOk()->getContent());
+        $html = $this->get('/es')->assertOk()->getContent();
 
-        $this->assertStringNotContainsString('q=free', $nav);
+        $this->assertStringContainsString('q=free', $this->headerNav($html),
+            'Con un tour "free" publicado, el menú debe ofrecer Free Tours.');
+        $this->assertStringContainsString('q=free', $this->linksNav($html),
+            'Con un tour "free" publicado, el footer debe ofrecer Free Tours.');
     }
 
-    public function test_blog_link_is_not_shown_even_with_a_published_post(): void
+    public function test_free_tours_link_is_hidden_without_free_tours(): void
+    {
+        Tour::factory()->create(['title_es' => 'City Tour Centro Histórico', 'is_published' => true]);
+
+        $html = $this->get('/es')->assertOk()->getContent();
+
+        // Sin tours "free", ?q=free devuelve 0 resultados: enlazarlo es mandar
+        // al visitante a una página vacía.
+        $this->assertStringNotContainsString('q=free', $this->headerNav($html));
+        $this->assertStringNotContainsString('q=free', $this->linksNav($html));
+    }
+
+    public function test_blog_link_appears_when_a_post_is_published(): void
     {
         // Las columnas de contenido son NOT NULL (excerpt_es / body_es): el
         // modelo se llama así, no `content_es`.
@@ -86,12 +137,23 @@ class FooterHidesEmptyLinksTest extends TestCase
             'published_at' => now()->subDay(),
         ]);
 
-        $nav = $this->linksNav($this->get('/es')->assertOk()->getContent());
-
-        $this->assertStringNotContainsString('/es/blog', $nav);
+        $this->assertStringContainsString(
+            '/es/blog',
+            $this->linksNav($this->get('/es')->assertOk()->getContent()),
+            'Con una entrada publicada, el footer debe enlazar el blog.'
+        );
     }
 
-    /** Legales: fuera del bloque de enlaces, pero siguen en la barra inferior. */
+    public function test_blog_link_is_hidden_from_the_footer_without_posts(): void
+    {
+        $this->assertStringNotContainsString(
+            '/es/blog',
+            $this->linksNav($this->get('/es')->assertOk()->getContent()),
+            'Sin entradas publicadas, el footer no debe enlazar un listado vacío.'
+        );
+    }
+
+    /** Legales: en el bloque de enlaces y también en la barra inferior. */
     public function test_legal_links_stay_in_the_bottom_bar(): void
     {
         $footer = $this->footer($this->get('/es')->assertOk()->getContent());
