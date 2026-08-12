@@ -341,7 +341,7 @@
                                         @if ($step['time'])
                                             <span class="lat-itin-step__time">{{ $step['time'] }}</span>
                                         @endif
-                                        <h4>{{ $step['title'] }}</h4>
+                                        <h3>{{ $step['title'] }}</h3>
                                         @if ($step['description'])
                                             <p>{{ $step['description'] }}</p>
                                         @endif
@@ -543,12 +543,12 @@
 
                 @if ($related->isNotEmpty())
                     <div class="lat-more-tours-card">
-                        <h4>{{ $L('Más tours', 'More tours', 'Mais tours') }}</h4>
+                        <h3>{{ $L('Más tours', 'More tours', 'Mais tours') }}</h3>
                         @foreach ($related as $rel)
                             <a class="lat-mini-tour" href="{{ route('tours.show', ['locale' => $locale, 'slug' => $rel->slug]) }}">
                                 <div class="lat-mini-tour__img"><img src="{{ $rel->cover_url }}" alt="{{ $rel->title }}" loading="lazy" width="74" height="60"></div>
                                 <div>
-                                    <h5 class="clamp-2">{{ $rel->title }}</h5>
+                                    <h4 class="clamp-2">{{ $rel->title }}</h4>
                                     <div class="lat-mprice">{{ \App\Support\Money::format($rel->price, \App\Support\Money::site()) }}</div>
                                     <span class="lat-stars">
                                         <span class="lat-stars__s"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6L12 2z"/></svg></span>

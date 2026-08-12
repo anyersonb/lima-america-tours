@@ -36,7 +36,63 @@ class HeadingHierarchyTest extends TestCase
             'blog' => ['/es/blog'],
             'contacto' => ['/es/contacto'],
             'catálogo' => ['/es/tours'],
+            'términos' => ['/es/terminos'],
+            'privacidad' => ['/es/privacidad'],
         ];
+    }
+
+    /**
+     * La ficha de tour va aparte porque su URL depende de un slug de la base: un
+     * data provider es estático y no puede consultarla (hardcodear un slug real dio
+     * 404 en el entorno de test, que siembra su propio catálogo).
+     *
+     * Entró al inventario el 2026-08-12: el gate de QA la revisó por su cuenta y
+     * encontró un H2→H4 que este test no cubría — el itinerario usaba `<h4>` y los
+     * tours relacionados `<h5>`. Como es una plantilla compartida, el defecto estaba
+     * en las 24 fichas a la vez.
+     */
+    public function test_la_ficha_de_tour_no_tiene_saltos_y_tiene_un_solo_h1(): void
+    {
+        $tour = \App\Models\Tour::published()->firstOrFail();
+
+        // El itinerario y los tours relacionados son justamente donde estaban los
+        // saltos, y el catálogo sembrado no trae itinerario: sin cargarlo, el bloque
+        // no se renderiza y el test pasaría aunque el defecto siguiera ahí (probado:
+        // con `itinerary_es` vacío, reintroducir el <h4> no ponía el test en rojo).
+        $tour->update([
+            'itinerary_es' => [
+                ['time' => '08:00', 'title' => 'Recojo en el hotel', 'description' => 'Pasamos por ti.'],
+                ['time' => '10:30', 'title' => 'Centro Histórico', 'description' => 'Recorrido guiado.'],
+            ],
+        ]);
+
+        $this->assertGreaterThan(
+            1,
+            \App\Models\Tour::published()->count(),
+            'La ficha necesita al menos otro tour publicado para que se pinte el bloque «Más tours», que es donde estaba el otro salto.'
+        );
+
+        $url = route('tours.show', ['locale' => 'es', 'slug' => $tour->slug], false);
+        $html = $this->get($url)->assertOk()->getContent();
+
+        $encabezados = $this->encabezados($html);
+        $this->assertNotEmpty($encabezados, "No se extrajo ningún encabezado de $url.");
+
+        $saltos = [];
+        $prev = 0;
+
+        foreach ($encabezados as [$nivel, $texto]) {
+            if ($prev > 0 && $nivel > $prev + 1) {
+                $saltos[] = "H{$prev}→H{$nivel} en «".mb_strimwidth($texto, 0, 40, '…').'»';
+            }
+
+            $prev = $nivel;
+        }
+
+        $this->assertSame([], $saltos, "Saltos de jerarquía en la ficha «{$tour->slug}»:\n".implode("\n", $saltos));
+
+        $h1 = array_filter($encabezados, fn (array $h) => $h[0] === 1);
+        $this->assertCount(1, $h1, 'La ficha debe tener exactamente un <h1>, tiene '.count($h1));
     }
 
     /**

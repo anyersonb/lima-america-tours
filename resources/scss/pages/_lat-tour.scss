@@ -476,7 +476,8 @@
 
     // Título en mayúsculas (referencia visual del brief B2), sin tocar el
     // copy real del CMS (text-transform, no mb_strtoupper en PHP).
-    h4 { font-family: $lat-font-sans; font-weight: 700; font-size: 1rem; margin-bottom: 5px; color: $lat-ink; text-transform: uppercase; letter-spacing: .01em; }
+    // h3 desde 2026-08-12: el itinerario usaba h4 y saltaba de H2 a H4 (gate SEO).
+    h3, h4 { font-family: $lat-font-sans; font-weight: 700; font-size: 1rem; margin-bottom: 5px; color: $lat-ink; text-transform: uppercase; letter-spacing: .01em; }
     p { font-size: .92rem; color: $lat-muted; margin: 0; }
 }
 
@@ -611,7 +612,8 @@
     background: $lat-surface; border: 1px solid $lat-line; border-radius: $lat-r-md;
     box-shadow: $lat-shadow-sm; padding: 20px 22px;
 
-    h4 {
+    // h3 desde 2026-08-12 (gate SEO: este titulo era h4 despues de un h2).
+    h3, h4 {
         font-family: $lat-font-serif; font-size: 1.15rem; margin-bottom: 16px; padding-bottom: 12px;
         border-bottom: 2px solid $lat-red; display: inline-block; color: $lat-ink;
     }
@@ -625,7 +627,8 @@
     &__img { width: 74px; height: 60px; border-radius: 10px; overflow: hidden; flex: none; }
     &__img img { width: 100%; height: 100%; object-fit: cover; }
 
-    h5 { font-family: $lat-font-sans; font-size: .9rem; line-height: 1.25; margin-bottom: 5px; color: $lat-ink; }
+    // h4 desde 2026-08-12 (gate SEO: los relacionados eran h5 bajo un h4).
+    h4, h5 { font-family: $lat-font-sans; font-size: .9rem; line-height: 1.25; margin-bottom: 5px; color: $lat-ink; }
     .lat-mprice { font-family: $font-price; font-weight: 400; color: $lat-red; font-size: 1.05rem; }
     .lat-stars { font-size: .76rem; }
 }
