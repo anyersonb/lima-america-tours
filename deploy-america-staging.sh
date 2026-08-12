@@ -13,9 +13,18 @@
 #   3. Limpia y regenera cachés de Laravel, y prepara public/media/derived.
 #   4. Comprueba que el hero salga en WebP y que el staging siga con noindex.
 #
-# NO toca la base de datos: este lote no trae migraciones. Los Settings nuevos
-# (íconos de los features, alt de la foto) se leen con fallback en código, así
-# que el sitio funciona sin cargar nada en el panel.
+# QUÉ **NO** HACE, y ya costó caro dos veces (leer antes de confiar):
+#   · NO corre migraciones. Si el lote trae una, va a mano:
+#       sudo -u limaa3133 $PHP artisan migrate --force < /dev/null
+#   · NO corre seeders. Si el lote depende de datos nuevos (guías, categorías de
+#     blog, portadas), staging se queda con la pantalla vacía y nadie se entera.
+#   · NO limpia datos viejos. El bloqueante del 2026-08-12 fue exactamente eso:
+#     el código corregido y la dirección de OTRO cliente viva en `settings`, en un
+#     servidor donde la base local limpia no servía de evidencia. Después de cada
+#     deploy:
+#       sudo -u limaa3133 $PHP artisan data:audit-foreign < /dev/null
+#     (sale con código 1 si encuentra algo).
+# El detalle de lo corrido a mano en cada publicación está junto a DEPLOYED_COMMIT.
 #
 # USO
 #   SSH_KEY=~/.ssh/lima_america_staging bash deploy-america-staging.sh
@@ -71,7 +80,10 @@ SSH_OPTS=(-i "$SSH_KEY" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15
 # leads de prueba. Después de CADA deploy conviene correr:
 #   sudo -u limaa3133 $PHP artisan data:audit-foreign < /dev/null
 # que devuelve código 1 si quedó algún dato de otro cliente en ESTE entorno.
-DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-7aec0b6}"
+# 2026-08-12 (tercera pasada) · el salto de encabezados de la ficha de tour y el
+# site.webmanifest con rutas absolutas, que bajo /staging apuntaban al WordPress de la
+# raiz. 486 tests verdes. Gate de QA: PASS.
+DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-977828e}"
 
 mapfile -t FILES < <(
   git -C "$LOCAL" diff --name-only "$DEPLOYED_COMMIT..HEAD" \
