@@ -98,6 +98,13 @@
             </p>
         </div>
 
+        {{-- Las tarjetas de tour usan <h3> y no había ningún <h2> entre el <h1> de la
+             página y ellas: la jerarquía saltaba H1→H3 (mismo defecto que el gate de
+             regresión SEO marcó el 2026-08-12 en el bloque de promociones del home).
+             El diseño no lleva un título visible acá porque ya lo dice el <h1> y el
+             contador de resultados, así que va sr-only. --}}
+        <h2 class="sr-only">{{ $L('Catálogo de tours', 'Tour catalogue', 'Catálogo de tours') }}</h2>
+
         <div class="lat-tours-grid" id="toursGrid">
             @forelse ($tours as $tour)
                 @php $pct = $tourOffer($tour); @endphp

@@ -587,6 +587,12 @@
              para no repetir las mismas tarjetas dos veces en la página. Si
              no hay ofertas activas, el hero no deja un hueco. ── --}}
         @if ($offers->isNotEmpty())
+            {{-- El título de este grupo va oculto a la vista pero presente para
+                 lectores de pantalla y para el rastreo: las tarjetas usan <h3> y sin
+                 un <h2> que las agrupe la jerarquía salta de H1 a H3 (gate de
+                 regresión SEO, 2026-08-12). El mockup no dibuja un título acá, así
+                 que se resuelve con sr-only en vez de inventar un encabezado visible. --}}
+            <h2 class="sr-only">{{ $L('Promociones vigentes', 'Current promotions', 'Promoções vigentes') }}</h2>
             <div class="lat-wrap lat-hero__promos">
                 @foreach ($offers as $offer)
                     @php

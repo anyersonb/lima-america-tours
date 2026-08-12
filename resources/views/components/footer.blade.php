@@ -144,8 +144,13 @@
                 </div>
             </section>
 
+            {{-- Los tres títulos de columna de este footer eran <h4> y producían un
+                 salto H2→H4 en TODAS las páginas del sitio (el footer es compartido),
+                 que el gate de regresión SEO marcó como bloqueante el 2026-08-12.
+                 Son <h3> a propósito: no subirlos a <h2> (competirían con los títulos
+                 de sección de cada página) ni devolverlos a <h4>. --}}
             <nav aria-labelledby="footer-links">
-                <h4 id="footer-links">{{ __('footer.links') }}</h4>
+                <h3 id="footer-links">{{ __('footer.links') }}</h3>
                 <div class="lat-footer__links">
                     {{--
                         Menú completo (2026-08-03), espejo del header. Inicio,
@@ -171,7 +176,7 @@
             </nav>
 
             <section aria-labelledby="footer-contact">
-                <h4 id="footer-contact">{{ __('footer.locate_us') }}</h4>
+                <h3 id="footer-contact">{{ __('footer.locate_us') }}</h3>
                 <address class="lat-footer__contact" style="font-style:normal;">
                     @if ($contactAddress)
                     <li>
@@ -199,7 +204,7 @@
             </section>
 
             <section aria-labelledby="footer-tours">
-                <h4 id="footer-tours">{{ __('footer.popular_tours') }}</h4>
+                <h3 id="footer-tours">{{ __('footer.popular_tours') }}</h3>
                 <div class="lat-footer__links">
                     @forelse ($popularTours as $pt)
                         <a href="{{ route('tours.show', ['locale' => $locale, 'slug' => $pt->slug]) }}">{{ $pt->title }}</a>
