@@ -78,7 +78,10 @@ local',
     'contact_channel_office' => 'Nuestra Oficina',
     'contact_channel_office_desc' => 'Visítanos en nuestra oficina',
     'contact_channel_phone' => 'Teléfono',
-    'contact_channel_phone_desc' => 'Disponibles Lun–Dom de 9:00 a.m. – 6:30 p.m.',
+    // 'contact_channel_phone_desc' (horario fijo "Lun–Dom 9-6:30") se retiró
+    // 2026-08-11: clave sin ningún uso en las vistas (verificado por grep) que
+    // además era uno de los 3-4 horarios contradictorios publicados a la vez.
+    // El horario real vive en Configuración → Contacto (Setting::contactHours()).
     'contact_channels' => 'Canales de contacto',
     'contact_email_placeholder' => 'Escribe tu correo electrónico',
     'contact_form_title' => 'Formulario de<br>contacto',

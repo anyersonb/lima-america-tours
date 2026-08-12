@@ -63,6 +63,17 @@ $lat-wa:         #25d366;   // verde de marca de WhatsApp — SOLO para superfic
 // aclara, el test falla.
 $lat-wa-strong:  #0f7d3d;
 
+// Acento dorado — SOLO para la sección "Misión, visión y valores" sobre foto
+// oscura (about.blade.php / mockup 03-nosotros-parte2). Mismo criterio que
+// $lat-eyebrow--on-dark con el rojo: el dorado "de marca" habitual (#c9a227,
+// el que se ve a ojo en el mockup) mide ~3.4:1 sobre el scrim oscuro de esa
+// sección — no pasa AA para el texto chico de los chips de valores. Este tono
+// (más claro/cálido) mide 5.3–5.6:1 sobre el rango de luminosidad medido de
+// esa foto+scrim (ver informe de este lote) y se sigue leyendo como dorado,
+// no como amarillo. Si se cambia la foto de fondo, volver a medir.
+$lat-gold:       #e3b04b;
+$lat-gold-soft:  rgba(227, 176, 75, .14);
+
 $lat-shadow-sm: 0 1px 2px rgba(28, 27, 26, .06), 0 2px 8px rgba(28, 27, 26, .05);
 $lat-shadow-md: 0 6px 18px rgba(28, 27, 26, .09), 0 2px 6px rgba(28, 27, 26, .06);
 $lat-shadow-lg: 0 24px 60px rgba(28, 27, 26, .16);

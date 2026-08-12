@@ -176,6 +176,7 @@
     if (!grid || !filtersWrap) return;
 
     var cards = Array.prototype.slice.call(grid.querySelectorAll('.lat-tcard'));
+    var filterButtons = Array.prototype.slice.call(filtersWrap.querySelectorAll('.lat-filter'));
     var curCat = 'all';
 
     var LABELS = {
@@ -215,6 +216,25 @@
 
     if (searchInput) {
         searchInput.addEventListener('input', applyFilters);
+    }
+
+    // Preselección por querystring (?cat=slug), usada por las tarjetas de
+    // categoría del Home ("tira" y "Explora por categoría"): si el slug no
+    // corresponde a ningún botón real —categoría inactiva, sin tours
+    // publicados, o inventado— se ignora y el listado se queda en "Todos"
+    // (el botón ya nace is-active en el HTML), sin dejar el grid vacío.
+    var catParam = new URLSearchParams(window.location.search).get('cat');
+    if (catParam) {
+        var matchBtn = filterButtons.find(function (b) {
+            return b.getAttribute('data-cat') === catParam;
+        });
+        if (matchBtn) {
+            curCat = catParam;
+            filterButtons.forEach(function (b) {
+                b.classList.toggle('is-active', b === matchBtn);
+            });
+            applyFilters();
+        }
     }
 
     document.addEventListener('click', function (e) {

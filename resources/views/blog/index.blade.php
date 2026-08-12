@@ -14,116 +14,200 @@
 ))
 @section('header_variant', 'solid')
 
+@php
+    // Foto real (2560×1707, muy por encima de cualquier ancho renderizado)
+    // en vez del placeholder de 205×123px (`assets/banners/Rectangle
+    // 19212.jpg`) que usaba esta misma sección antes — ver "Problema
+    // transversal: el kit de imágenes está degradado" en el brief.
+    $blogHeroImg = asset('storage/tours/Machu_Picchu_Peru_-_Laslovarga_262-scaled.jpg');
+
+    // WhatsApp real (Setting::whatsappNumber(), sin fallback a un número
+    // ajeno) — alimenta el botón "Habla con un asesor" del CTA final; sin
+    // número configurado, el botón se oculta en vez de apuntar a un chat
+    // que no existe.
+    $waNumber = \App\Models\Setting::whatsappNumber();
+
+    // Preserva el término de búsqueda al cambiar de categoría y viceversa
+    // (?q= y ?categoria= son combinables, ver BlogController::index).
+    $blogFilterParams = fn (?string $categoria = null) => array_filter([
+        'locale' => $locale,
+        'categoria' => $categoria,
+        'q' => $q !== '' ? $q : null,
+    ]);
+
+    // Copy del blog administrable desde Configuración → Blog. El blog no
+    // tiene fila en `pages` (mismo caso que Home): se resuelve por Setting,
+    // no por Page->blocks. Vacío = texto por defecto de este mockup.
+    $bs = function (string $key, string $fallback) use ($locale): string {
+        $val = trim((string) \App\Models\Setting::get($key . '_' . $locale));
+        return $val !== '' ? $val : $fallback;
+    };
+@endphp
+
 @section('content')
 <div class="lat-page">
 
     {{-- ============================================================
-         HERO INTERNO — imagen de fondo + degradado rojo/oscuro
+         HERO — foto a la derecha con degradado hacia la izquierda,
+         eyebrow rojo, H1, bajada y buscador pill real.
          ============================================================ --}}
-    <section class="lat-page-hero" style="background-image:url('{{ asset('assets/banners/Rectangle 19212.jpg') }}')">
+    <section class="lat-page-hero lat-blog-hero" style="background-image:url('{{ $blogHeroImg }}')">
         <div class="lat-wrap">
-            <nav class="lat-page-hero__crumb" aria-label="Breadcrumb">
-                <a href="{{ route('home', ['locale' => $locale]) }}">{{ __('ui.home') }}</a> &middot; <b>Blog</b>
-            </nav>
-            <span class="lat-eyebrow">{{ $L('Aprende cosas nuevas', 'Learn something new', 'Aprenda coisas novas') }}</span>
-            <h1>{{ $L('Post Recientes', 'Recent Posts', 'Posts Recentes') }}</h1>
+            <span class="lat-eyebrow lat-eyebrow--on-dark">{{ $bs('blog_hero_eyebrow', $L('Inspírate para viajar', 'Get inspired to travel', 'Inspire-se para viajar')) }}</span>
+            <h1>{{ $bs('blog_hero_title', $L('Blog de viajes', 'Travel blog', 'Blog de viagens')) }}</h1>
             <p class="lat-page-hero__sub">
-                {{ $L(
-                    'Consejos, guías y experiencias para que disfrutes al máximo tu viaje por el Perú.',
-                    'Tips, guides and experiences to help you make the most of your trip to Peru.',
-                    'Dicas, guias e experiências para você aproveitar ao máximo sua viagem pelo Peru.'
-                ) }}
+                {{ $bs('blog_hero_sub', $L(
+                    'Consejos, guías y experiencias para que disfrutes al máximo tu aventura por el Perú.',
+                    'Tips, guides and experiences to help you make the most of your adventure in Peru.',
+                    'Dicas, guias e experiências para você aproveitar ao máximo sua aventura pelo Peru.'
+                )) }}
             </p>
+
+            {{-- Buscador real: BlogController@index ya filtra por ?q= en
+                 título y extracto (ES + el idioma actual). Combinable con
+                 ?categoria= vía el input oculto. --}}
+            @php
+                $blogSearchPlaceholder = $bs('blog_search_placeholder', $L('Buscar artículos, destinos o consejos…', 'Search articles, destinations or tips…', 'Buscar artigos, destinos ou dicas…'));
+            @endphp
+            <form class="lat-blog-search" role="search" method="GET" action="{{ route('blog.index', ['locale' => $locale]) }}">
+                @if (request()->filled('categoria'))
+                    <input type="hidden" name="categoria" value="{{ request('categoria') }}">
+                @endif
+                <svg class="lat-blog-search__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <label for="blog-q" class="sr-only">{{ $blogSearchPlaceholder }}</label>
+                <input id="blog-q" type="search" name="q" value="{{ $q }}" autocomplete="off"
+                       placeholder="{{ $blogSearchPlaceholder }}">
+                <button type="submit" class="sr-only">{{ $L('Buscar', 'Search', 'Buscar') }}</button>
+            </form>
         </div>
     </section>
 
     {{-- ============================================================
-         FILTROS + GRID DE ARTÍCULOS
+         CUERPO OSCURO — toolbar + filtros + grid + CTA final. Tema
+         oscuro de ESTA página (no del layout compartido): ver comentario
+         de _lat-blog.scss.
          ============================================================ --}}
-    <section class="lat-wrap" style="padding:46px 24px 70px">
+    <section class="lat-blog-body">
+        <div class="lat-wrap">
 
-        @if ($categories->isNotEmpty())
-            <div class="lat-blog-filters" role="group" aria-label="{{ $L('Filtrar por categoría', 'Filter by category', 'Filtrar por categoria') }}">
-                <a href="{{ route('blog.index', ['locale' => $locale]) }}"
-                   class="lat-filter {{ ! request('categoria') ? 'is-active' : '' }}">
-                    {{ $L('Todos', 'All', 'Todos') }}
-                </a>
-                @foreach ($categories as $cat)
-                    <a href="{{ route('blog.index', ['locale' => $locale, 'categoria' => $cat]) }}"
-                       class="lat-filter {{ request('categoria') === $cat ? 'is-active' : '' }}">
-                        {{ $cat }}
-                    </a>
-                @endforeach
-            </div>
-        @endif
+            <div class="lat-blog-toolbar">
+                <h2 class="lat-blog-toolbar__title">{{ $bs('blog_toolbar_title', $L('Explora nuestros artículos', 'Explore our articles', 'Explore nossos artigos')) }}</h2>
 
-        @if ($posts->isEmpty())
-            <p class="lat-empty-note">{{ $L('No hay artículos publicados todavía.', 'No articles published yet.', 'Nenhum artigo publicado ainda.') }}</p>
-        @else
-            <div class="lat-blog-grid">
-                @foreach ($posts as $post)
-                    <article class="lat-post" itemscope itemtype="https://schema.org/BlogPosting">
-                        <img src="{{ $post->cover_image ? asset('storage/' . $post->cover_image) : asset('assets/banners/banner-hero.jpg') }}"
-                             alt="{{ $post->title }}" loading="lazy" width="640" height="420" itemprop="image">
-
-                        @if ($post->category)
-                            <span class="lat-post__badge">{{ $post->category }}</span>
-                        @endif
-
-                        <div class="lat-post__body">
-                            <h2 itemprop="headline">
-                                <a href="{{ route('blog.show', ['locale' => $locale, 'slug' => $post->slug]) }}">
-                                    {{ $post->title }}
-                                </a>
-                            </h2>
-
-                            <div class="lat-post__meta">
-                                @if ($post->reading_minutes)
-                                    <span>
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-                                        {{ $post->reading_minutes }} {{ $L('min de lectura', 'min read', 'min de leitura') }}
-                                    </span>
-                                @endif
-                                @if ($post->published_at)
-                                    <time datetime="{{ $post->published_at->toIso8601String() }}" itemprop="datePublished">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline;vertical-align:-3px;width:15px;height:15px;color:#ff1f2d;margin-right:6px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>{{ $post->published_at->translatedFormat('d M Y') }}
-                                    </time>
-                                @endif
-                            </div>
-
-                            <a href="{{ route('blog.show', ['locale' => $locale, 'slug' => $post->slug]) }}" class="lat-post__link">
-                                {{ $L('Leer más', 'Read more', 'Leia mais') }}
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                @if ($categories->isNotEmpty())
+                    <div class="lat-blog-filters" role="group" aria-label="{{ $L('Filtrar por categoría', 'Filter by category', 'Filtrar por categoria') }}">
+                        <a href="{{ route('blog.index', $blogFilterParams()) }}"
+                           class="lat-blog-filter {{ ! request('categoria') ? 'is-active' : '' }}">
+                            {{ $L('Todos', 'All', 'Todos') }}
+                        </a>
+                        @foreach ($categories as $cat)
+                            <a href="{{ route('blog.index', $blogFilterParams($cat)) }}"
+                               class="lat-blog-filter {{ request('categoria') === $cat ? 'is-active' : '' }}">
+                                {{ $cat }}
                             </a>
-                        </div>
-                    </article>
-                @endforeach
+                        @endforeach
+                    </div>
+                @endif
             </div>
 
-            @if ($posts->hasPages())
-                <div style="margin-top:40px; display:flex; justify-content:center">
-                    {{ $posts->links() }}
+            @if ($posts->isEmpty())
+                <p class="lat-empty-note--blog">
+                    {{ $q !== '' || request()->filled('categoria')
+                        ? $L('No encontramos artículos con esa búsqueda.', 'We couldn\'t find any articles matching that search.', 'Não encontramos artigos com essa busca.')
+                        : $L('No hay artículos publicados todavía.', 'No articles published yet.', 'Nenhum artigo publicado ainda.') }}
+                </p>
+            @else
+                {{-- El mockup pinta 6 tarjetas pero el catálogo publicado no se
+                     recorta a 6: se pintan TODAS las de $posts (paginador de
+                     BlogController@index, sin slice adicional aquí). --}}
+                <div class="lat-blog-grid">
+                    @foreach ($posts as $post)
+                        @php
+                            // Fila "autor · fecha · N min" — solo los datos que
+                            // el post realmente tiene (brief: nunca una fila de
+                            // autor vacía cuando el post no tiene autor cargado).
+                            $metaParts = [];
+                            if ($post->author_name) {
+                                $metaParts[] = ['type' => 'text', 'value' => $post->author_name];
+                            }
+                            if ($post->published_at) {
+                                $metaParts[] = ['type' => 'time', 'value' => $post->published_at];
+                            }
+                            if ($post->reading_minutes) {
+                                $metaParts[] = ['type' => 'text', 'value' => $post->reading_minutes . ' ' . $L('min', 'min', 'min')];
+                            }
+                        @endphp
+                        <article class="lat-blog-card" itemscope itemtype="https://schema.org/BlogPosting">
+                            <a href="{{ route('blog.show', ['locale' => $locale, 'slug' => $post->slug]) }}" class="lat-blog-card__media">
+                                <img src="{{ $post->cover_url }}" alt="{{ $post->title }}" loading="lazy" width="640" height="464" itemprop="image">
+                                @if ($post->category)
+                                    <span class="lat-blog-card__badge">{{ $post->category }}</span>
+                                @endif
+                            </a>
+
+                            <div class="lat-blog-card__body">
+                                <h3 class="clamp-2" itemprop="headline">
+                                    <a href="{{ route('blog.show', ['locale' => $locale, 'slug' => $post->slug]) }}">
+                                        {{ $post->title }}
+                                    </a>
+                                </h3>
+
+                                <div class="lat-blog-card__foot">
+                                    @if (! empty($metaParts))
+                                        <div class="lat-blog-card__meta">
+                                            @foreach ($metaParts as $part)
+                                                @if ($part['type'] === 'time')
+                                                    <time datetime="{{ $part['value']->toIso8601String() }}" itemprop="datePublished">{{ $part['value']->translatedFormat('d M, Y') }}</time>
+                                                @else
+                                                    <span>{{ $part['value'] }}</span>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    <a href="{{ route('blog.show', ['locale' => $locale, 'slug' => $post->slug]) }}" class="lat-blog-card__arrow"
+                                       aria-label="{{ $L('Leer', 'Read', 'Ler') }}: {{ $post->title }}">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </article>
+                    @endforeach
                 </div>
+
+                @if ($posts->hasPages())
+                    <div class="lat-blog-pager">
+                        {{ $posts->links() }}
+                    </div>
+                @endif
             @endif
-        @endif
 
-        {{-- ============================================================
-             CTA FINAL — "¿Listo para vivir tu propia aventura?"
-             ============================================================ --}}
-        <div class="lat-blog-cta" style="margin-top:44px">
-            <div class="lat-blog-cta__left">
-                <div class="lat-blog-cta__ic">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+            {{-- ============================================================
+                 CTA FINAL — "¿Listo para vivir tu propia historia?"
+                 ============================================================ --}}
+            <div class="lat-blog-cta">
+                <div class="lat-blog-cta__left">
+                    <div class="lat-blog-cta__ic">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+                    </div>
+                    <div>
+                        <h2>{{ $bs('blog_cta_title', $L('¿Listo para vivir tu propia historia?', 'Ready to live your own story?', 'Pronto para viver sua própria história?')) }}</h2>
+                        <p>{{ $bs('blog_cta_desc', $L('Inspírate, planea y reserva tu próxima aventura con nosotros.', 'Get inspired, plan and book your next adventure with us.', 'Inspire-se, planeje e reserve sua próxima aventura conosco.')) }}</p>
+                    </div>
                 </div>
-                <div>
-                    <h2>{{ $L('¿Listo para vivir tu propia aventura?', 'Ready to live your own adventure?', 'Pronto para viver sua própria aventura?') }}</h2>
-                    <p>{{ $L('Descubre nuestros tours y experiencias únicas en Perú.', 'Discover our tours and unique experiences in Peru.', 'Descubra nossos tours e experiências únicas no Peru.') }}</p>
+                <div class="lat-blog-cta__actions">
+                    <a href="{{ route('tours.index', ['locale' => $locale]) }}" class="lat-btn lat-btn--red">
+                        {{ $bs('blog_cta_btn_primary', $L('Ver tours disponibles', 'See available tours', 'Ver tours disponíveis')) }}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </a>
+                    @if ($waNumber)
+                        <span class="lat-blog-cta__divider" aria-hidden="true"></span>
+                        <a href="https://wa.me/{{ $waNumber }}" target="_blank" rel="noopener noreferrer" class="lat-btn lat-btn--outline-white">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="18" height="18"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24z"/></svg>
+                            {{ $bs('blog_cta_btn_wa', $L('Habla con un asesor', 'Talk to an advisor', 'Fale com um consultor')) }}
+                        </a>
+                    @endif
                 </div>
             </div>
-            <a href="{{ route('tours.index', ['locale' => $locale]) }}" class="lat-btn lat-btn--red">
-                {{ $L('Ver todos los tours', 'See all tours', 'Ver todos os tours') }}
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-            </a>
         </div>
     </section>
 </div>

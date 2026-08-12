@@ -4,6 +4,13 @@
 @section('description', __('legal.last_updated'))
 @section('header_variant', 'solid')
 
+@php
+    // Fuente única para la dirección en el texto legal — ver
+    // App\Models\Setting::contactAddress(). Sin dato, la frase omite la
+    // cláusula de dirección física por completo (no imprime paréntesis vacíos).
+    $legalAddress = \App\Models\Setting::contactAddress($locale);
+@endphp
+
 @section('content')
 <div class="lat-page">
 
@@ -58,6 +65,12 @@
                 {{ __('legal.privacy_s5_title') }}
             </h2>
             <p class="text-lat-ink-soft leading-relaxed">{{ __('legal.privacy_s5_body') }}</p>
+            <p class="text-lat-ink-soft leading-relaxed">
+                {{ $legalAddress
+                    ? __('legal.privacy_s5_exercise_email_and_address', ['address' => $legalAddress])
+                    : __('legal.privacy_s5_exercise_email') }}
+            </p>
+            <p class="text-lat-ink-soft leading-relaxed">{{ __('legal.privacy_s5_response_time') }}</p>
         </section>
 
         {{-- Back link --}}

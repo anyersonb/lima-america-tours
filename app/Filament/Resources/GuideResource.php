@@ -74,6 +74,32 @@ class GuideResource extends Resource
                     ->helperText('Ej: Español, Inglés, Quechua.')
                     ->columnSpanFull(),
 
+                Forms\Components\Fieldset::make('Redes sociales (opcional)')
+                    ->columns(2)
+                    ->schema([
+                        Forms\Components\TextInput::make('instagram_handle')
+                            ->label('Usuario de Instagram')
+                            ->placeholder('usuario (sin @ ni URL completa)')
+                            ->helperText('Deja vacío si no tiene: sin esto, el ícono de Instagram no se muestra en su tarjeta.')
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('whatsapp_number')
+                            ->label('WhatsApp')
+                            ->placeholder('51900000000')
+                            ->helperText('Solo números: código de país + número, sin "+" ni espacios. Vacío = sin ícono de WhatsApp.')
+                            ->maxLength(20),
+                    ]),
+
+                Forms\Components\Fieldset::make('Dato destacado (opcional)')
+                    ->columns(1)
+                    ->schema([
+                        Forms\Components\Placeholder::make('highlight_note')
+                            ->label('')
+                            ->content('Solo para un dato VERIFICABLE (ej. "Mencionada por nombre en 15 de 20 reseñas de Google y TripAdvisor"). Vacío si no hay respaldo — nunca un elogio inventado.'),
+                        Forms\Components\TextInput::make('highlight_es')->label('Dato destacado (Español)')->maxLength(255),
+                        Forms\Components\TextInput::make('highlight_en')->label('Highlight (English)')->maxLength(255),
+                        Forms\Components\TextInput::make('highlight_pt')->label('Destaque (Português)')->maxLength(255),
+                    ]),
+
                 Forms\Components\TextInput::make('years_experience')
                     ->label('Años de experiencia')
                     ->numeric()
@@ -113,6 +139,14 @@ class GuideResource extends Resource
                     ->label('Años exp.')
                     ->numeric()
                     ->sortable(),
+                Tables\Columns\IconColumn::make('instagram_handle')
+                    ->label('IG')
+                    ->getStateUsing(fn ($record) => filled($record->instagram_handle))
+                    ->boolean(),
+                Tables\Columns\IconColumn::make('whatsapp_number')
+                    ->label('WA')
+                    ->getStateUsing(fn ($record) => filled($record->whatsapp_number))
+                    ->boolean(),
                 Tables\Columns\TextColumn::make('order')
                     ->label('Orden')
                     ->numeric()

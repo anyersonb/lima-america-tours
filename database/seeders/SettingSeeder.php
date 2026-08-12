@@ -31,8 +31,18 @@ class SettingSeeder extends Seeder
             // (contact.blade.php) ya lo oculta con @if(!empty(...)) cuando no
             // hay valor cargado desde Configuración → Contacto.
             ['key' => 'contact_phone_secondary', 'value' => '', 'group' => 'contact'],
-            ['key' => 'contact_address_es', 'value' => 'Av. Larcomar 233, Of. 410 — Miraflores, Lima', 'group' => 'contact'],
-            ['key' => 'contact_address_en', 'value' => 'Larcomar Ave. 233, Off. 410 — Miraflores, Lima', 'group' => 'contact'],
+            // Vacíos a propósito desde 2026-08-11: "Av. Larcomar 233, Of. 410 —
+            // Miraflores, Lima" es IDÉNTICA a la dirección real de Lima View
+            // Tours (otro cliente) — el mismo patrón de contaminación del fork
+            // que ya afectó a contact_phone/whatsapp arriba. Al mismo tiempo,
+            // lang/*/footer.php y Términos/Privacidad publicaban una SEGUNDA
+            // dirección ("Jr. Lampa 209, Lima Center") heredada del fork,
+            // tampoco confirmada. Ninguna de las dos se "elige como la buena":
+            // el Setting queda vacío hasta que el cliente confirme la
+            // dirección real (docs/rebrand/ESTADO.md). Setting::contactAddress()
+            // devuelve null con esto vacío, y cada consumidor oculta el bloque.
+            ['key' => 'contact_address_es', 'value' => '', 'group' => 'contact'],
+            ['key' => 'contact_address_en', 'value' => '', 'group' => 'contact'],
             ['key' => 'contact_hours_es', 'value' => 'Lun – Vie: 9:00 a.m. – 7:00 p.m.', 'group' => 'contact'],
             ['key' => 'contact_hours_en', 'value' => 'Mon – Fri: 9:00 a.m. – 7:00 p.m.', 'group' => 'contact'],
             ['key' => 'whatsapp', 'value' => '', 'group' => 'contact'],

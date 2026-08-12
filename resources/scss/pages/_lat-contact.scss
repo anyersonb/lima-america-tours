@@ -1,8 +1,158 @@
 // ═══════════════════════════════════════════════════════════════════════
-// LIMA AMÉRICA TOURS — Contacto (lat-07-contacto.jpeg)
-// Reutiliza .lat-flat-hero, .lat-eyebrow, .lat-wrap, .lat-btn y tokens $lat-*.
+// LIMA AMÉRICA TOURS — Contacto (05-contacto.jpeg, lote ago-2026)
+// Tema oscuro COMPLETO, exclusivo de esta página (namespace ".lat-contact-*").
+// Reutiliza .lat-wrap, .lat-eyebrow/.lat-eyebrow--on-dark y $lat-* globales;
+// todo lo demás vive aquí para no filtrar el oscuro al resto del sitio.
 // ═══════════════════════════════════════════════════════════════════════
 @use '../abstracts/variables' as *;
+
+// ── Tokens locales del tema oscuro de esta página ──────────────────────
+// No se suman a _variables.scss (global) porque son exclusivos de Contacto.
+$cn-bg:        $lat-ink;      // #171412 — fondo de página/hero
+$cn-card:      #211c19;       // superficie de tarjetas (form, canales)
+$cn-card-2:    #2b2521;       // inputs / superficies un nivel más claras
+$cn-border:    #3a332e;       // bordes sutiles sobre tarjetas oscuras
+$cn-text-mut:  rgba(255, 255, 255, .72);  // texto secundario sobre oscuro
+$cn-text-faint:rgba(255, 255, 255, .55);  // placeholders
+// Rojo accesible sobre fondo oscuro (NO el rojo de marca: mide 3.1–3.4:1 y no
+// pasa AA — ver _variables.scss / feedback_rojo_sobre_foto_oscura). #ff1f2d
+// mide 5.0+:1 contra estas superficies oscuras y se sigue leyendo como rojo.
+$cn-red:       #ff1f2d;
+
+.lat-contact-page { background: $cn-bg; font-family: $lat-font-sans; }
+
+// ═══════════════════════════════════════════════════════════════════════
+// HERO fotográfico
+// ═══════════════════════════════════════════════════════════════════════
+.lat-contact-hero {
+    position: relative;
+    isolation: isolate;
+    color: #fff;
+    overflow: hidden;
+}
+
+.lat-contact-hero__bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        // La foto (Faro de Miraflores, atardecer) es panorámica 1920×848: en
+        // recortes altos y angostos (móvil) un centrado vertical cae justo en
+        // la franja de cielo rosado, la parte MÁS clara de toda la imagen.
+        // Bajar el encuadre hacia el parque/malecón evita depender solo del
+        // velo para el contraste del texto.
+        object-position: center 68%;
+    }
+}
+
+// Medido con la foto real, no asumido (ver feedback_fondo_seccion_medirlo):
+// un primer cálculo con este mismo velo dio 3.64:1 en el eyebrow — la franja
+// de cielo del atardecer es más clara de lo que parecía a ojo. Se subió la
+// opacidad en toda la columna hasta medir ≥4.5:1 con un muestreo real de
+// píxeles (script en el reporte de validación), no con la fórmula aplicada
+// a un color supuesto.
+.lat-contact-hero__scrim {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(180deg, rgba(8, 6, 5, .86) 0%, rgba(8, 6, 5, .9) 50%, rgba(8, 6, 5, .96) 100%),
+        linear-gradient(100deg, rgba(8, 6, 5, .4) 0%, rgba(8, 6, 5, .12) 60%, rgba(8, 6, 5, 0) 90%);
+}
+
+.lat-contact-hero__content {
+    position: relative;
+    z-index: 2;
+    padding: 40px 24px 44px;
+
+    @media (min-width: $bp-lg) { padding: 56px 24px 56px; }
+}
+
+.lat-contact-hero__crumb {
+    font-size: .82rem;
+    color: rgba(255, 255, 255, .75);
+    margin-bottom: 18px;
+
+    a { color: rgba(255, 255, 255, .75); text-decoration: none; }
+    a:hover { color: #fff; }
+    b { color: #fff; font-weight: 700; }
+}
+
+.lat-contact-hero__title {
+    font-family: $lat-font-serif;
+    font-weight: 800;
+    color: #fff;
+    font-size: clamp(2.1rem, 6vw, 3.4rem);
+    line-height: 1.08;
+    margin: 14px 0 16px;
+}
+
+.lat-contact-hero__sub {
+    max-width: 640px;
+    color: rgba(255, 255, 255, .86);
+    font-size: 1rem;
+    line-height: 1.65;
+    margin: 0 0 34px;
+}
+
+// ── Chips de confianza ───────────────────────────────────────────────
+.lat-contact-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 26px 34px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    @media (max-width: 640px) { gap: 18px; flex-direction: column; }
+}
+
+.lat-contact-chips__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    // Separador vertical entre chips en desktop (no entre el último).
+    padding-right: 34px;
+    border-right: 1px solid rgba(255, 255, 255, .18);
+
+    &:last-child { border-right: none; padding-right: 0; }
+
+    @media (max-width: 640px) { border-right: none; padding-right: 0; }
+}
+
+.lat-contact-chips__ic {
+    flex: none;
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 1.5px solid $cn-red;
+    color: $cn-red;
+    display: grid; place-items: center;
+
+    svg { width: 18px; height: 18px; }
+}
+
+.lat-contact-chips__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: .85rem;
+    line-height: 1.4;
+
+    strong { color: #fff; font-weight: 700; font-size: .92rem; }
+    span { color: rgba(255, 255, 255, .72); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SECCIÓN principal — formulario + canales
+// ═══════════════════════════════════════════════════════════════════════
+.lat-contact-main {
+    background: $cn-bg;
+    padding: 48px 0 60px;
+    border-top: 1px solid rgba(255, 255, 255, .06);
+}
 
 .lat-contact-grid {
     display: grid;
@@ -14,26 +164,51 @@
 }
 
 .lat-contact-card {
-    background: $lat-surface;
-    border: 1px solid $lat-line;
+    background: $cn-card;
+    border: 1px solid $cn-border;
     border-radius: $lat-r-lg;
-    box-shadow: $lat-shadow-sm;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .28);
     padding: 28px;
 
     @media (max-width: 640px) { padding: 20px; border-radius: $lat-r-md; }
 }
 
+.lat-contact-card--sm { padding: 22px; }
+
 .lat-contact-card__head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 22px; }
 
+// Ícono cuadrado (redondeado) relleno — cabecera del form y badge del
+// asesor. Distinto del círculo de las tarjetas de canal (ver más abajo).
+.lat-contact-icon-sq {
+    width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0;
+    background: $lat-red; color: #fff;
+    display: grid; place-items: center;
+    box-shadow: 0 8px 18px rgba(203, 16, 30, .35);
+
+    svg { width: 22px; height: 22px; }
+}
+.lat-contact-icon-sq--sm { width: 38px; height: 38px; border-radius: 11px; margin-bottom: 10px; svg { width: 18px; height: 18px; } }
+
+// Ícono circular relleno — tarjetas de canal (teléfono, correo, horario, recojo)
 .lat-contact-icon-circle {
     width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
-    background: $lat-red-tint; color: $lat-red;
+    background: $lat-red; color: #fff;
     display: grid; place-items: center;
 }
-.lat-contact-icon-circle svg { width: 22px; height: 22px; }
+.lat-contact-icon-circle svg { width: 21px; height: 21px; }
 
-.lat-contact-card__title { font-family: $lat-font-serif; font-weight: 800; font-size: 1.35rem; color: $lat-ink; margin: 0; line-height: 1.2; }
-.lat-contact-card__desc { font-size: .85rem; color: $lat-muted; margin: 4px 0 0; }
+.lat-contact-card__title { font-family: $lat-font-serif; font-weight: 800; font-size: 1.35rem; color: #fff; margin: 0; line-height: 1.2; }
+.lat-contact-card__desc { font-size: .85rem; color: $cn-text-mut; margin: 4px 0 0; }
+
+.lat-contact-alert {
+    margin-bottom: 20px;
+    border-radius: $lat-r-md;
+    padding: 12px 18px;
+    font-size: .88rem;
+    border: 1px solid;
+}
+.lat-contact-alert--ok  { background: rgba(20, 82, 18, .18);  border-color: rgba(90, 200, 90, .4);  color: #a9e8a9; }
+.lat-contact-alert--err { background: rgba(200, 31, 33, .16); border-color: rgba(255, 90, 90, .4);  color: #ffb3b3; }
 
 .lat-contact-form-grid { display: grid; gap: 18px; }
 .lat-contact-two {
@@ -41,49 +216,179 @@
     @media (max-width: 560px) { grid-template-columns: 1fr; }
 }
 
-.lat-contact-field label { display: block; font-size: .82rem; font-weight: 700; color: $lat-ink; margin-bottom: 8px; }
-.lat-contact-field label .req { color: $lat-red; }
+.lat-contact-field label {
+    display: block; font-size: .82rem; font-weight: 700; color: #fff;
+    margin-bottom: 8px; text-transform: uppercase; letter-spacing: .02em;
+}
+.lat-contact-field label .req { color: $cn-red; }
+.lat-contact-field__opt { color: $cn-text-mut; font-weight: 400; text-transform: none; letter-spacing: normal; }
 
 .lat-contact-input, .lat-contact-textarea {
-    width: 100%; border-radius: 12px; border: 1px solid $lat-line-strong;
-    background: $lat-surface-2; padding: 13px 16px; font-size: .92rem; color: $lat-ink-soft;
+    width: 100%; border-radius: 12px; border: 1px solid $cn-border;
+    background: $cn-card-2; padding: 13px 16px; font-size: .92rem; color: #fff;
     font-family: $lat-font-sans; outline: none; transition: border-color .15s, box-shadow .15s, background .15s;
 }
 .lat-contact-input { height: 48px; }
 .lat-contact-textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
-.lat-contact-input::placeholder, .lat-contact-textarea::placeholder { color: rgba(58, 53, 47, .4); }
+// rgba(255,255,255,.55) sobre $cn-card-2 (#2b2521) mide ~7.3:1 — pasa AA con
+// margen (medido con la fórmula WCAG, no a ojo).
+.lat-contact-input::placeholder, .lat-contact-textarea::placeholder { color: $cn-text-faint; }
 .lat-contact-input:focus, .lat-contact-textarea:focus {
-    border-color: $lat-red; box-shadow: 0 0 0 3px rgba(203, 16, 30, .12); background: $lat-surface;
+    border-color: $cn-red; box-shadow: 0 0 0 3px rgba(255, 31, 45, .18); background: #322b26;
+}
+
+// ── Selector de país (Perú, único hoy) + input de celular ─────────────
+.lat-contact-phone {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid $cn-border;
+    border-radius: 12px;
+    background: $cn-card-2;
+    overflow: hidden;
+    transition: border-color .15s, box-shadow .15s;
+
+    &:focus-within { border-color: $cn-red; box-shadow: 0 0 0 3px rgba(255, 31, 45, .18); }
+
+    .lat-contact-input--phone {
+        border: none; background: transparent; border-radius: 0;
+        flex: 1; min-width: 0;
+
+        &:focus { box-shadow: none; background: transparent; }
+    }
+}
+
+.lat-contact-phone__country {
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 10px 0 14px;
+    border-right: 1px solid $cn-border;
+    flex: none;
+    cursor: default;
+}
+.lat-contact-phone__flag { font-size: 1.1rem; line-height: 1; }
+.lat-contact-phone__country select {
+    appearance: none; -webkit-appearance: none;
+    background: transparent; border: none; color: #fff;
+    font-family: $lat-font-sans; font-size: .88rem; font-weight: 600;
+    padding: 0 16px 0 0; height: 48px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right center; background-size: 13px;
+    cursor: pointer;
+}
+.lat-contact-phone__country select:focus { outline: none; }
+
+.lat-contact-legal {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: .8rem; color: $cn-text-mut; cursor: pointer; line-height: 1.5;
+
+    a { color: $cn-red; text-decoration: underline; text-underline-offset: 2px; }
+    a:hover { color: #ff5259; }
+}
+.lat-contact-legal__check {
+    margin-top: 2px; width: 17px; height: 17px; flex-shrink: 0; border-radius: 4px;
+    accent-color: $cn-red;
 }
 
 .lat-contact-submit {
-    width: 100%; height: 52px; border-radius: 14px; border: none; margin-top: 4px;
-    background: $lat-ink; color: #fff; font-weight: 700; font-size: .95rem;
+    width: 100%; height: 54px; border-radius: 14px; border: none; margin-top: 4px;
+    background: $lat-red; color: #fff; font-weight: 700; font-size: .95rem; letter-spacing: .02em;
+    text-transform: uppercase;
     display: flex; align-items: center; justify-content: center; gap: 9px; cursor: pointer;
-    transition: background .15s; font-family: $lat-font-sans;
+    transition: background .15s, transform .15s; font-family: $lat-font-sans;
 }
 .lat-contact-submit svg { width: 18px; height: 18px; }
-.lat-contact-submit:hover { background: $lat-red; }
+.lat-contact-submit:hover { background: $lat-red-deep; transform: translateY(-2px); }
+.lat-contact-submit:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
-// ── Columna derecha: canales de contacto ──────────────────────────────────
+// ── Columna derecha: canales de contacto ──────────────────────────────
 .lat-contact-channels { display: grid; gap: 16px; }
 
 .lat-contact-channel { display: flex; gap: 14px; align-items: flex-start; }
-.lat-contact-channel h3 { font-family: $lat-font-serif; font-weight: 800; font-size: 1.05rem; color: $lat-ink; margin: 0 0 4px; }
+.lat-contact-channel h3 { font-family: $lat-font-serif; font-weight: 800; font-size: 1.02rem; color: #fff; margin: 0 0 4px; }
 .lat-contact-channel p, .lat-contact-channel a {
-    display: block; font-size: .88rem; color: $lat-ink-soft; line-height: 1.5;
+    display: block; font-size: .88rem; color: $cn-text-mut; line-height: 1.5;
 }
-.lat-contact-channel a { color: $lat-ink-soft; text-decoration: none; }
-.lat-contact-channel a:hover { color: $lat-red; }
+.lat-contact-channel a { color: $cn-text-mut; text-decoration: none; }
+.lat-contact-channel a:hover { color: #fff; }
+
+.lat-contact-pickup-note { font-size: .85rem; color: $cn-text-mut; line-height: 1.5; margin: 0; }
+
+// ── Card de asesor (foto de un tour propio + overlay) ─────────────────
+.lat-contact-advisor {
+    position: relative;
+    isolation: isolate;
+    border-radius: $lat-r-lg;
+    overflow: hidden;
+    min-height: 300px;
+    display: flex;
+    align-items: flex-end;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .28);
+
+    img {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2;
+    }
+    &::after {
+        content: "";
+        position: absolute; inset: 0; z-index: -1;
+        background: linear-gradient(180deg, rgba(10, 8, 7, .15) 0%, rgba(10, 8, 7, .82) 62%, rgba(10, 8, 7, .95) 100%);
+    }
+}
+
+.lat-contact-advisor__panel { position: relative; z-index: 1; padding: 22px; width: 100%; }
+.lat-contact-advisor__title { font-family: $lat-font-serif; font-weight: 800; color: #fff; font-size: 1.08rem; margin: 0 0 6px; line-height: 1.3; }
+.lat-contact-advisor__desc { color: rgba(255, 255, 255, .82); font-size: .85rem; line-height: 1.5; margin: 0 0 16px; }
 
 .lat-contact-wa-btn {
-    width: 100%; height: 52px; border-radius: 14px; border: none;
+    width: 100%; height: 50px; border-radius: 14px; border: none;
     // Verde accesible (5.2:1 con texto blanco); el de marca daba 1.98:1.
-    background: $lat-wa-strong; color: #fff; font-weight: 700; font-size: .95rem;
+    background: $lat-wa-strong; color: #fff; font-weight: 700; font-size: .92rem;
     display: flex; align-items: center; justify-content: center; gap: 9px; cursor: pointer;
-    text-decoration: none; transition: filter .15s; font-family: $lat-font-sans;
+    text-decoration: none; transition: filter .15s, transform .15s; font-family: $lat-font-sans;
 }
 .lat-contact-wa-btn svg { width: 19px; height: 19px; }
-.lat-contact-wa-btn:hover { filter: brightness(.94); }
+.lat-contact-wa-btn:hover { filter: brightness(.94); transform: translateY(-2px); }
+.lat-contact-wa-btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
-.lat-contact-pickup-note { font-size: .85rem; color: $lat-muted; line-height: 1.5; margin: 6px 0 0; }
+// ═══════════════════════════════════════════════════════════════════════
+// Franja inferior — social proof real
+// ═══════════════════════════════════════════════════════════════════════
+.lat-contact-social {
+    background: #14110e;
+    border-top: 1px solid rgba(255, 255, 255, .08);
+    padding: 26px 0;
+}
+
+.lat-contact-social__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.lat-contact-social__left {
+    h2 { font-family: $lat-font-serif; font-weight: 800; color: #fff; font-size: 1.15rem; margin: 0 0 4px; }
+    p  { color: $cn-text-mut; font-size: .88rem; margin: 0; }
+}
+
+.lat-contact-social__right { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+
+.lat-contact-social__rating { display: flex; align-items: center; gap: 9px; }
+.lat-contact-social__stars { display: inline-flex; gap: 2px; color: #f5a623; }
+.lat-contact-social__stars svg { width: 15px; height: 15px; }
+.lat-contact-social__rate { font-weight: 800; color: #fff; font-size: 1rem; }
+.lat-contact-social__count { color: $cn-text-mut; font-size: .85rem; }
+
+// Variante roja accesible del botón outline pill, para usar sobre esta
+// franja oscura (el rojo de marca $lat-red mide 3.1–3.4:1 aquí y no pasa AA).
+.lat-contact-btn-outline {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1.5px solid $cn-red; color: $cn-red;
+    font-family: $lat-font-sans; font-weight: 700; font-size: .86rem; letter-spacing: .02em;
+    text-transform: uppercase;
+    padding: 12px 22px; border-radius: $lat-r-pill; text-decoration: none;
+    transition: background .2s, color .2s, transform .2s;
+
+    svg { width: 16px; height: 16px; }
+    &:hover { background: $lat-red; border-color: $lat-red; color: #fff; transform: translateY(-2px); }
+    &:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+}

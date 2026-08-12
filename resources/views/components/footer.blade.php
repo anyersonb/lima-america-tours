@@ -6,8 +6,13 @@
     $contactEmail = \App\Models\Setting::get('contact_email') ?: 'info@limaamericatours.com';
     // docs/qa/F7-personas.md §g #5: la dirección del panel (Configuración → Contacto)
     // se guardaba correctamente pero el footer ignoraba el Setting y mostraba el string
-    // fijo de idioma __('footer.address'). Ahora ese string solo es un fallback.
-    $contactAddress = \App\Models\Setting::get('contact_address_' . $locale) ?: __('footer.address');
+    // fijo de idioma __('footer.address'). SIN fallback a texto de idioma desde
+    // 2026-08-11: esa dirección fija resultó ser la de OTRO cliente (Lima View
+    // Tours) o una heredada del fork, ninguna confirmada — ver
+    // App\Models\Setting::contactAddress(). Null = el <li> de abajo se oculta.
+    $contactAddress = \App\Models\Setting::contactAddress($locale);
+    // Mismo criterio: sin horario fijo de idioma. Ver Setting::contactHours().
+    $contactHours = \App\Models\Setting::contactHours($locale);
 
     $sIg = \App\Models\Setting::get('social_instagram');
     $sFb = \App\Models\Setting::get('social_facebook');
@@ -168,10 +173,12 @@
             <section aria-labelledby="footer-contact">
                 <h4 id="footer-contact">{{ __('footer.locate_us') }}</h4>
                 <address class="lat-footer__contact" style="font-style:normal;">
+                    @if ($contactAddress)
                     <li>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
                         <span>{{ $contactAddress }}</span>
                     </li>
+                    @endif
                     @if ($contactPhone)
                     <li>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
@@ -182,10 +189,12 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
                         <a href="mailto:{{ $contactEmail }}">{{ $contactEmail }}</a>
                     </li>
+                    @if ($contactHours)
                     <li>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span>{{ __('footer.hours') }}</span>
+                        <span>{{ $contactHours }}</span>
                     </li>
+                    @endif
                 </address>
             </section>
 
@@ -202,12 +211,11 @@
             </section>
         </div>
 
-        {{-- Sellos de confianza --}}
+        {{-- Sellos de confianza. "Pago 100% Seguro" se quitó 2026-08-12: el
+             alcance v1 no tiene pasarela de pago activa (ver
+             docs/rebrand/LOTE-MOCKUPS-AGO-2026.md, Fix 2) — prometerlo era
+             afirmar algo falso. Solo quedan los sellos que sí son ciertos. --}}
         <div class="lat-footer__seals">
-            <span class="lat-footer__seal">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-                {{ __('footer.seal_secure_payment') }}
-            </span>
             <span class="lat-footer__seal">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5" fill="currentColor"/></svg>
                 {{ __('footer.seal_best_price') }}

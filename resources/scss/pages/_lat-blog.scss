@@ -1,105 +1,291 @@
 // ═══════════════════════════════════════════════════════════════════════
-// LIMA AMÉRICA TOURS — Blog (calca de lat-05-blog.jpeg)
-// Namespace "lat-" — reutiliza .lat-page-hero, .lat-eyebrow, .lat-btn,
-// .lat-wrap y tokens globales ya definidos en pages/lat-tours.
+// LIMA AMÉRICA TOURS — Blog (calca de mockups/04-blog.jpeg)
+// Namespace "lat-" — reutiliza .lat-page-hero, .lat-eyebrow/--on-dark,
+// .lat-btn/--red/--outline-white, .lat-wrap y tokens globales.
+//
+// Tema OSCURO DE PUNTA A PUNTA — a diferencia de Home/Nosotros (claros con
+// franjas oscuras), Blog (y Contacto, fuera de alcance aquí) son oscuros
+// completos (docs/rebrand/LOTE-MOCKUPS-AGO-2026.md, decisión 1). Todo lo
+// de esta sección va bajo `.lat-blog-hero`/`.lat-blog-body` o con nombres
+// de clase EXCLUSIVOS del listado (`.lat-blog-*`) para no filtrar el
+// oscuro a `.lat-page-hero` ni a `.lat-filter`, que tours/privacidad/
+// términos siguen usando en su versión clara. Las reglas de
+// "Artículo individual (show)" al final del archivo (`.lat-post-*`,
+// `.lat-related-*`) son de blog/show.blade.php, NO tocadas por este lote.
 // ═══════════════════════════════════════════════════════════════════════
 @use '../abstracts/variables' as *;
 
-// ── Grilla de artículos ──────────────────────────────────────────────────
-.lat-blog-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 28px;
+// ── HERO — foto a la derecha con degradado hacia la izquierda ──────────
+// Reutiliza `.lat-page-hero` (mismo componente oscuro que tours/privacidad/
+// términos, degradado 115deg ya más denso a la izquierda — ver
+// _lat-tours.scss) en vez de duplicarlo; solo se ajusta el eyebrow a rojo
+// saturado (no el rosa pálido que usan esas otras páginas) y se agrega el
+// buscador, exclusivos de esta página vía el scope `.lat-blog-hero`.
+.lat-blog-hero {
+    padding-bottom: 84px;
+    position: relative;
 
-    @media (max-width: 760px) { grid-template-columns: 1fr; gap: 22px; }
+    // Refuerzo de oscurecimiento SOLO en la columna de texto (eyebrow/H1/
+    // subtítulo/buscador). Medido con muestreo real de píxeles (no
+    // calculado): el degradado compartido de `.lat-page-hero::after` (pensado
+    // para fotos internas menos claras) daba 4.36:1 PROMEDIO real para el
+    // eyebrow rojo sobre esta foto de Machu Picchu — por debajo del 4.5:1
+    // que exige AA para texto normal (11.5px/700, no califica como texto
+    // grande). Este ::before propio de la página sube el margen sin tocar
+    // `.lat-page-hero`, compartida con tours/privacidad/términos. Verificado
+    // de nuevo tras el cambio: ver reporte de este lote.
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background: linear-gradient(100deg, rgba(10, 8, 7, .68) 0%, rgba(10, 8, 7, .4) 40%, rgba(10, 8, 7, 0) 62%);
+        pointer-events: none;
+    }
+
+    .lat-wrap { position: relative; z-index: 1; }
+
+    .lat-eyebrow { color: #ff1f2d; &::before, &::after { background: #ff1f2d; } }
+
+    .lat-page-hero__sub { max-width: 480px; }
+
+    @media (max-width: 760px) { padding-bottom: 56px; }
 }
 
-.lat-post {
-    position: relative;
-    isolation: isolate;
-    border-radius: $lat-r-md;
-    overflow: hidden;
-    box-shadow: $lat-shadow-sm;
-    min-height: 340px;
+// Buscador pill — real (BlogController::index respeta ?q=), no decorativo.
+// Solo icono + input visibles (mockup): el submit es por Enter, con un
+// botón accesible fuera de pantalla para teclado/lector de pantalla.
+.lat-blog-search {
     display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, .09);
+    border: 1px solid rgba(255, 255, 255, .24);
+    border-radius: $lat-r-pill;
+    padding: 15px 22px;
+    max-width: 460px;
+    margin-top: 30px;
+    transition: border-color .2s;
+
+    &:focus-within { border-color: #ff1f2d; }
+
+    &__ic { width: 18px; height: 18px; color: #ff1f2d; flex: none; }
+
+    input {
+        flex: 1;
+        min-width: 0;
+        border: none;
+        background: transparent;
+        outline: none;
+        font-family: $lat-font-sans;
+        font-size: .92rem;
+        color: #fff;
+
+        &::placeholder { color: rgba(255, 255, 255, .64); }
+
+        // Quita el ícono nativo de "borrar" de type=search en algunos
+        // navegadores, que rompe el alineado con el ícono propio.
+        &::-webkit-search-cancel-button { -webkit-appearance: none; }
+    }
+
+    @media (max-width: 480px) { max-width: 100%; padding: 13px 18px; }
+}
+
+// ── Cuerpo oscuro completo: toolbar + filtros + grid + CTA ──────────────
+.lat-blog-body {
+    background: $lat-ink;
     color: #fff;
-    transition: transform .3s ease, box-shadow .3s ease;
+    padding: 56px 24px 90px;
+}
 
-    &:hover { transform: translateY(-6px); box-shadow: $lat-shadow-lg; }
+.lat-blog-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px 16px;
+    flex-wrap: wrap;
+    margin-bottom: 36px;
 
-    img {
-        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        z-index: -2; transition: transform .55s ease;
-    }
-    &:hover img { transform: scale(1.07); }
-
-    &::after {
-        content: "";
-        position: absolute; inset: 0; z-index: -1;
-        background: linear-gradient(to top, rgba($lat-ink, .92) 10%, rgba($lat-ink, .45) 55%, rgba($lat-ink, .08) 100%);
-    }
-
-    &__badge {
-        position: absolute; top: 16px; left: 16px; z-index: 2;
-        background: $lat-red; color: #fff;
-        font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-        padding: 7px 14px; border-radius: $lat-r-pill; box-shadow: $lat-shadow-sm;
-    }
-
-    &__body { position: relative; z-index: 2; padding: 26px 26px 24px; }
-
-    h2, h3 {
+    &__title {
         font-family: $lat-font-serif;
         font-weight: 800;
-        font-size: clamp(1.2rem, 2vw, 1.5rem);
-        line-height: 1.25;
-        margin: 0 0 14px;
-        max-width: 90%;
-
-        a { color: inherit; }
-        a:hover { color: #ffd7d9; }
-    }
-
-    &__meta {
-        display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
-        font-size: .82rem; color: #f1ebe4; margin-bottom: 18px;
-
-        span { display: inline-flex; align-items: center; gap: 7px; }
-        svg { width: 15px; height: 15px; color: #ff1f2d; flex: none; }
-    }
-
-    &__link {
-        display: inline-flex; align-items: center; gap: 8px;
-        // Botón "Leer más" sobre foto oscura: blanco/ink por defecto, el
-        // rojo entra solo en hover (evita otro bloque rojo sólido más).
-        background: $lat-surface; color: $lat-ink;
-        font-family: $lat-font-sans; font-weight: 600; font-size: .85rem;
-        padding: 10px 18px; border-radius: $lat-r-pill;
-        transition: background .2s, color .2s, transform .2s;
-
-        &:hover { background: $lat-red; color: #fff; transform: translateY(-2px); }
-        svg { width: 15px; height: 15px; }
-    }
-
-    @media (min-width: 761px) {
-        min-height: 380px;
+        font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+        color: #fff;
+        margin: 0;
     }
 }
 
-// ── Chips de categoría (filtro) ──────────────────────────────────────────
-.lat-blog-filters { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 30px; }
+// Chips de filtro — namespace propio (NO `.lat-filter`, compartida con el
+// listado de tours en su versión clara): el fondo/borde/estado activo de
+// aquí son para tema oscuro y no deben filtrarse a esa página.
+.lat-blog-filters { display: flex; flex-wrap: wrap; gap: 9px; }
 
-// reutiliza .lat-filter de lat-tours.scss vía markup compartido
+.lat-blog-filter {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 18px;
+    border-radius: $lat-r-pill;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, .3);
+    color: rgba(255, 255, 255, .82);
+    font-family: $lat-font-sans;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s, color .2s, border-color .2s, transform .2s;
 
-// ── CTA final "¿Listo para vivir tu propia aventura?" ───────────────────
+    &:hover { border-color: #ff1f2d; color: #fff; transform: translateY(-2px); }
+
+    &.is-active { background: $lat-red; border-color: $lat-red; color: #fff; }
+
+    &:focus-visible { outline: 2px solid #ff1f2d; outline-offset: 2px; }
+}
+
+// ── Grilla de artículos — imagen contenida arriba (NO fondo de tarjeta
+// con texto encimado, como en el diseño claro anterior), badge de
+// categoría encimado abajo-izquierda de la imagen, cuerpo con título +
+// meta, botón circular flecha abajo-derecha de la tarjeta. ──
+.lat-blog-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 26px;
+
+    @media (max-width: 1024px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 680px) { grid-template-columns: 1fr; gap: 20px; }
+}
+
+.lat-blog-card {
+    background: rgba(255, 255, 255, .03);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: $lat-r-md;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform .3s ease, border-color .3s ease;
+
+    &:hover { transform: translateY(-5px); border-color: rgba(255, 31, 45, .55); }
+
+    &__media {
+        position: relative;
+        display: block;
+        aspect-ratio: 4 / 2.9;
+        overflow: hidden;
+    }
+
+    &__media img {
+        width: 100%; height: 100%; object-fit: cover; display: block;
+        transition: transform .55s ease;
+    }
+    &:hover &__media img { transform: scale(1.06); }
+
+    &__badge {
+        position: absolute;
+        left: 14px;
+        bottom: 14px;
+        background: $lat-red;
+        color: #fff;
+        font-size: .66rem;
+        font-weight: 700;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        padding: 6px 13px;
+        border-radius: $lat-r-pill;
+        box-shadow: $lat-shadow-sm;
+    }
+
+    &__body {
+        padding: 20px 22px 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        flex: 1;
+    }
+
+    h3 {
+        font-family: $lat-font-serif;
+        font-weight: 700;
+        font-size: 1.1rem;
+        line-height: 1.32;
+        color: #fff;
+        margin: 0;
+
+        a { color: inherit; }
+        a:hover { color: #ff1f2d; }
+    }
+
+    &__foot {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    // Separador " · " automático entre autor/fecha/minutos — se imprimen
+    // solo los que tengan dato real (ver blade: sin fila vacía cuando el
+    // post no tiene autor).
+    &__meta {
+        font-size: .78rem;
+        color: rgba(255, 255, 255, .68);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+
+        > * + *::before { content: "\00b7"; margin: 0 7px; color: rgba(255, 255, 255, .4); }
+    }
+
+    &__arrow {
+        width: 40px; height: 40px; border-radius: 50%; flex: none;
+        display: grid; place-items: center;
+        background: $lat-surface; color: $lat-ink;
+        transition: background .2s, color .2s, transform .2s;
+
+        svg { width: 16px; height: 16px; }
+        &:hover { background: $lat-red; color: #fff; transform: translateX(2px); }
+        &:focus-visible { outline: 2px solid #ff1f2d; outline-offset: 2px; }
+    }
+}
+
+// ── Pager (Laravel paginator, vista `pagination::tailwind`) — la vista
+// vendor trae clases de Tailwind con las que este proyecto compila la
+// hoja de utilidades, pero SOLO las que Tailwind detecta escaneando
+// `resources/**` — no escanea `vendor/`, así que esas clases (bg-white,
+// text-gray-700...) no existen en el CSS final. Sin poder editar el
+// archivo vendor, se sobreescribe por estructura (nav/a/span), no por
+// clase; el !important es el único caso de este archivo y es para ganarle
+// a esas utilidades de Tailwind si algún día SÍ llegaran a compilarse. ──
+.lat-blog-pager {
+    margin-top: 46px;
+    display: flex;
+    justify-content: center;
+
+    nav { color: rgba(255, 255, 255, .85); }
+
+    nav a, nav span > span {
+        background: rgba(255, 255, 255, .06) !important;
+        border-color: rgba(255, 255, 255, .18) !important;
+        color: rgba(255, 255, 255, .85) !important;
+    }
+
+    nav [aria-current="page"] span {
+        background: $lat-red !important;
+        border-color: $lat-red !important;
+        color: #fff !important;
+    }
+
+    nav a:hover { background: rgba(255, 255, 255, .16) !important; }
+
+    nav p, nav p span { color: rgba(255, 255, 255, .6) !important; }
+}
+
+// ── CTA final "¿Listo para vivir tu propia historia?" — card oscura con
+// borde discontinuo rojo (mockup), ícono de avión, CTA rojo + outline. ──
 .lat-blog-cta {
-    // Fondo neutro (antes lavado rojo pálido a todo el ancho de la franja);
-    // el rojo queda en el ícono circular.
-    background: $lat-surface-2;
+    margin-top: 46px;
+    background: rgba(255, 255, 255, .04);
+    border: 1.5px dashed rgba(255, 31, 45, .45);
     border-radius: $lat-r-lg;
-    padding: 30px 34px;
+    padding: 32px 36px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -111,22 +297,35 @@
     &__ic {
         width: 54px; height: 54px; border-radius: 50%; flex: none;
         background: $lat-red; color: #fff; display: grid; place-items: center;
-        box-shadow: 0 8px 20px rgba(203, 16, 30, .3);
+        box-shadow: 0 8px 20px rgba(255, 31, 45, .35);
 
         svg { width: 24px; height: 24px; }
     }
 
-    h2 { font-family: $lat-font-serif; font-weight: 800; font-size: 1.3rem; color: $lat-ink; margin: 0 0 4px; }
-    p { color: $lat-muted; font-size: .92rem; margin: 0; }
+    h2 { font-family: $lat-font-serif; font-weight: 800; font-size: 1.3rem; color: #fff; margin: 0 0 4px; }
+    p { color: rgba(255, 255, 255, .76); font-size: .92rem; margin: 0; }
 
-    @media (max-width: 700px) {
-        flex-direction: column; align-items: flex-start; padding: 26px;
+    &__actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 
-        .lat-btn { width: 100%; }
+    &__divider { width: 1px; height: 28px; background: rgba(255, 255, 255, .25); flex: none; }
+
+    @media (max-width: 760px) {
+        flex-direction: column; align-items: flex-start; padding: 28px;
+
+        &__actions { width: 100%; }
+        &__actions .lat-btn { flex: 1; justify-content: center; }
+        &__divider { display: none; }
+    }
+
+    @media (max-width: 480px) {
+        &__actions { flex-direction: column; }
+        &__actions .lat-btn { width: 100%; }
     }
 }
 
-// ── Artículo individual (show) ──────────────────────────────────────────
+// ── Artículo individual (show) ───────────────────────────────────────────
+// SIN TOCAR — blog/show.blade.php sigue en tema claro, fuera de alcance de
+// este lote (brief: solo blog/index.blade.php).
 .lat-post-head {
     background: $lat-surface-2;
     border-bottom: 1px solid $lat-line;
@@ -247,4 +446,9 @@
     time { font-size: .8rem; color: $lat-muted; }
 }
 
-.lat-empty-note--blog { grid-column: 1 / -1; }
+.lat-empty-note--blog {
+    grid-column: 1 / -1;
+    color: rgba(255, 255, 255, .7);
+    text-align: center;
+    padding: 40px 0;
+}

@@ -318,15 +318,22 @@
     <a href="https://wa.me/{{ $waNumber }}"
        target="_blank"
        rel="noopener noreferrer"
-       aria-label="WhatsApp"
-       id="waFab"
        {{-- Verde #0f7d3d, no el #25D366 de marca: el glifo blanco sobre el verde
             claro da 1.98:1 (WCAG 1.4.11 pide 3:1 para elementos gráficos) y, además,
             este FAB y el pill de WhatsApp del hero se ven a la vez en escritorio —
             con dos verdes distintos parecía un error de maquetación.
             Mismo valor que $lat-wa-strong en _variables.scss: si se cambia uno,
-            cambiar el otro (aquí es inline porque el FAB no depende del build). --}}
-       style="position:fixed;bottom:104px;right:18px;z-index:9000;width:52px;height:52px;border-radius:9999px;background-color:#0F7D3D;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:transform .2s ease,opacity .2s ease;color:#fff;text-decoration:none;"
+            cambiar el otro (aquí es inline porque el FAB no depende del build).
+
+            2026-08-11 (mockup 01-home.jpeg): abajo a la IZQUIERDA, no a la derecha
+            — el script de colisión de más abajo solo lee/escribe `bottom`, nunca
+            `left`/`right`, así que mover el eje horizontal no interfiere con la
+            lógica que despeja `.lat-sticky-book` (barra fija de precio de la
+            ficha, ancho completo — a cualquier `bottom` el FAB cae sobre ella sea
+            cual sea su lado horizontal, y `avoidOverlap()` ya la libra igual). --}}
+       aria-label="WhatsApp"
+       id="waFab"
+       style="position:fixed;bottom:104px;left:18px;z-index:9000;width:52px;height:52px;border-radius:9999px;background-color:#0F7D3D;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:transform .2s ease,opacity .2s ease;color:#fff;text-decoration:none;"
        onmouseover="this.style.transform='scale(1.1)'"
        onmouseout="this.style.transform='scale(1)'">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

@@ -4,6 +4,15 @@
 @section('description', __('legal.last_updated'))
 @section('header_variant', 'solid')
 
+@php
+    // Fuente única para teléfono/horario/dirección en el texto legal — ver
+    // App\Models\Setting::contactPhone()/contactHours()/contactAddress().
+    // Cada línea de la sección 5 solo se imprime si el dato existe.
+    $legalPhone = \App\Models\Setting::contactPhone();
+    $legalHours = \App\Models\Setting::contactHours($locale);
+    $legalAddress = \App\Models\Setting::contactAddress($locale);
+@endphp
+
 @section('content')
 <div class="lat-page">
 
@@ -57,7 +66,16 @@
             <h2 id="terms-s5" class="font-display text-xl md:text-2xl text-lat-ink mb-3">
                 {{ __('legal.terms_s5_title') }}
             </h2>
-            <p class="text-lat-ink-soft leading-relaxed">{{ __('legal.terms_s5_body') }}</p>
+            <p class="text-lat-ink-soft leading-relaxed">{{ __('legal.terms_s5_intro') }}</p>
+            @if ($legalPhone)
+                <p class="text-lat-ink-soft leading-relaxed">{{ __('legal.terms_s5_phone_line', ['phone' => $legalPhone]) }}</p>
+            @endif
+            @if ($legalHours)
+                <p class="text-lat-ink-soft leading-relaxed">{{ __('legal.terms_s5_hours_line', ['hours' => $legalHours]) }}</p>
+            @endif
+            @if ($legalAddress)
+                <p class="text-lat-ink-soft leading-relaxed">{{ __('legal.terms_s5_address_line', ['address' => $legalAddress]) }}</p>
+            @endif
         </section>
 
         {{-- Back link --}}

@@ -75,6 +75,68 @@ class Setting extends Model
         return $digits !== '' ? $digits : null;
     }
 
+    /**
+     * Dirección física de contacto en el idioma pedido, con solo un
+     * fallback: al español, no a texto libre de idioma.
+     *
+     * SIN default en código a propósito. Hallazgo 2026-08-11: había DOS
+     * direcciones publicadas al mismo tiempo — el Setting traía
+     * "Av. Larcomar 233, Of. 410 — Miraflores, Lima" (idéntica a la
+     * dirección real de Lima View Tours, OTRO cliente) y `lang/*` +
+     * Términos/Privacidad tenían como fallback "Jr. Lampa 209, Lima
+     * Center" (heredado del fork, tampoco confirmado). Ninguna de las dos
+     * está verificada, así que no se "elige la buena": si el Setting está
+     * vacío, esto devuelve null y cada consumidor oculta el bloque de
+     * dirección en vez de imprimir un dato ajeno o adivinado.
+     */
+    public static function contactAddress(string $locale): ?string
+    {
+        $value = trim((string) static::get("contact_address_{$locale}", ''));
+        if ($value === '') {
+            $value = trim((string) static::get('contact_address_es', ''));
+        }
+
+        return $value !== '' ? $value : null;
+    }
+
+    /**
+     * Horario de atención en el idioma pedido, con fallback solo al
+     * español. SIN default en código: antes convivían hasta 4 horarios
+     * distintos hardcodeados en footer.php, ui.php, legal.php y
+     * contact.blade.php, ninguno igual al que el cliente carga en el
+     * panel (Configuración → Contacto). Esta es la única fuente ahora.
+     */
+    public static function contactHours(string $locale): ?string
+    {
+        $value = trim((string) static::get("contact_hours_{$locale}", ''));
+        if ($value === '') {
+            $value = trim((string) static::get('contact_hours_es', ''));
+        }
+
+        return $value !== '' ? $value : null;
+    }
+
+    /**
+     * RUC de la empresa. SIN default: el footer y los Términos publicaban
+     * dos RUC contradictorios (20616108264 "Viaja con LAT S.A.C." y
+     * 10720481826 "Díaz Córdova Augusto Manuel"), ninguno confirmado por
+     * el cliente. Null hasta que el cliente confirme cuál es el correcto.
+     */
+    public static function companyRuc(): ?string
+    {
+        $value = trim((string) static::get('company_ruc', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
+    /** Razón social. Mismo criterio que companyRuc(): sin default inventado. */
+    public static function companyLegalName(): ?string
+    {
+        $value = trim((string) static::get('company_legal_name', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
     protected static function castValue(?string $value, string $type): mixed
     {
         return match ($type) {

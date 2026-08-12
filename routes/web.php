@@ -140,7 +140,22 @@ Route::prefix('{locale}')
                 ->first()
                 ?? \App\Models\Testimonial::active()->latest()->first();
 
-            return view('about', compact('page', 'testimonials', 'featured'));
+            // Guías/equipo real (mockup 02-nosotros-parte1, "Guías locales,
+            // amigos y amantes de nuestra cultura"). Colección vacía = 0
+            // guías activos: la vista debe ocultar la sección entera, mismo
+            // criterio que el resto del proyecto (nunca una sección con 0
+            // resultados a la vista).
+            $guides = \App\Models\Guide::active()->ordered()->get();
+
+            // Destinos reales (mockup 02, "Explora los increíbles destinos
+            // del Perú"): solo regiones con al menos un tour publicado, con
+            // su conteo real. Guard automático — ver Region::scopeWithPublishedTours.
+            $destinationRegions = \App\Models\Region::active()
+                ->orderBy('order')
+                ->withPublishedTours()
+                ->get();
+
+            return view('about', compact('page', 'testimonials', 'featured', 'guides', 'destinationRegions'));
         })->name('about');
 
         // Legal pages

@@ -174,13 +174,31 @@
         linear-gradient(100deg, rgba(10, 8, 7, .4) 0%, rgba(10, 8, 7, .08) 55%, rgba(10, 8, 7, 0) 78%);
 }
 
-// ── Contenido superpuesto (eyebrow / H1 / párrafo / botones) ────────────
+// ── Contenido superpuesto (eyebrow / H1 / párrafo / botones + card de
+// stats) ────────────────────────────────────────────────────────────────
+// Fix 2 (lote mockups agosto 2026): antes solo contenía .lat-hero__text (y
+// el badge de años); ahora también es hermana de .lat-hero__text la card
+// roja de stats (.lat-hero__stats-card, más abajo). En mobile/tablet
+// (<1024) se queda en columna: el texto primero, la card DEBAJO en flujo
+// normal — nunca tapa el título ni los CTAs. En ≥1024 pasa a fila: el texto
+// crece, la card queda fija a la derecha "a la altura del título", como
+// pide el mockup 01-home.
 .lat-hero__content {
     position: relative;
     z-index: 2;
     padding: 108px 24px 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 30px;
 
-    @media (min-width: $bp-lg) { padding: 150px 24px 100px; }
+    @media (min-width: $bp-lg) {
+        padding: 150px 24px 100px;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 40px;
+    }
 }
 
 .lat-hero__text { min-width: 0; max-width: 620px; }
@@ -330,6 +348,114 @@
         strong { font-size: 1.5rem; }
         &-sub { font-size: .68rem; }
     }
+
+    // NOTA: hoy este badge nunca se pinta ($heroYearsBadge['show'] es false
+    // sin company_started_year — ver home.blade.php) así que no se pudo medir
+    // en el navegador cómo conviven su posición absoluta (right:5% en ≥1024)
+    // y la card roja de stats nueva (.lat-hero__stats-card, mismo lado). Si
+    // el cliente carga el año de inicio y el badge se activa, revisar que no
+    // se solapen — no se fuerza una posición a ciegas sobre algo invisible.
+}
+
+// ── Card roja de stats del hero (Fix 2, lote mockups agosto 2026) ───────
+// Reemplaza la barra blanca horizontal que colgaba del borde INFERIOR del
+// hero (.lat-hero__stats-wrap, retirada — medida: rgb(255,255,255), top
+// absoluto 1174 contra un hero de 139 a 1367, muy por debajo del titular).
+// El mockup 01-home la pone como card ROJA a la derecha del hero, a la
+// altura del título, filas apiladas con ícono a la izquierda. Vive dentro
+// de .lat-hero__content (hermana de .lat-hero__text): en ≥1024 el flex la
+// manda a la derecha del texto; en mobile/tablet queda en flujo normal
+// DEBAJO del texto — nunca puede tapar el título ni los CTAs porque no sale
+// del flow hasta ese breakpoint.
+//
+// Namespace propio (.lat-hero__stats-card / .lat-hsc__*), NO
+// .lat-hero-stats / .lat-htc: esas clases las sigue usando about.blade.php
+// (franja de stats de Nosotros, fuera de alcance de este lote) tal cual
+// estaban — reusarlas aquí les habría heredado un layout de barra horizontal
+// pensado para OTRO contexto.
+//
+// Alto: nunca fijo. Es flex-column con 1 fila por slot; si HomeStatsResolver
+// oculta un slot (sin dato), la fila no se imprime y la card se achica sola
+// — no hay ninguna altura hardcodeada que dejar hueca.
+.lat-hero__stats-card {
+    position: relative;
+    z-index: 2;
+    background: $lat-red;
+    color: #fff;
+    border-radius: $lat-r-lg;
+    box-shadow: $lat-shadow-lg;
+    padding: 6px 22px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 320px;
+
+    @media (min-width: $bp-lg) {
+        flex: 0 0 300px;
+        width: 300px;
+        // Alinea el TOPE de la card con el tope del título, no con el
+        // centro del bloque de texto completo — así se lee "a la altura
+        // del titular" incluso si el párrafo/CTAs alargan el bloque.
+        margin-top: 6px;
+    }
+}
+
+.lat-hsc__row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 0;
+
+    &:not(:last-child) { border-bottom: 1px solid rgba(255, 255, 255, .24); }
+}
+
+.lat-hsc__ic {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .14);
+    border: 1.5px solid rgba(255, 255, 255, .55);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    flex: none;
+
+    svg { width: 20px; height: 20px; }
+}
+
+.lat-hsc__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+// Cifra (Instrument→Raleway vía $font-price, mismo criterio que el resto de
+// números del sitio — precios, stats de Nosotros). Blanco puro: 5.79:1
+// contra $lat-red, medido con la fórmula WCAG (ver _variables.scss, mismo
+// cálculo que ya documenta .lat-eyebrow--on-dark para este mismo rojo).
+.lat-hsc__value {
+    display: block;
+    font-family: $font-price;
+    font-weight: 400;
+    font-size: 1.55rem;
+    line-height: 1.1;
+    color: #fff;
+}
+
+.lat-hsc__value--src {
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover, &:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
+    &:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+}
+
+.lat-hsc__label {
+    font-size: .8rem;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.3;
 }
 
 // ── Tarjetas PROMOCIÓN (A3) — sobre la foto, dentro del hero ────────────
@@ -396,20 +522,11 @@
     &:hover { background: $lat-red; border-color: $lat-red; color: #fff; }
 }
 
-// ── Barra de stats clara (A2) — tarjeta blanca encimada al borde inferior
-// del hero. Mismo recurso que ya usaba el buscador (margin-top negativo):
-// la mitad "muerde" el degradado oscuro de arriba, la otra mitad cae sobre
-// la sección siguiente ($lat-paper). ──
-.lat-hero__stats-wrap {
-    position: relative;
-    z-index: 3;
-    padding: 0 24px;
-    margin-top: -46px;
-    padding-bottom: 46px;
-
-    @media (max-width: 640px) { margin-top: -30px; padding-bottom: 30px; }
-}
-
+// .lat-hero__stats-wrap (la barra blanca horizontal, A2) se retiró en el
+// Fix 2 del lote mockups agosto 2026: la reemplaza .lat-hero__stats-card
+// más arriba. .lat-hero-stats / .lat-htc / .lat-hstat__value de aquí abajo
+// NO se tocan — about.blade.php los sigue usando tal cual para su propia
+// franja de stats (Nosotros, fuera de alcance de este lote).
 .lat-hero-stats {
     background: $lat-surface;
     border: 1px solid $lat-line;
@@ -1065,6 +1182,244 @@
         &__mark { opacity: .12; width: clamp(160px, 40vw, 220px); right: 2%; }
     }
 }
+
+// ── Tira de categorías — encimada al borde del hero (mockup 01-home) ────
+// Distinta de .lat-cats (grilla grande de "Explora por categoría"): esta es
+// una fila compacta de fotos cuadradas con ícono + label, pegada al límite
+// entre el hero y el fondo claro. 4 columnas reales (no 6 del mockup) —
+// `--lat-catstrip-n` evita columnas muertas si el catálogo cambia.
+.lat-cat-strip {
+    background: $lat-paper;
+    padding: 0 24px 26px;
+    margin-top: -1px; // muerde el borde inferior del hero, sin dejar línea de 1px visible
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(var(--lat-catstrip-n, 4), 1fr);
+        gap: 14px;
+
+        @media (max-width: 780px) { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    &__item {
+        position: relative;
+        isolation: isolate;
+        display: block;
+        border-radius: $lat-r-md;
+        overflow: hidden;
+        aspect-ratio: 1 / 1;
+        box-shadow: $lat-shadow-sm;
+        transition: transform .25s ease, box-shadow .25s ease;
+
+        &:hover { transform: translateY(-4px); box-shadow: $lat-shadow-lg; }
+
+        img {
+            position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+            z-index: -2; transition: transform .5s ease;
+        }
+        &:hover img { transform: scale(1.08); }
+
+        &::after {
+            content: ""; position: absolute; inset: 0; z-index: -1;
+            background: linear-gradient(to top, rgba(15, 11, 10, .82) 10%, rgba(15, 11, 10, .1) 75%);
+        }
+    }
+
+    &__ic {
+        position: absolute; top: 10px; left: 10px;
+        width: 30px; height: 30px; border-radius: 50%;
+        background: rgba(255, 255, 255, .18);
+        backdrop-filter: blur(3px);
+        border: 1px solid rgba(255, 255, 255, .4);
+        color: #fff;
+        display: grid; place-items: center;
+
+        svg { width: 15px; height: 15px; }
+
+        @media (max-width: 480px) { width: 24px; height: 24px; svg { width: 12px; height: 12px; } }
+    }
+
+    &__label {
+        position: absolute; left: 12px; bottom: 10px; right: 10px;
+        color: #fff; font-weight: 700; font-size: .88rem; line-height: 1.2;
+
+        @media (max-width: 480px) { font-size: .76rem; }
+    }
+}
+
+// ── "Viaja con confianza" — 5 columnas (mockup: "¿Por qué elegirnos?") ──
+.lat-why {
+    padding: 20px 24px 70px;
+
+    &__grid {
+        display: grid;
+        // auto-fit y no repeat(5): los ítems los edita el cliente desde el panel
+        // (repeater `home_why_items`), así que si deja 4 el grid se reparte en 4
+        // en vez de dejar una celda vacía al final. Con 5 se comporta igual que antes.
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 28px 20px;
+        text-align: center;
+
+        @media (max-width: 980px) { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+        @media (max-width: 640px) { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+
+        b { font-family: $lat-font-serif; font-size: .98rem; color: $lat-ink; }
+        span { font-size: .82rem; color: $lat-muted; line-height: 1.45; }
+    }
+
+    &__ic {
+        width: 58px; height: 58px; border-radius: 50%;
+        border: 1.5px solid $lat-red; color: $lat-red;
+        background: $lat-red-tint;
+        display: grid; place-items: center;
+
+        svg { width: 24px; height: 24px; }
+    }
+}
+
+// ── Encabezado de sección alineado a la izquierda + link a la derecha
+// (Testimonios: "Ver todas las reseñas →"), compartido si otra sección lo
+// necesita a futuro. Distinto de .lat-sec-head (que es centrado).
+.lat-sec-head-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 34px;
+    flex-wrap: wrap;
+
+    h2 {
+        font-family: $lat-font-serif;
+        font-weight: 800;
+        color: $lat-ink;
+        font-size: clamp(1.7rem, 3vw, 2.3rem);
+        margin: 10px 0 0;
+    }
+}
+
+.lat-link-arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 700;
+    font-size: .9rem;
+    color: $lat-red;
+    white-space: nowrap;
+
+    svg { width: 16px; height: 16px; transition: transform .2s ease; }
+    &:hover svg { transform: translateX(4px); }
+}
+
+// ── Testimonios reales (3 tarjetas + 1 de agregado) ─────────────────────
+.lat-reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+
+    @media (max-width: 1100px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 640px) { grid-template-columns: 1fr; }
+}
+
+.lat-rcard {
+    background: $lat-surface;
+    border: 1px solid $lat-line;
+    border-radius: $lat-r-md;
+    box-shadow: $lat-shadow-sm;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    &__head { display: flex; align-items: center; gap: 12px; }
+
+    &__avatar {
+        width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex: none;
+
+        &--fallback {
+            display: grid; place-items: center;
+            background: $lat-ink; color: #fff;
+            font-family: $lat-font-serif; font-weight: 700;
+        }
+    }
+
+    &__head b { display: block; font-size: .92rem; color: $lat-ink; }
+    &__head span { font-size: .78rem; color: $lat-muted; }
+
+    &__quote { font-size: .88rem; color: $lat-ink-soft; line-height: 1.55; flex: 1; }
+
+    &__src { font-size: .74rem; font-weight: 700; color: $lat-muted; text-transform: uppercase; letter-spacing: .04em; }
+
+    &--agg {
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background: $lat-ink;
+        border-color: $lat-ink;
+        gap: 8px;
+    }
+
+    &__agg-num {
+        font-family: $font-price;
+        font-size: 2.6rem;
+        font-weight: 400;
+        color: #fff;
+        line-height: 1;
+
+        small { font-size: 1.1rem; color: rgba(255, 255, 255, .7); }
+    }
+
+    &__agg-count { font-size: .8rem; color: rgba(255, 255, 255, .75); }
+}
+
+// ── Destinos populares ───────────────────────────────────────────────────
+.lat-dest-cards {
+    display: grid;
+    grid-template-columns: repeat(var(--lat-dest-n, 3), 1fr);
+    gap: 22px;
+    margin-bottom: 36px;
+
+    @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 560px) { grid-template-columns: 1fr; }
+}
+
+.lat-dest-card {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: flex-end;
+    min-height: 320px;
+    border-radius: $lat-r-md;
+    overflow: hidden;
+    box-shadow: $lat-shadow-sm;
+    transition: transform .3s ease, box-shadow .3s ease;
+
+    &:hover { transform: translateY(-5px); box-shadow: $lat-shadow-lg; }
+
+    img {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        z-index: -2; transition: transform .55s ease;
+    }
+    &:hover img { transform: scale(1.08); }
+
+    &::after {
+        content: ""; position: absolute; inset: 0; z-index: -1;
+        background: linear-gradient(to top, rgba(15, 11, 10, .88) 10%, rgba(15, 11, 10, .12) 65%);
+    }
+
+    &__body { padding: 24px 22px; color: #fff; }
+
+    &__body b { display: block; font-family: $lat-font-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+    &__body span { font-size: .86rem; color: #e9e1d7; }
+}
+
+.lat-dest-cta { text-align: center; }
 
 // ── Newsletter oscuro con foto (A5) — antes del footer. Calca del mockup
 // "Tu próxima aventura empieza aquí" (WhatsApp Image 2026-07-31

@@ -8,7 +8,7 @@
 
 @section('title', $post->metaTitle ?: $post->title)
 @section('description', $post->metaDescription ?: Str::limit(strip_tags($post->excerpt), 160))
-@section('og_image', $post->cover_image ? asset('storage/' . $post->cover_image) : null)
+@section('og_image', $post->cover_url)
 @section('header_variant', 'solid')
 
 @push('schema')
@@ -19,7 +19,7 @@
         {
             "@type": "BlogPosting",
             "headline": "{{ addslashes($post->title) }}",
-            "image": "{{ $post->cover_image ? asset('storage/' . $post->cover_image) : asset('assets/banners/banner-hero.jpg') }}",
+            "image": "{{ $post->cover_url }}",
             "datePublished": "{{ $post->published_at?->toIso8601String() }}",
             "dateModified": "{{ $post->updated_at->toIso8601String() }}",
             "author": {
@@ -133,13 +133,11 @@
             </div>
         </header>
 
-        @if ($post->cover_image)
-            <div class="lat-wrap">
-                <div class="lat-post-cover">
-                    <img src="{{ asset('storage/' . $post->cover_image) }}" alt="{{ $post->title }}" itemprop="image" width="896" height="460">
-                </div>
+        <div class="lat-wrap">
+            <div class="lat-post-cover">
+                <img src="{{ $post->cover_url }}" alt="{{ $post->title }}" itemprop="image" width="896" height="460">
             </div>
-        @endif
+        </div>
 
         <div class="lat-wrap">
             <div class="lat-post-body" itemprop="articleBody">
@@ -169,7 +167,7 @@
                     @foreach ($related as $rel)
                         <article class="lat-related-card">
                             <a href="{{ route('blog.show', ['locale' => $locale, 'slug' => $rel->slug]) }}" class="lat-related-card__media">
-                                <img src="{{ $rel->cover_image ? asset('storage/' . $rel->cover_image) : asset('assets/banners/banner-hero.jpg') }}"
+                                <img src="{{ $rel->cover_url }}"
                                      alt="{{ $rel->title }}" loading="lazy" width="400" height="225">
                             </a>
                             <div class="lat-related-card__body">

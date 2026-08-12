@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Guide;
 use App\Models\Offer;
 use App\Models\Region;
@@ -31,6 +32,8 @@ class HomeController extends Controller
         $homeStatsResolved = $this->homeStats->resolve(app()->getLocale());
         $activeGuides = $this->fetchActiveGuides();
         $realTestimonials = $this->fetchRealTestimonials();
+        $destinationRegions = $this->fetchDestinationRegions();
+        $homeCategories = $this->fetchHomeCategories();
 
         return view('home', compact(
             'featuredTours',
@@ -43,6 +46,8 @@ class HomeController extends Controller
             'homeStatsResolved',
             'activeGuides',
             'realTestimonials',
+            'destinationRegions',
+            'homeCategories',
         ));
     }
 
@@ -194,6 +199,53 @@ class HomeController extends Controller
                 ->get();
         } catch (\Throwable $e) {
             Log::error('HomeController: failed to fetch real testimonials', [
+                'exception' => $e->getMessage(),
+            ]);
+
+            return collect();
+        }
+    }
+
+    /**
+     * Destinos reales para "Explora los increíbles destinos del Perú"
+     * (mockups 01 y 02): solo regiones activas con al menos un tour
+     * publicado, con su conteo. El mockup pide 6 tarjetas fijas (incluye
+     * Cusco, Arequipa y Puno) pero esas 3 no son intercambiables por
+     * decreto — Arequipa y Puno hoy no tienen ni región ni tour cargado, así
+     * que no aparecerán hasta que el cliente los cargue (guard automático,
+     * ver Region::scopeWithPublishedTours). Cusco SÍ tiene tours reales hoy
+     * (7, ver reporte) y por lo tanto aparecerá, aunque el brief lo daba
+     * como destino "sin tours" — la fuente de verdad es la base de datos.
+     */
+    private function fetchDestinationRegions(): \Illuminate\Support\Collection
+    {
+        try {
+            return Region::active()->orderBy('order')->withPublishedTours()->get();
+        } catch (\Throwable $e) {
+            Log::error('HomeController: failed to fetch destination regions', [
+                'exception' => $e->getMessage(),
+            ]);
+
+            return collect();
+        }
+    }
+
+    /**
+     * Categorías reales para la tira de íconos + "Explora por categoría"
+     * (mockup 01): solo categorías activas con al menos un tour publicado,
+     * con su conteo real. El mockup dibuja 6 categorías de ejemplo
+     * (Aventura, Cultura, Naturaleza, Grupos, Experiencias, Relajación) que
+     * no existen como tales en el catálogo — las reales hoy son 4
+     * (Culturales, Aventura, Culinarias, Otros). Guard automático: si el
+     * cliente da de baja la última categoría "Otros", esa tarjeta
+     * desaparece sola.
+     */
+    private function fetchHomeCategories(): \Illuminate\Support\Collection
+    {
+        try {
+            return Category::active()->orderBy('order')->withPublishedTours()->get();
+        } catch (\Throwable $e) {
+            Log::error('HomeController: failed to fetch home categories', [
                 'exception' => $e->getMessage(),
             ]);
 

@@ -117,7 +117,14 @@ class BlogPostResource extends Resource
                                     ->label('Etiquetas'),
                                 Forms\Components\TextInput::make('author_name')
                                     ->maxLength(255)
-                                    ->label('Nombre del autor'),
+                                    ->label('Nombre del autor')
+                                    ->helperText('Vacío = se usa el nombre del sitio (Configuración → General) como firma.'),
+                                Forms\Components\TextInput::make('reading_minutes')
+                                    ->numeric()
+                                    ->minValue(1)
+                                    ->maxValue(120)
+                                    ->label('Minutos de lectura')
+                                    ->helperText('Se calcula automático a partir del cuerpo en español si se deja vacío. Puedes forzar un número propio aquí.'),
                             ]),
 
                         // ── SEO ───────────────────────────────────────────

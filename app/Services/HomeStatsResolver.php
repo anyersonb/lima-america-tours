@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Region;
 use App\Models\Setting;
 use App\Models\Tour;
 use App\Support\HeroIcons;
@@ -47,7 +48,7 @@ use App\Support\HeroIcons;
  */
 class HomeStatsResolver
 {
-    public const SOURCES = ['manual', 'rating_real', 'reviews_count', 'rating_external', 'reviews_external_count', 'tours_count', 'years_active'];
+    public const SOURCES = ['manual', 'rating_real', 'reviews_count', 'rating_external', 'reviews_external_count', 'tours_count', 'years_active', 'destinations_count'];
 
     /**
      * Defaults por slot: fuente, ícono y etiqueta histórica.
@@ -82,6 +83,32 @@ class HomeStatsResolver
     ];
 
     /**
+     * Defaults de los 4 primeros slots de la banda de /nosotros (el 5to,
+     * "Valores", se resuelve aparte en aboutValuesSlot() porque no es
+     * elegible por fuente: es el conteo de tags que la misma página ya
+     * pinta más arriba, no un dato externo).
+     *
+     * 2026-08-12 — Fix CRO/medición real: con los defaults viejos (slot 1
+     * `years_active`, slot 3 `manual` vacío) la banda solo mostraba 2 de 4
+     * tiles ("24 Tours disponibles" + "8 Valores"), con huecos enormes en
+     * el grid — no porque falten cifras inventadas, sino porque había datos
+     * REALES sin usar: el mismo rating/reseñas que ya publica el hero
+     * (`rating_real`/`reviews_count`, 5.0 sobre 18 opiniones) y los destinos
+     * con tours publicados (`destinations_count`, hoy 3: Lima/Cusco/Ica).
+     * Ningún slot nuevo inventa un número — cada uno se oculta solo si no
+     * hay dato, igual que el resto del proyecto (docs/rebrand/
+     * LOTE-MOCKUPS-AGO-2026.md, Fix 1).
+     */
+    private const ABOUT_DEFAULTS = [
+        1 => ['source' => 'rating_real', 'value' => '', 'icon' => 'star', 'label' => ['es' => 'Valoración de viajeros', 'en' => 'Traveler rating', 'pt' => 'Avaliação dos viajantes']],
+        2 => ['source' => 'reviews_count', 'value' => '', 'icon' => 'group', 'label' => ['es' => 'Opiniones de viajeros', 'en' => 'Traveler reviews', 'pt' => 'Avaliações de viajantes']],
+        3 => ['source' => 'tours_count', 'value' => '', 'icon' => 'map', 'label' => ['es' => 'Tours & experiencias', 'en' => 'Tours & experiences', 'pt' => 'Tours & experiências']],
+        4 => ['source' => 'destinations_count', 'value' => '', 'icon' => 'pin', 'label' => ['es' => 'Destinos', 'en' => 'Destinations', 'pt' => 'Destinos']],
+    ];
+
+    private const ABOUT_VALUES_LABEL = ['es' => 'Valores que nos guían', 'en' => 'Values that guide us', 'pt' => 'Valores que nos guiam'];
+
+    /**
      * Etiqueta por defecto SEGÚN LA FUENTE, no según el número de slot.
      *
      * Sin esto, cambiar la fuente en el panel publicaba disparates: al poner
@@ -99,6 +126,7 @@ class HomeStatsResolver
         'reviews_external_count' => ['es' => 'Opiniones verificadas', 'en' => 'Verified reviews', 'pt' => 'Avaliações verificadas'],
         'tours_count' => ['es' => 'Tours disponibles', 'en' => 'Tours available', 'pt' => 'Tours disponíveis'],
         'years_active' => ['es' => 'Años de experiencia', 'en' => 'Years of experience', 'pt' => 'Anos de experiência'],
+        'destinations_count' => ['es' => 'Destinos', 'en' => 'Destinations', 'pt' => 'Destinos'],
     ];
 
     private ?array $overallStatsCache = null;
@@ -124,28 +152,71 @@ class HomeStatsResolver
         return [
             'enabled' => $enabled,
             'slots' => array_map(
-                fn (int $n) => $this->resolveSlot($n, $locale),
+                fn (int $n) => $this->resolveConfigurableSlot('home_stat', $n, $locale, self::DEFAULTS[$n]),
                 [1, 2, 3, 4]
             ),
         ];
     }
 
-    private function resolveSlot(int $n, string $locale): array
+    /**
+     * Banda "Miles de viajeros ya confiaron en nosotros" de /nosotros
+     * (about.blade.php). Mismo mecanismo que el hero (`resolve()`), con su
+     * propio namespace de Settings (`about_stat_*`) para no pisar los slots
+     * del hero: cada franja se configura por separado aunque comparta fuentes.
+     *
+     * Antes esta banda tenía su PROPIA lógica duplicada en el Blade, con dos
+     * defaults inventados (año de fundación → 2015, viajeros felices → 5000)
+     * que ningún cliente confirmó — justo lo que la regla del proyecto
+     * prohíbe. El bug reportado ("las 4 tarjetas muestran 0") no era ese: el
+     * valor real SÍ se calculaba bien, pero solo se pintaba vía una animación
+     * JS que arranca el HTML en literal "0"; si el JS no corre (o el
+     * IntersectionObserver nunca cruza el umbral), el cero queda fijo. Con
+     * este resolver el valor final ya llega resuelto al HTML — la animación
+     * es una mejora progresiva, no la única fuente del número.
+     *
+     * El slot 5 ("Valores que nos guían") no es elegible por fuente como los
+     * otros cuatro: es, literalmente, el conteo de los tags de Misión/Visión/
+     * Valores que la MISMA página ya pinta más arriba (CMS `Page` slug
+     * "nosotros", bloque "stats"), así que se recibe ya calculado desde la
+     * vista — inventar una fuente paralela sería el mismo error que se está
+     * corrigiendo (dos números que deberían coincidir y podrían divergir).
+     */
+    public function resolveAboutBand(string $locale, int $valuesCount): array
     {
-        $default = self::DEFAULTS[$n];
+        $enabledRaw = Setting::get('about_stats_enabled');
+        $enabled = $enabledRaw === null ? true : filter_var($enabledRaw, FILTER_VALIDATE_BOOLEAN);
 
-        $source = Setting::get("home_stat_{$n}_source") ?: $default['source'];
+        $slots = array_map(
+            fn (int $n) => $this->resolveConfigurableSlot('about_stat', $n, $locale, self::ABOUT_DEFAULTS[$n]),
+            [1, 2, 3, 4]
+        );
+        $slots[] = $this->aboutValuesSlot($locale, $valuesCount);
+
+        return [
+            'enabled' => $enabled,
+            'slots' => $slots,
+        ];
+    }
+
+    /**
+     * Resuelve un slot configurable (fuente + ícono + etiqueta por idioma)
+     * bajo el namespace de Settings `{prefix}_{n}_*`. Compartido por el hero
+     * (`home_stat`) y la banda de Nosotros (`about_stat`).
+     */
+    private function resolveConfigurableSlot(string $prefix, int $n, string $locale, array $default): array
+    {
+        $source = Setting::get("{$prefix}_{$n}_source") ?: $default['source'];
         if (! in_array($source, self::SOURCES, true)) {
             $source = 'manual';
         }
 
-        $chosenIcon = Setting::get("home_stat_{$n}_icon");
+        $chosenIcon = Setting::get("{$prefix}_{$n}_icon");
         $icon = (is_string($chosenIcon) && HeroIcons::exists($chosenIcon)) ? $chosenIcon : $default['icon'];
 
         // Prioridad: etiqueta escrita en el panel → etiqueta propia de la
         // fuente calculada → etiqueta histórica del slot (solo `manual`).
         $fallbackLabels = self::SOURCE_LABELS[$source] ?? $default['label'];
-        $label = Setting::get("home_stat_{$n}_label_{$locale}")
+        $label = Setting::get("{$prefix}_{$n}_label_{$locale}")
             ?: ($fallbackLabels[$locale] ?? $fallbackLabels['es']);
 
         $resolved = match ($source) {
@@ -155,7 +226,8 @@ class HomeStatsResolver
             'reviews_external_count' => $this->reviewsExternalCount(),
             'tours_count' => $this->toursCount(),
             'years_active' => $this->yearsActive(),
-            default => $this->manual($n, $default['value']),
+            'destinations_count' => $this->destinationsCount(),
+            default => $this->manual("{$prefix}_{$n}_value", $default['value']),
         };
 
         return [
@@ -165,10 +237,25 @@ class HomeStatsResolver
             'label' => $label,
             'icon' => $icon,
             // Solo `rating_external` los usa hoy; el resto siempre viaja null
-            // para que el contrato sea el mismo shape en los 4 slots.
+            // para que el contrato sea el mismo shape en todos los slots.
             'count' => $resolved['count'],
             'url' => $resolved['url'],
         ];
+    }
+
+    /** @return array{show: bool, value: ?string, label: string, icon: string, count: ?int, url: ?string} */
+    private function aboutValuesSlot(string $locale, int $valuesCount): array
+    {
+        $label = Setting::get('about_stat_5_label_'.$locale)
+            ?: (self::ABOUT_VALUES_LABEL[$locale] ?? self::ABOUT_VALUES_LABEL['es']);
+        $chosenIcon = Setting::get('about_stat_5_icon');
+        $icon = (is_string($chosenIcon) && HeroIcons::exists($chosenIcon)) ? $chosenIcon : 'heart';
+
+        if ($valuesCount <= 0) {
+            return ['source' => 'values_count', 'show' => false, 'value' => null, 'label' => $label, 'icon' => $icon, 'count' => null, 'url' => null];
+        }
+
+        return ['source' => 'values_count', 'show' => true, 'value' => (string) $valuesCount, 'label' => $label, 'icon' => $icon, 'count' => $valuesCount, 'url' => null];
     }
 
     /** @return array{show: bool, value: ?string, count: ?int, url: ?string} */
@@ -234,9 +321,9 @@ class HomeStatsResolver
      * una tarjeta hueca. Con los defaults ya sin cifras inventadas, este caso
      * pasó de teórico a normal.
      */
-    private function manual(int $n, string $fallback): array
+    private function manual(string $settingKey, string $fallback): array
     {
-        $raw = Setting::get("home_stat_{$n}_value");
+        $raw = Setting::get($settingKey);
         $value = trim((string) ($raw !== null && $raw !== '' ? $raw : $fallback));
 
         if ($value === '') {
@@ -282,6 +369,26 @@ class HomeStatsResolver
         return ['show' => true, 'value' => (string) $count, 'count' => $count, 'url' => null];
     }
 
+    /**
+     * Destinos (regiones) con al menos un tour publicado — el MISMO guard
+     * automático que ya usan Home y Nosotros para pintar las tarjetas de
+     * destino (Region::scopeWithPublishedTours()). Hoy da 3 (Lima, Cusco,
+     * Ica); si el cliente da de alta una región nueva y le asigna un tour
+     * publicado, el número sube solo, sin tocar código.
+     *
+     * @return array{show: bool, value: ?string, count: ?int, url: ?string}
+     */
+    private function destinationsCount(): array
+    {
+        $count = Region::active()->withPublishedTours()->count();
+
+        if ($count === 0) {
+            return ['show' => false, 'value' => null, 'count' => null, 'url' => null];
+        }
+
+        return ['show' => true, 'value' => (string) $count, 'count' => $count, 'url' => null];
+    }
+
     /** @return array{show: bool, value: ?string, count: ?int, url: ?string} */
     private function yearsActive(): array
     {
@@ -305,5 +412,33 @@ class HomeStatsResolver
     private function overallStats(string $locale): array
     {
         return $this->overallStatsCache ??= $this->reviews->overallStats($locale);
+    }
+
+    /**
+     * Badge fijo "10+ años" del hero (home.blade.php) y del split "10 años
+     * mostrando lo mejor del Perú" (about.blade.php). Corrección
+     * 2026-08-11: ambos badges publicaban un número de texto libre
+     * ("10+", con "Miles de viajeros descubriendo el Perú" de subtítulo en
+     * el de Home) sin pasar por ningún resolvedor — exactamente la cifra
+     * sin respaldo que este lote decidió apagar (docs/rebrand/
+     * LOTE-MOCKUPS-AGO-2026.md, tabla "Lo que NO se publica") y la MISMA
+     * cifra de "viajeros" que ya está oculta en la barra de stats, así que
+     * no podía reaparecer aquí como texto suelto.
+     *
+     * Es DISTINTO de los slots configurables de resolve()/resolveAboutBand():
+     * esos 4 slots son tarjetas que el admin puede reasignar a otra fuente
+     * (rating, tours, etc.) — este badge es una pieza visual fija que SIEMPRE
+     * es "años de experiencia" o no existe. Usa el mismo cálculo
+     * (Setting::company_started_year) que el slot 'years_active' para que
+     * nunca haya dos números de "años" que puedan divergir entre sí. Sin el
+     * dato, se oculta el badge completo — nunca un placeholder.
+     *
+     * @return array{show: bool, value: ?string}
+     */
+    public function yearsActiveBadge(): array
+    {
+        $resolved = $this->yearsActive();
+
+        return ['show' => $resolved['show'], 'value' => $resolved['value']];
     }
 }

@@ -30,8 +30,13 @@ class TourSeeder extends Seeder
                 'departure_time' => '05:00 AM',
                 'return_time' => '10:30 PM',
                 'max_capacity' => 20,
-                'cover_image' => 'assets/banners/Rectangle 19210.jpg',
-                'gallery' => ['assets/banners/Rectangle 19210.jpg','assets/banners/Rectangle 19211.jpg','assets/banners/Rectangle 19212.jpg','assets/banners/Rectangle 19214.jpg','assets/banners/Rectangle 19215.jpg'],
+                // 2026-08-11: portada/galería reemplazadas — apuntaban al
+                // placeholder del kit de mockup (205×123px reales, estirado a
+                // ancho completo). Fotos reales del propio catálogo
+                // (storage/app/public/tours), del oasis de Huacachina y las
+                // Islas Ballestas en Paracas, todas ≥900px de ancho.
+                'cover_image' => 'tours/OASIS-DE-HUACACHINA-CON-BUGGIE-6-scaled-1.jpg',
+                'gallery' => ['tours/OASIS-DE-HUACACHINA-CON-BUGGIE-6-scaled-1.jpg', 'tours/OASIS-DE-HUACACHINA-CON-BUGGIE-7-scaled-1.jpg', 'tours/OASIS-DE-HUACACHINA-ISLAS-BALLESTAS-EN-PARACAS-2.jpg', 'tours/OASIS-DE-HUACACHINA-ISLAS-BALLESTAS-EN-PARACAS-6.jpg', 'tours/OASIS-DE-HUACACHINA-CON-BUGGIE-11.jpg'],
                 'badge_text' => 'CUPOS LIMITADOS',
                 'badge_type' => 'warn',
                 'rating' => 4.6,
@@ -50,7 +55,7 @@ class TourSeeder extends Seeder
                 ],
                 'includes_es' => ['Recojo y retorno al hotel', 'Transporte turístico climatizado', 'Guía oficial bilingüe', 'Embarque a Islas Ballestas', 'Ingreso a Reserva de Paracas'],
                 'excludes_es' => ['Almuerzo en Ica', 'Tubulares en Huacachina', 'Bebidas adicionales', 'Propinas'],
-                'recommendations_es' => "Llevar protector solar SPF50+, lentes de sol, sombrero, ropa cómoda, cámara, agua y documento de identidad.",
+                'recommendations_es' => 'Llevar protector solar SPF50+, lentes de sol, sombrero, ropa cómoda, cámara, agua y documento de identidad.',
                 'notes_es' => 'El recorrido marítimo puede sufrir cambios por condiciones climáticas. En caso de cancelación se reembolsa o reagenda.',
                 'seo_title' => 'Tour Huacachina + Islas Ballestas desde Lima | Lima América Tours',
                 'seo_description' => 'Reserva el tour Full Day Huacachina + Islas Ballestas. Desde Lima, con guía oficial, transporte y mejor precio.',
@@ -65,8 +70,10 @@ class TourSeeder extends Seeder
                 'price' => 100,
                 'price_before' => 125,
                 'duration' => 'Full Day',
-                'cover_image' => 'assets/banners/Rectangle 19211.jpg',
-                'gallery' => ['assets/banners/Rectangle 19211.jpg','assets/banners/Rectangle 19215.jpg','assets/banners/Rectangle 19216.jpg'],
+                // 2026-08-11: ídem — fotos reales del Full Day Lima Ancestral
+                // (Centro Histórico), todas ≥788px de ancho.
+                'cover_image' => 'tours/FULL-DAY-LIMA-ANCESTRAL-5-1-1.jpg',
+                'gallery' => ['tours/FULL-DAY-LIMA-ANCESTRAL-5-1-1.jpg', 'tours/FULL-DAY-LIMA-ANCESTRAL-4-1.jpg', 'tours/FULL-DAY-LIMA-ANCESTRAL-6-1.jpg', 'tours/FULL-DAY-LIMA-ANCESTRAL-7-1.jpg', 'tours/CENTRO-HISTORICO-DE-LIMA-PARQUE-DE-LAS-AGUAS-4.jpg'],
                 'badge_text' => '5 CUPOS DE 20',
                 'badge_type' => 'error',
                 'rating' => 4.8,
@@ -84,8 +91,13 @@ class TourSeeder extends Seeder
                 'price' => 220,
                 'price_before' => 250,
                 'duration' => '2 Días',
-                'cover_image' => 'assets/banners/Rectangle 19212.jpg',
-                'gallery' => ['assets/banners/Rectangle 19212.jpg','assets/banners/Rectangle 19214.jpg','assets/banners/Rectangle 19219.jpg'],
+                // 2026-08-11: ídem — Líneas de Nazca + Huacachina/Ballestas,
+                // sin repetir ningún archivo ya usado como portada de otro
+                // tour publicado (tours/2024-02-Nazca-02.webp es la portada
+                // real del tour #9 "Full day Nazca e Islas Ballestas desde
+                // Lima" y se evitó a propósito).
+                'cover_image' => 'tours/FULL-DAY-A-LAS-LINEAS-DE-NAZCA-5-1.jpg',
+                'gallery' => ['tours/FULL-DAY-A-LAS-LINEAS-DE-NAZCA-5-1.jpg', 'tours/2024-02-Nazca-03.webp', 'tours/2024-02-Nazca-04.webp', 'tours/OASIS-DE-HUACACHINA-ISLAS-BALLESTAS-EN-PARACAS-3.jpg', 'tours/OASIS-DE-HUACACHINA-CON-BUGGIE-8-scaled-1.jpg'],
                 'badge_text' => 'MÁS RESERVADO',
                 'badge_type' => 'success',
                 'rating' => 4.6,
@@ -103,8 +115,9 @@ class TourSeeder extends Seeder
                 'price' => 300,
                 'price_before' => 350,
                 'duration' => 'Full Day',
-                'cover_image' => 'assets/banners/Rectangle 19214.jpg',
-                'gallery' => ['assets/banners/Rectangle 19214.jpg','assets/banners/Rectangle 19219.jpg'],
+                // 2026-08-11: ídem — Líneas de Nazca (sobrevuelo).
+                'cover_image' => 'tours/FULL-DAY-A-LAS-LINEAS-DE-NAZCA-5.jpg',
+                'gallery' => ['tours/FULL-DAY-A-LAS-LINEAS-DE-NAZCA-5.jpg', 'tours/2024-02-Nazca-05.webp', 'tours/2024-02-Nazca-06.webp', 'tours/2024-02-Nazca-09.webp'],
                 'badge_text' => 'CUPOS LIMITADOS',
                 'badge_type' => 'warn',
                 'rating' => 4.8,
@@ -121,8 +134,14 @@ class TourSeeder extends Seeder
                 'price' => 65,
                 'price_before' => 80,
                 'duration' => '4 horas',
-                'cover_image' => 'assets/banners/Rectangle 19215.jpg',
-                'gallery' => ['assets/banners/Rectangle 19215.jpg'],
+                // 2026-08-11: no estaba en la lista de 5 reportada por el
+                // jefe (en la BD viva este cover ya estaba vacío, alguien lo
+                // limpió a mano desde el panel), pero el seeder — la fuente
+                // que corre en cada instalación nueva/CI — seguía apuntando
+                // al mismo placeholder. Se corrige aquí también para que un
+                // fresh install no lo reintroduzca.
+                'cover_image' => 'tours/2024-02-Centro-Historico-Lima-08.webp',
+                'gallery' => ['tours/2024-02-Centro-Historico-Lima-08.webp', 'tours/2024-02-Centro-Historico-Lima-09.webp', 'tours/2024-02-Centro-Historico-Lima-11.webp', 'tours/CENTRO-HISTORICO-DE-LIMA-PARQUE-DE-LAS-AGUAS-7.jpg'],
                 'badge_text' => 'NUEVO TOUR',
                 'badge_type' => 'success',
                 'rating' => 4.7,
@@ -139,8 +158,12 @@ class TourSeeder extends Seeder
                 'price' => 420,
                 'price_before' => 480,
                 'duration' => 'Full Day',
-                'cover_image' => 'assets/banners/Rectangle 19217.jpg',
-                'gallery' => ['assets/banners/Rectangle 19217.jpg','assets/banners/Rectangle 19218.jpg'],
+                // 2026-08-11: ídem — Machu Picchu. Reusa la misma foto real
+                // de máxima resolución (2560×1707) que ya sirve de
+                // hero_image de la región Cusco: no es un duplicado
+                // accidental, es la mejor toma de Machu Picchu del catálogo.
+                'cover_image' => 'tours/Machu_Picchu_Peru_-_Laslovarga_262-scaled.jpg',
+                'gallery' => ['tours/Machu_Picchu_Peru_-_Laslovarga_262-scaled.jpg', 'tours/MACHU-2-DIAS-1.jpg', 'tours/2024-12-MACHU-2-DIAS-1-qulwpkgkbgqlczcpqjlzb39p7o3kkaw977pkcfyxdc.jpg', 'tours/2024-12-MACHU-2-DIAS-2-qulwpgp7k4lg2ji6chzh147uu4m3pihbup3mfc4i28.jpg', 'tours/pueblo-machu-picchu.jpg'],
                 'badge_text' => 'EXPERIENCIA TOP',
                 'badge_type' => 'success',
                 'rating' => 4.9,

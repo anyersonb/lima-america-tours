@@ -91,6 +91,9 @@ class Settings extends Page implements HasForms
         $rows['home_news_enabled'] = isset($rows['home_news_enabled'])
             ? filter_var($rows['home_news_enabled'], FILTER_VALIDATE_BOOLEAN)
             : true;
+        $rows['about_stats_enabled'] = isset($rows['about_stats_enabled'])
+            ? filter_var($rows['about_stats_enabled'], FILTER_VALIDATE_BOOLEAN)
+            : true;
 
         // Decode FAQs JSON for the Repeater
         if (isset($rows['faqs']) && is_string($rows['faqs'])) {
@@ -138,10 +141,33 @@ class Settings extends Page implements HasForms
                             ->label('WhatsApp (sin +)')
                             ->placeholder('51900000000')
                             ->helperText('Solo números: código de país + número, sin espacios ni "+". Ejemplo de formato (no es un número real): 51900000000.'),
-                        TextInput::make('contact_address_es')->label('Dirección (ES)'),
+                        TextInput::make('contact_address_es')
+                            ->label('Dirección (ES)')
+                            ->helperText('Única fuente de la dirección en TODO el sitio (footer, JSON-LD/SEO). Vacío = el bloque de dirección se oculta en vez de mostrar un dato sin confirmar.'),
                         TextInput::make('contact_address_en')->label('Dirección (EN)'),
-                        TextInput::make('contact_hours_es')->label('Horarios (ES)'),
+                        TextInput::make('contact_address_pt')->label('Endereço (PT)'),
+                        TextInput::make('contact_hours_es')
+                            ->label('Horarios (ES)')
+                            ->helperText('Única fuente del horario en TODO el sitio (footer, ficha de contacto, Términos). Vacío = el bloque de horario se oculta.'),
                         TextInput::make('contact_hours_en')->label('Horarios (EN)'),
+                        TextInput::make('contact_hours_pt')->label('Horários (PT)'),
+
+                        // ── Datos legales ──────────────────────────────────────
+                        // 2026-08-11: el footer y los Términos llegaron a publicar
+                        // DOS RUC contradictorios de manera simultánea (uno de "Viaja
+                        // con LAT S.A.C.", otro de una persona natural), ninguno
+                        // confirmado por el cliente. Única fuente ahora — vacío hasta
+                        // que el cliente confirme cuál es el correcto.
+                        \Filament\Forms\Components\Fieldset::make('Datos legales')
+                            ->columns(2)
+                            ->schema([
+                                TextInput::make('company_ruc')
+                                    ->label('RUC')
+                                    ->helperText('Sin confirmar todavía. No escribas un RUC que no puedas verificar con el cliente — vacío es mejor que uno equivocado.'),
+                                TextInput::make('company_legal_name')
+                                    ->label('Razón social'),
+                            ]),
+
                         TextInput::make('booking_notification_email')
                             ->label('Emails para avisos de reserva')
                             ->placeholder('correo1@dominio.com, correo2@dominio.com')
@@ -503,9 +529,44 @@ class Settings extends Page implements HasForms
                                 TextInput::make('home_hero_cta_primary_pt')->label('Botón primario — texto (PT)')->placeholder('Reservar Agora'),
                                 TextInput::make('home_hero_cta_primary_url')
                                     ->label('Botón primario — URL destino')
-                                    ->url()
-                                    ->placeholder('https://limaamericatours.com/tours')
-                                    ->helperText('Opcional. Si se deja vacía, el botón lleva al listado de tours.')
+                                    // SIN ->url(): esa regla de Filament exige un esquema
+                                    // (http/https) y rechazaría de plano la ruta relativa
+                                    // ("/tours") que es justo el formato correcto para un
+                                    // destino dentro de este mismo sitio. La validación
+                                    // completa (formato + host propio) vive en el ->rule()
+                                    // de abajo.
+                                    ->placeholder('/tours (o https://otra-web.com si el destino es externo)')
+                                    ->helperText('Opcional. Si se deja vacía, el botón lleva al listado de tours. Si el destino es una página de ESTE mismo sitio, escribe solo la ruta relativa (ej. "/tours"), NO la URL completa con https://limaamericatours.com — eso saca al visitante de staging/local hacia el sitio de producción. Una URL completa solo es correcta cuando apunta a una web externa de verdad.')
+                                    ->rule(function () {
+                                        return function (string $attribute, $value, \Closure $fail) {
+                                            $value = trim((string) $value);
+                                            if ($value === '') {
+                                                return;
+                                            }
+
+                                            $host = parse_url($value, PHP_URL_HOST);
+                                            if (! $host) {
+                                                // Sin host: ruta relativa (ej. "/tours"). Debe
+                                                // empezar con "/" — cualquier otra cosa no es ni
+                                                // una ruta ni una URL válida.
+                                                if (! str_starts_with($value, '/')) {
+                                                    $fail('Escribe una ruta relativa que empiece con "/" (ej. "/tours") o una URL completa a una web externa (ej. "https://...").');
+                                                }
+
+                                                return;
+                                            }
+
+                                            if (! filter_var($value, FILTER_VALIDATE_URL)) {
+                                                $fail('Esa URL no es válida.');
+
+                                                return;
+                                            }
+
+                                            if (in_array(strtolower($host), self::selfOrLocalHosts(), true)) {
+                                                $fail("No pegues la URL completa de este mismo sitio ({$host}). Escribe solo la ruta relativa, por ejemplo \"/tours\". Una URL completa solo es válida si el destino es una web externa de verdad.");
+                                            }
+                                        };
+                                    })
                                     ->columnSpanFull(),
                                 TextInput::make('home_hero_cta_video_es')->label('Botón secundario — texto (ES)')->placeholder('Ver Video'),
                                 TextInput::make('home_hero_cta_video_en')->label('Botón secundario — texto (EN)')->placeholder('Watch Video'),
@@ -780,13 +841,21 @@ class Settings extends Page implements HasForms
                                 TextInput::make('home_trust_banner_pt')->label('Banner confianza (PT)')->placeholder('Reserva fácil, segura e<br><strong class="font-bold text-orange-500">100% garantida</strong>')->columnSpanFull(),
                             ]),
 
-                        // ── Repeater: ¿Por qué elegirnos? items ─────────────────────
-                        \Filament\Forms\Components\Section::make('Razones "¿Por qué elegirnos?" (lista)')
+                        // ── Repeater: "Viaja con confianza y vive la mejor experiencia"
+                        // (sección real del home rediseñado, .lat-why). Antes este
+                        // repeater existía en el panel pero home.blade.php pintaba un
+                        // array de 5 razones fijo en un @php, sin leer nunca este campo
+                        // (hallazgo 2026-08-11): la clienta podía editar "razones" en
+                        // Configuración → Home y no pasaba NADA en el sitio. Ahora sí
+                        // alimenta esa sección; el ícono de cada tarjeta se asigna por
+                        // posición (mismo criterio que blocks.stats en Nosotros), ya
+                        // que el repeater no tiene campo de ícono.
+                        \Filament\Forms\Components\Section::make('Razones "Viaja con confianza y vive la mejor experiencia"')
                             ->collapsible()->collapsed()
                             ->schema([
                                 Repeater::make('home_why_items')
                                     ->label('Razones')
-                                    ->helperText('Dejar vacío para usar las 5 razones por defecto.')
+                                    ->helperText('Dejar vacío para usar las 5 razones por defecto (Guías certificados, Viajes seguros, Mejor precio garantizado, Atención personalizada, Cancelación flexible). Reordenable: arrastra para cambiar el orden en pantalla.')
                                     ->schema([
                                         TextInput::make('title_es')->label('Título (ES)')->required(),
                                         TextInput::make('title_en')->label('Título (EN)'),
@@ -1093,6 +1162,166 @@ class Settings extends Page implements HasForms
                                 ]),
                             ]),
                     ]),
+                    Tabs\Tab::make('Nosotros')->icon('heroicon-o-users')->schema([
+                        // ── Banda "Miles de viajeros ya confiaron en nosotros" ──
+                        // Mismo patrón que "Barra de estadísticas del hero" (pestaña
+                        // Home): fuente elegible por slot + ícono + etiqueta por
+                        // idioma. Corrige el bug de las 4 tarjetas en "0" (el valor
+                        // ahora se resuelve con HomeStatsResolver::resolveAboutBand,
+                        // no con los defaults inventados que tenía antes el Blade).
+                        \Filament\Forms\Components\Section::make('Franja de confianza (banda oscura, 5 indicadores)')
+                            ->description('Los 5 indicadores de la franja oscura "Miles de viajeros ya confiaron en nosotros" y de la barra compacta encimada al hero de /nosotros (misma resolución, dos vistas). El 5to (Valores) siempre muestra el conteo real de los tags de Misión/Visión/Valores de esta misma página — solo su etiqueta e ícono son editables aquí. Fix 2026-08-12: antes solo 2 de 4 traían dato (Tours y Valores); ahora los slots 1, 2 y 4 arrancan en fuentes reales (rating/reseñas/destinos) en vez de fuentes vacías. Cada tarjeta se oculta sola si su fuente no tiene dato — nunca un número inventado.')
+                            ->collapsible()
+                            ->schema([
+                                Toggle::make('about_stats_enabled')
+                                    ->label('Mostrar la franja de confianza en Nosotros')
+                                    ->default(true)
+                                    ->columnSpanFull(),
+
+                                \Filament\Forms\Components\Fieldset::make('Indicador 1 — Valoración de viajeros')->columns(3)->schema([
+                                    Select::make('about_stat_1_source')
+                                        ->label('Fuente del valor')
+                                        ->options(self::STAT_SOURCE_OPTIONS)
+                                        ->default('rating_real')
+                                        ->native(false)
+                                        ->live()
+                                        ->columnSpanFull(),
+                                    Select::make('about_stat_1_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Estrella (por defecto)')->native(false),
+                                    TextInput::make('about_stat_1_value')
+                                        ->label('Valor (manual)')
+                                        ->columnSpan(2)
+                                        ->disabled(fn (Get $get): bool => ($get('about_stat_1_source') ?: 'rating_real') !== 'manual')
+                                        ->dehydrated(true)
+                                        ->helperText(fn (Get $get): ?string => ($get('about_stat_1_source') ?: 'rating_real') !== 'manual'
+                                            ? '⚠️ Ignorado: la fuente elegida arriba calcula el valor automáticamente.'
+                                            : null),
+                                    TextInput::make('about_stat_1_label_es')->label('Etiqueta (ES)')->placeholder('Valoración de viajeros'),
+                                    TextInput::make('about_stat_1_label_en')->label('Etiqueta (EN)')->placeholder('Traveler rating'),
+                                    TextInput::make('about_stat_1_label_pt')->label('Etiqueta (PT)')->placeholder('Avaliação dos viajantes'),
+                                ]),
+                                \Filament\Forms\Components\Fieldset::make('Indicador 2 — Opiniones de viajeros')->columns(3)->schema([
+                                    Select::make('about_stat_2_source')
+                                        ->label('Fuente del valor')
+                                        ->options(self::STAT_SOURCE_OPTIONS)
+                                        ->default('reviews_count')
+                                        ->native(false)
+                                        ->live()
+                                        ->columnSpanFull(),
+                                    Select::make('about_stat_2_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Grupo (por defecto)')->native(false),
+                                    TextInput::make('about_stat_2_value')
+                                        ->label('Valor (manual)')
+                                        ->columnSpan(2)
+                                        ->disabled(fn (Get $get): bool => ($get('about_stat_2_source') ?: 'reviews_count') !== 'manual')
+                                        ->dehydrated(true)
+                                        ->helperText(fn (Get $get): ?string => ($get('about_stat_2_source') ?: 'reviews_count') !== 'manual'
+                                            ? '⚠️ Ignorado: la fuente elegida arriba calcula el valor automáticamente.'
+                                            : null),
+                                    TextInput::make('about_stat_2_label_es')->label('Etiqueta (ES)')->placeholder('Opiniones de viajeros'),
+                                    TextInput::make('about_stat_2_label_en')->label('Etiqueta (EN)')->placeholder('Traveler reviews'),
+                                    TextInput::make('about_stat_2_label_pt')->label('Etiqueta (PT)')->placeholder('Avaliações de viajantes'),
+                                ]),
+                                \Filament\Forms\Components\Fieldset::make('Indicador 3 — Tours & experiencias')->columns(3)->schema([
+                                    Select::make('about_stat_3_source')
+                                        ->label('Fuente del valor')
+                                        ->options(self::STAT_SOURCE_OPTIONS)
+                                        ->default('tours_count')
+                                        ->native(false)
+                                        ->live()
+                                        ->columnSpanFull(),
+                                    Select::make('about_stat_3_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Mapa (por defecto)')->native(false),
+                                    TextInput::make('about_stat_3_value')
+                                        ->label('Valor (manual)')
+                                        ->columnSpan(2)
+                                        ->disabled(fn (Get $get): bool => ($get('about_stat_3_source') ?: 'tours_count') !== 'manual')
+                                        ->dehydrated(true)
+                                        ->helperText(fn (Get $get): ?string => ($get('about_stat_3_source') ?: 'tours_count') !== 'manual'
+                                            ? '⚠️ Ignorado: la fuente elegida arriba calcula el valor automáticamente.'
+                                            : null),
+                                    TextInput::make('about_stat_3_label_es')->label('Etiqueta (ES)')->placeholder('Tours & experiencias'),
+                                    TextInput::make('about_stat_3_label_en')->label('Etiqueta (EN)')->placeholder('Tours & experiences'),
+                                    TextInput::make('about_stat_3_label_pt')->label('Etiqueta (PT)')->placeholder('Tours & experiências'),
+                                ]),
+                                \Filament\Forms\Components\Fieldset::make('Indicador 4 — Destinos')->columns(3)->schema([
+                                    Select::make('about_stat_4_source')
+                                        ->label('Fuente del valor')
+                                        ->options(self::STAT_SOURCE_OPTIONS)
+                                        ->default('destinations_count')
+                                        ->native(false)
+                                        ->live()
+                                        ->columnSpanFull(),
+                                    Select::make('about_stat_4_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Pin de ubicación (por defecto)')->native(false),
+                                    TextInput::make('about_stat_4_value')
+                                        ->label('Valor (manual)')
+                                        ->columnSpan(2)
+                                        ->disabled(fn (Get $get): bool => ($get('about_stat_4_source') ?: 'destinations_count') !== 'manual')
+                                        ->dehydrated(true)
+                                        ->helperText(fn (Get $get): ?string => ($get('about_stat_4_source') ?: 'destinations_count') !== 'manual'
+                                            ? '⚠️ Ignorado: la fuente elegida arriba calcula el valor automáticamente.'
+                                            : null),
+                                    TextInput::make('about_stat_4_label_es')->label('Etiqueta (ES)')->placeholder('Destinos'),
+                                    TextInput::make('about_stat_4_label_en')->label('Etiqueta (EN)')->placeholder('Destinations'),
+                                    TextInput::make('about_stat_4_label_pt')->label('Etiqueta (PT)')->placeholder('Destinos'),
+                                ]),
+                                \Filament\Forms\Components\Fieldset::make('Indicador 5 — Valores que nos guían')->columns(3)->schema([
+                                    \Filament\Forms\Components\Placeholder::make('about_stat_5_note')
+                                        ->label('')
+                                        ->content('El valor SIEMPRE es el conteo real de los tags de Misión/Visión/Valores que ya se editan en Nosotros (Filament → Páginas → Nosotros → bloque Misión/Visión/Valores). Aquí solo se edita cómo se etiqueta y qué ícono lleva.')
+                                        ->columnSpanFull(),
+                                    Select::make('about_stat_5_icon')->label('Ícono')->options(\App\Support\HeroIcons::options())->placeholder('Corazón (por defecto)')->native(false),
+                                    TextInput::make('about_stat_5_label_es')->label('Etiqueta (ES)')->placeholder('Valores que nos guían'),
+                                    TextInput::make('about_stat_5_label_en')->label('Etiqueta (EN)')->placeholder('Values that guide us'),
+                                    TextInput::make('about_stat_5_label_pt')->label('Etiqueta (PT)')->placeholder('Valores que nos guiam'),
+                                ]),
+                            ]),
+                    ]),
+                    // ── Blog: a diferencia de Contacto/Nosotros, el blog no tiene
+                    // fila en la tabla `pages` (BlogController@index no resuelve
+                    // ningún Page) — mismo caso que Home. Se administra aquí, con
+                    // el mismo criterio de "vacío = texto por defecto del mockup".
+                    Tabs\Tab::make('Blog')->icon('heroicon-o-newspaper')->schema([
+                        \Filament\Forms\Components\Section::make('Hero')
+                            ->collapsible()
+                            ->columns(3)
+                            ->schema([
+                                TextInput::make('blog_hero_eyebrow_es')->label('Eyebrow (ES)')->placeholder('Inspírate para viajar'),
+                                TextInput::make('blog_hero_eyebrow_en')->label('Eyebrow (EN)')->placeholder('Get inspired to travel'),
+                                TextInput::make('blog_hero_eyebrow_pt')->label('Eyebrow (PT)')->placeholder('Inspire-se para viajar'),
+                                TextInput::make('blog_hero_title_es')->label('H1 (ES)')->placeholder('Blog de viajes'),
+                                TextInput::make('blog_hero_title_en')->label('H1 (EN)')->placeholder('Travel blog'),
+                                TextInput::make('blog_hero_title_pt')->label('H1 (PT)')->placeholder('Blog de viagens'),
+                                Textarea::make('blog_hero_sub_es')->label('Bajada (ES)')->rows(2)->placeholder('Consejos, guías y experiencias para que disfrutes al máximo tu aventura por el Perú.')->columnSpanFull(),
+                                Textarea::make('blog_hero_sub_en')->label('Bajada (EN)')->rows(2)->placeholder('Tips, guides and experiences to help you make the most of your adventure in Peru.')->columnSpanFull(),
+                                Textarea::make('blog_hero_sub_pt')->label('Bajada (PT)')->rows(2)->placeholder('Dicas, guias e experiências para você aproveitar ao máximo sua aventura pelo Peru.')->columnSpanFull(),
+                            ]),
+                        \Filament\Forms\Components\Section::make('Buscador y título de sección')
+                            ->collapsible()
+                            ->columns(3)
+                            ->schema([
+                                TextInput::make('blog_search_placeholder_es')->label('Placeholder buscador (ES)')->placeholder('Buscar artículos, destinos o consejos…'),
+                                TextInput::make('blog_search_placeholder_en')->label('Search placeholder (EN)')->placeholder('Search articles, destinations or tips…'),
+                                TextInput::make('blog_search_placeholder_pt')->label('Placeholder de busca (PT)')->placeholder('Buscar artigos, destinos ou dicas…'),
+                                TextInput::make('blog_toolbar_title_es')->label('Título de sección (ES)')->placeholder('Explora nuestros artículos'),
+                                TextInput::make('blog_toolbar_title_en')->label('Section title (EN)')->placeholder('Explore our articles'),
+                                TextInput::make('blog_toolbar_title_pt')->label('Título da seção (PT)')->placeholder('Explore nossos artigos'),
+                            ]),
+                        \Filament\Forms\Components\Section::make('CTA final')
+                            ->collapsible()
+                            ->columns(3)
+                            ->schema([
+                                TextInput::make('blog_cta_title_es')->label('Título (ES)')->placeholder('¿Listo para vivir tu propia historia?'),
+                                TextInput::make('blog_cta_title_en')->label('Title (EN)')->placeholder('Ready to live your own story?'),
+                                TextInput::make('blog_cta_title_pt')->label('Título (PT)')->placeholder('Pronto para viver sua própria história?'),
+                                Textarea::make('blog_cta_desc_es')->label('Bajada (ES)')->rows(2)->placeholder('Inspírate, planea y reserva tu próxima aventura con nosotros.'),
+                                Textarea::make('blog_cta_desc_en')->label('Subtitle (EN)')->rows(2)->placeholder('Get inspired, plan and book your next adventure with us.'),
+                                Textarea::make('blog_cta_desc_pt')->label('Bajada (PT)')->rows(2)->placeholder('Inspire-se, planeje e reserve sua próxima aventura conosco.'),
+                                TextInput::make('blog_cta_btn_primary_es')->label('Botón rojo (ES)')->placeholder('Ver tours disponibles'),
+                                TextInput::make('blog_cta_btn_primary_en')->label('Red button (EN)')->placeholder('See available tours'),
+                                TextInput::make('blog_cta_btn_primary_pt')->label('Botão vermelho (PT)')->placeholder('Ver tours disponíveis'),
+                                TextInput::make('blog_cta_btn_wa_es')->label('Botón WhatsApp (ES)')->placeholder('Habla con un asesor'),
+                                TextInput::make('blog_cta_btn_wa_en')->label('WhatsApp button (EN)')->placeholder('Talk to an advisor'),
+                                TextInput::make('blog_cta_btn_wa_pt')->label('Botão WhatsApp (PT)')->placeholder('Fale com um consultor'),
+                            ]),
+                    ]),
                     Tabs\Tab::make('GEO')->icon('heroicon-o-map-pin')->schema([
                         // docs/qa/F7-personas.md §labels #2 / §e: esta pestaña es puramente
                         // técnica para un usuario no experto; se agrega una explicación en
@@ -1371,6 +1600,7 @@ class Settings extends Page implements HasForms
         'reviews_external_count' => 'Verificado: cantidad de opiniones externas (Google/Tripadvisor, cargada abajo)',
         'tours_count' => 'Calculado: tours publicados',
         'years_active' => 'Calculado: años de operación',
+        'destinations_count' => 'Calculado: destinos con tours publicados',
     ];
 
     /** Keys whose values are stored as boolean type in settings. */
@@ -1382,7 +1612,32 @@ class Settings extends Page implements HasForms
         'pickup_enabled',
         'home_stats_enabled',
         'home_news_enabled',
+        'about_stats_enabled',
     ];
+
+    /**
+     * Hosts que NO deben aceptarse como URL absoluta en campos de "destino"
+     * opcionales que tienen fallback a una ruta interna (p.ej. el CTA
+     * primario del hero). Incluye el dominio real de producción (hardcoded
+     * a propósito: el host de config('app.url') en staging/local es
+     * 127.0.0.1/otro, y necesitamos bloquear el dominio de PRODUCCIÓN
+     * incluso cuando se edita desde local) y el símétrico localhost/
+     * 127.0.0.1 (para no colar por descuido una URL de pruebas hacia
+     * producción). Ver hallazgo CRO 2026-08-11: home_hero_cta_primary_url
+     * traía "https://limaamericatours.com/tours" hardcodeado, y ese mismo
+     * dato sacaba al visitante de staging/local hacia producción.
+     */
+    private static function selfOrLocalHosts(): array
+    {
+        $hosts = ['limaamericatours.com', 'www.limaamericatours.com', 'localhost', '127.0.0.1'];
+
+        $appHost = parse_url((string) config('app.url'), PHP_URL_HOST);
+        if ($appHost) {
+            $hosts[] = strtolower($appHost);
+        }
+
+        return array_unique(array_map('strtolower', $hosts));
+    }
 
     public function save(): void
     {

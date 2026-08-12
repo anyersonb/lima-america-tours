@@ -242,6 +242,138 @@ class PageResource extends Resource
                                             ->maxLength(400),
                                     ]),
 
+                                Forms\Components\Section::make('Hero — foto (accesibilidad y SEO) y 3 chips')
+                                    ->description('Descripción de la foto del hero y los 3 chips de confianza (título + bajada de cada uno). Los íconos de los chips son fijos.')
+                                    ->visible(fn (Forms\Get $get): bool => $get('slug') === 'contacto')
+                                    ->schema([
+                                        Forms\Components\Fieldset::make('Descripción de la foto del hero')
+                                            ->columns(3)
+                                            ->schema([
+                                                Forms\Components\TextInput::make('blocks.hero_image_alt_es')->label('Descripción (ES)')->maxLength(180),
+                                                Forms\Components\TextInput::make('blocks.hero_image_alt_en')->label('Description (EN)')->maxLength(180),
+                                                Forms\Components\TextInput::make('blocks.hero_image_alt_pt')->label('Descrição (PT)')->maxLength(180),
+                                            ]),
+                                        Forms\Components\Fieldset::make('Chip 1 — Respuesta rápida')
+                                            ->columns(3)
+                                            ->schema([
+                                                Forms\Components\TextInput::make('blocks.chip1_title_es')->label('Título (ES)')->placeholder('Respuesta rápida')->maxLength(60),
+                                                Forms\Components\TextInput::make('blocks.chip1_title_en')->label('Title (EN)')->placeholder('Fast response')->maxLength(60),
+                                                Forms\Components\TextInput::make('blocks.chip1_title_pt')->label('Título (PT)')->placeholder('Resposta rápida')->maxLength(60),
+                                                Forms\Components\TextInput::make('blocks.chip1_desc_es')->label('Bajada (ES)')->placeholder('Te respondemos a la brevedad')->maxLength(120),
+                                                Forms\Components\TextInput::make('blocks.chip1_desc_en')->label('Subtitle (EN)')->placeholder('We reply to you shortly')->maxLength(120),
+                                                Forms\Components\TextInput::make('blocks.chip1_desc_pt')->label('Bajada (PT)')->placeholder('Respondemos rapidamente')->maxLength(120),
+                                            ]),
+                                        Forms\Components\Fieldset::make('Chip 2 — Atención personalizada')
+                                            ->columns(3)
+                                            ->schema([
+                                                Forms\Components\TextInput::make('blocks.chip2_title_es')->label('Título (ES)')->placeholder('Atención personalizada')->maxLength(60),
+                                                Forms\Components\TextInput::make('blocks.chip2_title_en')->label('Title (EN)')->placeholder('Personalized service')->maxLength(60),
+                                                Forms\Components\TextInput::make('blocks.chip2_title_pt')->label('Título (PT)')->placeholder('Atendimento personalizado')->maxLength(60),
+                                                Forms\Components\TextInput::make('blocks.chip2_desc_es')->label('Bajada (ES)')->placeholder('Te ayudamos a crear la mejor experiencia')->maxLength(120),
+                                                Forms\Components\TextInput::make('blocks.chip2_desc_en')->label('Subtitle (EN)')->placeholder('We help you build the best experience')->maxLength(120),
+                                                Forms\Components\TextInput::make('blocks.chip2_desc_pt')->label('Bajada (PT)')->placeholder('Ajudamos você a criar a melhor experiência')->maxLength(120),
+                                            ]),
+                                        Forms\Components\Fieldset::make('Chip 3 — Viaja con confianza')
+                                            ->columns(3)
+                                            ->schema([
+                                                Forms\Components\TextInput::make('blocks.chip3_title_es')->label('Título (ES)')->placeholder('Viaja con confianza')->maxLength(60),
+                                                Forms\Components\TextInput::make('blocks.chip3_title_en')->label('Title (EN)')->placeholder('Travel with confidence')->maxLength(60),
+                                                Forms\Components\TextInput::make('blocks.chip3_title_pt')->label('Título (PT)')->placeholder('Viaje com confiança')->maxLength(60),
+                                                Forms\Components\TextInput::make('blocks.chip3_desc_es')->label('Bajada (ES)')->placeholder('Seguridad y respaldo garantizado')->maxLength(120),
+                                                Forms\Components\TextInput::make('blocks.chip3_desc_en')->label('Subtitle (EN)')->placeholder('Guaranteed safety and support')->maxLength(120),
+                                                Forms\Components\TextInput::make('blocks.chip3_desc_pt')->label('Bajada (PT)')->placeholder('Segurança e suporte garantidos')->maxLength(120),
+                                            ]),
+                                    ]),
+
+                                Forms\Components\Section::make('Formulario — cabecera y placeholders')
+                                    ->visible(fn (Forms\Get $get): bool => $get('slug') === 'contacto')
+                                    ->schema([
+                                        Forms\Components\Fieldset::make('Cabecera')
+                                            ->columns(3)
+                                            ->schema([
+                                                Forms\Components\TextInput::make('blocks.form_title_es')->label('Título (ES)')->placeholder('Envíanos un mensaje')->maxLength(100),
+                                                Forms\Components\TextInput::make('blocks.form_title_en')->label('Title (EN)')->placeholder('Send us a message')->maxLength(100),
+                                                Forms\Components\TextInput::make('blocks.form_title_pt')->label('Título (PT)')->placeholder('Envie-nos uma mensagem')->maxLength(100),
+                                                Forms\Components\TextInput::make('blocks.form_desc_es')->label('Descripción (ES)')->placeholder('Completa el formulario y te contactamos a la brevedad.')->maxLength(200),
+                                                Forms\Components\TextInput::make('blocks.form_desc_en')->label('Description (EN)')->placeholder('Fill out the form and we will get back to you shortly.')->maxLength(200),
+                                                Forms\Components\TextInput::make('blocks.form_desc_pt')->label('Descrição (PT)')->placeholder('Preencha o formulário e entraremos em contato em breve.')->maxLength(200),
+                                            ]),
+                                        Forms\Components\Fieldset::make('Placeholder — Nombre')
+                                            ->columns(3)
+                                            ->schema([
+                                                Forms\Components\TextInput::make('blocks.ph_nombre_es')->label('ES')->placeholder('Ej. María López')->maxLength(80),
+                                                Forms\Components\TextInput::make('blocks.ph_nombre_en')->label('EN')->placeholder('E.g. Maria Lopez')->maxLength(80),
+                                                Forms\Components\TextInput::make('blocks.ph_nombre_pt')->label('PT')->placeholder('Ex. Maria Lopez')->maxLength(80),
+                                            ]),
+                                        Forms\Components\Fieldset::make('Placeholder — Asunto')
+                                            ->columns(3)
+                                            ->schema([
+                                                Forms\Components\TextInput::make('blocks.ph_asunto_es')->label('ES')->placeholder('¿En qué podemos ayudarte?')->maxLength(100),
+                                                Forms\Components\TextInput::make('blocks.ph_asunto_en')->label('EN')->placeholder('How can we help?')->maxLength(100),
+                                                Forms\Components\TextInput::make('blocks.ph_asunto_pt')->label('PT')->placeholder('Como podemos ajudar?')->maxLength(100),
+                                            ]),
+                                        Forms\Components\Fieldset::make('Placeholder — Mensaje')
+                                            ->columns(3)
+                                            ->schema([
+                                                Forms\Components\TextInput::make('blocks.ph_mensaje_es')->label('ES')->placeholder('Cuéntanos tu plan de viaje, fechas, número de personas, intereses, etc.')->maxLength(200),
+                                                Forms\Components\TextInput::make('blocks.ph_mensaje_en')->label('EN')->placeholder('Tell us about your trip plan, dates, number of people, interests, etc.')->maxLength(200),
+                                                Forms\Components\TextInput::make('blocks.ph_mensaje_pt')->label('PT')->placeholder('Conte-nos seu plano de viagem, datas, número de pessoas, interesses, etc.')->maxLength(200),
+                                            ]),
+                                    ]),
+
+                                Forms\Components\Section::make('Canales de contacto — etiquetas')
+                                    ->description('Títulos de las 4 tarjetas de la columna derecha. El dato (teléfono, correo, horario) sigue viniendo de Configuración → Contacto; aquí solo se edita la etiqueta.')
+                                    ->visible(fn (Forms\Get $get): bool => $get('slug') === 'contacto')
+                                    ->columns(3)
+                                    ->schema([
+                                        Forms\Components\TextInput::make('blocks.channel_phone_label_es')->label('Teléfono/WhatsApp (ES)')->placeholder('Teléfono / WhatsApp')->maxLength(60),
+                                        Forms\Components\TextInput::make('blocks.channel_phone_label_en')->label('Phone/WhatsApp (EN)')->placeholder('Phone / WhatsApp')->maxLength(60),
+                                        Forms\Components\TextInput::make('blocks.channel_phone_label_pt')->label('Telefone/WhatsApp (PT)')->placeholder('Telefone / WhatsApp')->maxLength(60),
+                                        Forms\Components\TextInput::make('blocks.channel_email_label_es')->label('Correo (ES)')->placeholder('Correo')->maxLength(60),
+                                        Forms\Components\TextInput::make('blocks.channel_email_label_en')->label('Email (EN)')->placeholder('Email')->maxLength(60),
+                                        Forms\Components\TextInput::make('blocks.channel_email_label_pt')->label('E-mail (PT)')->placeholder('E-mail')->maxLength(60),
+                                        Forms\Components\TextInput::make('blocks.channel_hours_label_es')->label('Horario (ES)')->placeholder('Horario de atención')->maxLength(60),
+                                        Forms\Components\TextInput::make('blocks.channel_hours_label_en')->label('Hours (EN)')->placeholder('Business hours')->maxLength(60),
+                                        Forms\Components\TextInput::make('blocks.channel_hours_label_pt')->label('Horário (PT)')->placeholder('Horário de atendimento')->maxLength(60),
+                                        Forms\Components\TextInput::make('blocks.channel_pickup_label_es')->label('Punto de recojo (ES)')->placeholder('Punto de recojo')->maxLength(60),
+                                        Forms\Components\TextInput::make('blocks.channel_pickup_label_en')->label('Pickup point (EN)')->placeholder('Pickup point')->maxLength(60),
+                                        Forms\Components\TextInput::make('blocks.channel_pickup_label_pt')->label('Ponto de encontro (PT)')->placeholder('Ponto de encontro')->maxLength(60),
+                                        Forms\Components\Textarea::make('blocks.channel_pickup_note_es')->label('Nota punto de recojo (ES)')->rows(2)->columnSpanFull()->maxLength(300),
+                                        Forms\Components\Textarea::make('blocks.channel_pickup_note_en')->label('Pickup note (EN)')->rows(2)->columnSpanFull()->maxLength(300),
+                                        Forms\Components\Textarea::make('blocks.channel_pickup_note_pt')->label('Nota ponto de encontro (PT)')->rows(2)->columnSpanFull()->maxLength(300),
+                                    ]),
+
+                                Forms\Components\Section::make('Card de asesor')
+                                    ->description('Texto sobre la foto del tour destacado, en la columna derecha.')
+                                    ->visible(fn (Forms\Get $get): bool => $get('slug') === 'contacto')
+                                    ->columns(3)
+                                    ->schema([
+                                        Forms\Components\TextInput::make('blocks.advisor_title_es')->label('Título (ES)')->placeholder('¿Necesitas ayuda para elegir tu tour?')->maxLength(120),
+                                        Forms\Components\TextInput::make('blocks.advisor_title_en')->label('Title (EN)')->placeholder('Need help choosing your tour?')->maxLength(120),
+                                        Forms\Components\TextInput::make('blocks.advisor_title_pt')->label('Título (PT)')->placeholder('Precisa de ajuda para escolher seu tour?')->maxLength(120),
+                                        Forms\Components\TextInput::make('blocks.advisor_desc_es')->label('Descripción (ES)')->placeholder('Nuestros asesores te ayudarán a crear una experiencia a tu medida.')->maxLength(200),
+                                        Forms\Components\TextInput::make('blocks.advisor_desc_en')->label('Description (EN)')->placeholder('Our advisors will help you create a tailor-made experience.')->maxLength(200),
+                                        Forms\Components\TextInput::make('blocks.advisor_desc_pt')->label('Descrição (PT)')->placeholder('Nossos consultores vão ajudar você a criar uma experiência sob medida.')->maxLength(200),
+                                        Forms\Components\TextInput::make('blocks.advisor_cta_es')->label('Botón (ES)')->placeholder('Hablar con un asesor')->maxLength(60),
+                                        Forms\Components\TextInput::make('blocks.advisor_cta_en')->label('Button (EN)')->placeholder('Talk to an advisor')->maxLength(60),
+                                        Forms\Components\TextInput::make('blocks.advisor_cta_pt')->label('Botão (PT)')->placeholder('Falar com um consultor')->maxLength(60),
+                                    ]),
+
+                                Forms\Components\Section::make('Franja inferior — "¿Listo para tu próxima aventura?"')
+                                    ->visible(fn (Forms\Get $get): bool => $get('slug') === 'contacto')
+                                    ->columns(3)
+                                    ->schema([
+                                        Forms\Components\TextInput::make('blocks.bottom_title_es')->label('Título (ES)')->placeholder('¿Listo para tu próxima aventura?')->maxLength(120),
+                                        Forms\Components\TextInput::make('blocks.bottom_title_en')->label('Title (EN)')->placeholder('Ready for your next adventure?')->maxLength(120),
+                                        Forms\Components\TextInput::make('blocks.bottom_title_pt')->label('Título (PT)')->placeholder('Pronto para sua próxima aventura?')->maxLength(120),
+                                        Forms\Components\TextInput::make('blocks.bottom_desc_es')->label('Bajada (ES)')->placeholder('Escríbenos y armamos juntos la experiencia perfecta para ti.')->maxLength(200),
+                                        Forms\Components\TextInput::make('blocks.bottom_desc_en')->label('Subtitle (EN)')->placeholder('Write to us and let’s build the perfect experience together.')->maxLength(200),
+                                        Forms\Components\TextInput::make('blocks.bottom_desc_pt')->label('Bajada (PT)')->placeholder('Escreva para nós e vamos montar juntos a experiência perfeita para você.')->maxLength(200),
+                                        Forms\Components\TextInput::make('blocks.bottom_cta_es')->label('Botón (ES)')->placeholder('Ver tours populares')->maxLength(60),
+                                        Forms\Components\TextInput::make('blocks.bottom_cta_en')->label('Button (EN)')->placeholder('See popular tours')->maxLength(60),
+                                        Forms\Components\TextInput::make('blocks.bottom_cta_pt')->label('Botão (PT)')->placeholder('Ver tours populares')->maxLength(60),
+                                    ]),
+
                                 // ── SECCIÓN NOSOTROS ─────────────────────────
                                 Forms\Components\Section::make('Imágenes — Nosotros')
                                     ->description('Imágenes visibles en la página /nosotros')
@@ -658,6 +790,99 @@ class PageResource extends Resource
                                                     ->label('Heading (PT)')
                                                     ->placeholder('Nossos clientes falam sobre nossos tours')
                                                     ->maxLength(200),
+                                            ]),
+
+                                        // Card "¿Por qué viajar con Lima América Tours?" (equipo)
+                                        // Lote ago-2026: antes eran 6 <li> fijos en el Blade. El
+                                        // horario ("Soporte 24/7" → real) NO entra aquí: sigue
+                                        // viniendo de Configuración → Contacto (Setting::contactHours,
+                                        // única fuente del horario en todo el sitio) y se agrega
+                                        // al final de la lista, después de estos items.
+                                        Forms\Components\Section::make('Card "¿Por qué viajar con Lima América Tours?" (checks)')
+                                            ->description('Lista de la card oscura junto al equipo. El horario de atención se agrega solo, al final, desde Configuración → Contacto — no lo repitas aquí.')
+                                            ->schema([
+                                                Forms\Components\Repeater::make('blocks.why_travel_items')
+                                                    ->label('Checks')
+                                                    ->helperText('Dejar vacío para usar los 5 checks por defecto (Guías certificados, Experiencias auténticas, Grupos pequeños, Atención personalizada, Cancelación flexible).')
+                                                    ->addActionLabel('+ Agregar check')
+                                                    ->schema([
+                                                        Forms\Components\TextInput::make('text_es')->label('Texto (ES)')->required()->maxLength(120),
+                                                        Forms\Components\TextInput::make('text_en')->label('Text (EN)')->maxLength(120),
+                                                        Forms\Components\TextInput::make('text_pt')->label('Texto (PT)')->maxLength(120),
+                                                    ])
+                                                    ->columns(3)
+                                                    ->collapsible()
+                                                    ->itemLabel(fn (array $state): ?string => $state['text_es'] ?? null)
+                                                    ->columnSpanFull(),
+                                            ]),
+
+                                        // 4 features del CTA final ("Déjanos ser tu guía...").
+                                        // Campos fijos (no repeater): el feature 1 está atado al
+                                        // horario real (Setting::contactHours) y el grid CSS de
+                                        // esta franja es de 4 columnas fijas (.lat-cta-final__features),
+                                        // así que el conteo no es variable aquí.
+                                        Forms\Components\Section::make('CTA final — 4 features')
+                                            ->description('El valor del feature 1 (horario) sale de Configuración → Contacto; aquí solo se edita el texto que se muestra cuando NO hay horario cargado, y las etiquetas/textos de los otros 3.')
+                                            ->schema([
+                                                Forms\Components\Fieldset::make('Feature 1 — Horario')
+                                                    ->columns(3)
+                                                    ->schema([
+                                                        Forms\Components\TextInput::make('blocks.cta_feat1_fallback_es')->label('Texto si no hay horario (ES)')->placeholder('Escríbenos cuando quieras')->maxLength(80),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat1_fallback_en')->label('Text if no hours (EN)')->placeholder('Message us anytime')->maxLength(80),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat1_fallback_pt')->label('Texto se não houver horário (PT)')->placeholder('Escreva quando quiser')->maxLength(80),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat1_label_es')->label('Etiqueta (ES)')->placeholder('Horario de atención')->maxLength(80),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat1_label_en')->label('Label (EN)')->placeholder('Support hours')->maxLength(80),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat1_label_pt')->label('Etiqueta (PT)')->placeholder('Horário de atendimento')->maxLength(80),
+                                                    ]),
+                                                Forms\Components\Fieldset::make('Feature 2')
+                                                    ->columns(3)
+                                                    ->schema([
+                                                        Forms\Components\TextInput::make('blocks.cta_feat2_title_es')->label('Título (ES)')->placeholder('Viajes 100% personalizados')->maxLength(80),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat2_title_en')->label('Title (EN)')->placeholder('100% personalized trips')->maxLength(80),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat2_title_pt')->label('Título (PT)')->placeholder('Viagens 100% personalizadas')->maxLength(80),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat2_desc_es')->label('Bajada (ES)')->placeholder('Hechos a tu medida')->maxLength(120),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat2_desc_en')->label('Subtitle (EN)')->placeholder('Made just for you')->maxLength(120),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat2_desc_pt')->label('Bajada (PT)')->placeholder('Feitas sob medida')->maxLength(120),
+                                                    ]),
+                                                Forms\Components\Fieldset::make('Feature 3')
+                                                    ->columns(3)
+                                                    ->schema([
+                                                        Forms\Components\TextInput::make('blocks.cta_feat3_title_es')->label('Título (ES)')->placeholder('Seguridad y confianza')->maxLength(80),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat3_title_en')->label('Title (EN)')->placeholder('Security and trust')->maxLength(80),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat3_title_pt')->label('Título (PT)')->placeholder('Segurança e confiança')->maxLength(80),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat3_desc_es')->label('Bajada (ES)')->placeholder('Tu tranquilidad es lo primero')->maxLength(120),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat3_desc_en')->label('Subtitle (EN)')->placeholder('Your peace of mind comes first')->maxLength(120),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat3_desc_pt')->label('Bajada (PT)')->placeholder('Sua tranquilidade em primeiro lugar')->maxLength(120),
+                                                    ]),
+                                                Forms\Components\Fieldset::make('Feature 4')
+                                                    ->columns(3)
+                                                    ->schema([
+                                                        Forms\Components\TextInput::make('blocks.cta_feat4_title_es')->label('Título (ES)')->placeholder('Cancelación flexible')->maxLength(80),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat4_title_en')->label('Title (EN)')->placeholder('Flexible cancellation')->maxLength(80),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat4_title_pt')->label('Título (PT)')->placeholder('Cancelamento flexível')->maxLength(80),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat4_desc_es')->label('Bajada (ES)')->placeholder('Cambia tus planes sin complicaciones')->maxLength(120),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat4_desc_en')->label('Subtitle (EN)')->placeholder('Change your plans hassle-free')->maxLength(120),
+                                                        Forms\Components\TextInput::make('blocks.cta_feat4_desc_pt')->label('Bajada (PT)')->placeholder('Mude seus planos sem complicações')->maxLength(120),
+                                                    ]),
+                                            ]),
+
+                                        // Etiquetas de la fila de confianza (banda "Miles de
+                                        // viajeros..."). El rating y el conteo NUNCA se editan
+                                        // aquí: salen de ReviewAggregator (Google real). Solo las
+                                        // 3 etiquetas de texto.
+                                        Forms\Components\Section::make('Fila de confianza — etiquetas')
+                                            ->description('Textos junto al rating de Google, el ícono de Tripadvisor y el sello "Empresa registrada" (este último solo se ve si hay RUC cargado en Configuración → Contacto).')
+                                            ->columns(3)
+                                            ->schema([
+                                                Forms\Components\TextInput::make('blocks.trust_label_google_es')->label('Reseñas de Google (ES)')->placeholder('Reseñas de Google')->maxLength(80),
+                                                Forms\Components\TextInput::make('blocks.trust_label_google_en')->label('Google reviews (EN)')->placeholder('Google Reviews')->maxLength(80),
+                                                Forms\Components\TextInput::make('blocks.trust_label_google_pt')->label('Avaliações Google (PT)')->placeholder('Avaliações no Google')->maxLength(80),
+                                                Forms\Components\TextInput::make('blocks.trust_label_tripadvisor_es')->label('Tripadvisor (ES)')->placeholder('Presencia en Tripadvisor')->maxLength(80),
+                                                Forms\Components\TextInput::make('blocks.trust_label_tripadvisor_en')->label('Tripadvisor (EN)')->placeholder('Present on Tripadvisor')->maxLength(80),
+                                                Forms\Components\TextInput::make('blocks.trust_label_tripadvisor_pt')->label('Tripadvisor (PT)')->placeholder('Presença no Tripadvisor')->maxLength(80),
+                                                Forms\Components\TextInput::make('blocks.trust_label_company_es')->label('Empresa registrada (ES)')->placeholder('Empresa registrada')->maxLength(80),
+                                                Forms\Components\TextInput::make('blocks.trust_label_company_en')->label('Registered company (EN)')->placeholder('Registered company')->maxLength(80),
+                                                Forms\Components\TextInput::make('blocks.trust_label_company_pt')->label('Empresa registrada (PT)')->placeholder('Empresa registrada')->maxLength(80),
                                             ]),
                                     ]),
                             ]),

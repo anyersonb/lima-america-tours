@@ -36,6 +36,10 @@ class HeroIcons
         'camera' => '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
         'group' => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>',
         'wallet' => '<path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>',
+        // Pin de ubicación distinto de 'map' (que ya usa la silueta clásica de
+        // pin): este es un pin sólido más compacto, para el slot "Destinos"
+        // de la banda de Nosotros sin repetir el ícono de "Tours".
+        'pin' => '<path d="M12 21s7-6.5 7-11.5a7 7 0 1 0-14 0C5 14.5 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
     ];
 
     /** Etiquetas para el select del panel (en español, como el resto del CMS). */
@@ -52,6 +56,7 @@ class HeroIcons
         'camera' => 'Cámara',
         'group' => 'Grupo',
         'wallet' => 'Billetera',
+        'pin' => 'Pin de ubicación',
     ];
 
     /** @return array<string,string> opciones para Filament Select */

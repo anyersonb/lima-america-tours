@@ -13,11 +13,18 @@ use Tests\TestCase;
  * cambió... Pero la dirección sigue diciendo 'Jr. Lampa 209, Lima Center',
  * que ni siquiera es la que puse antes ni la nueva."
  *
- * Causa raíz: el footer leía __('footer.address') (string fijo de idioma)
- * en vez del Setting 'contact_address_{locale}' que sí se guarda
- * correctamente desde Configuración → Contacto. Este test confirma que,
- * con el Setting seteado, el home lo muestra; y que sin Setting, cae al
- * texto por defecto (sin romper instalaciones que aún no lo configuraron).
+ * Causa raíz original: el footer leía __('footer.address') (string fijo de
+ * idioma) en vez del Setting 'contact_address_{locale}'.
+ *
+ * Vuelta de tuerca 2026-08-11: el fallback a __('footer.address') SEGUÍA
+ * ahí para el caso "Setting vacío" — y ese string fijo resultó ser una
+ * SEGUNDA dirección sin confirmar (Jr. Lampa 209), tan sospechosa como la
+ * que trae el Setting por defecto (Av. Larcomar 233, idéntica a la de Lima
+ * View Tours, OTRO cliente). Se retiró el fallback de idioma por completo:
+ * sin dirección real cargada, el bloque se OCULTA — dos direcciones
+ * dudosas no se resuelven "eligiendo la que suena mejor", y esta clase de
+ * test es justo la que antes documentaba el bug como si fuera correcto
+ * (afirmaba que el fallback DEBÍA aparecer).
  */
 class FooterAddressSettingTest extends TestCase
 {
@@ -25,20 +32,27 @@ class FooterAddressSettingTest extends TestCase
 
     public function test_home_footer_shows_the_address_configured_in_settings(): void
     {
-        Setting::set('contact_address_es', 'Av. Larcomar 233, Of. 410 — Miraflores, Lima');
+        Setting::set('contact_address_es', 'Av. Real Confirmada 123, Lima');
 
         $response = $this->get(route('home', ['locale' => 'es']));
 
         $response->assertOk();
-        $response->assertSee('Av. Larcomar 233, Of. 410 — Miraflores, Lima');
+        $response->assertSee('Av. Real Confirmada 123, Lima');
         $response->assertDontSee('Jr. Lampa 209, Lima Center');
+        $response->assertDontSee('Av. Larcomar 233');
     }
 
-    public function test_home_footer_falls_back_to_default_text_when_no_address_is_configured(): void
+    public function test_home_footer_hides_the_address_block_when_none_is_configured(): void
     {
+        Setting::set('contact_address_es', '');
+        Setting::set('contact_address_en', '');
+
         $response = $this->get(route('home', ['locale' => 'es']));
 
         $response->assertOk();
-        $response->assertSee('Jr. Lampa 209, Lima Center');
+        // Ni el texto heredado del fork ni la dirección de Lima View Tours:
+        // ninguna de las dos está confirmada, así que ninguna debe imprimirse.
+        $response->assertDontSee('Jr. Lampa 209, Lima Center');
+        $response->assertDontSee('Av. Larcomar 233');
     }
 }

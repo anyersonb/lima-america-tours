@@ -158,9 +158,23 @@
     max-width: 460px;
 }
 
+// Fix 4 (lote mockups agosto 2026): `repeat(2, 1fr)` fijo forzaba SIEMPRE
+// 2 columnas a ancho completo del contenedor — medido a 1440: 2 tiles de
+// 391px cada uno estirados dentro de una columna de 790px, con huecos
+// enormes a los lados de cada tile. El backend está agregando en paralelo
+// hasta 3 slots más (calificación/opiniones, destinos), así que la cantidad
+// real de tiles varía entre 2 y 5 y no se puede hardcodear ninguna cuenta
+// de columnas. `auto-fit` + `minmax` + `justify-content:center` resuelve
+// las dos partes del defecto a la vez: cada tile tiene un ancho ACOTADO
+// (nunca se estira a ocupar el hueco vacío) y el set completo de tiles
+// queda centrado en vez de pegado a la izquierda — con 2 tiles se ven 2
+// tiles chicos centrados, no 2 tiles gigantes con aire alrededor. A 390 el
+// contenedor angosto solo alcanza para 1-2 columnas por el mismo cálculo de
+// auto-fit, sin media query aparte.
 .lat-stat-tiles {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(140px, 200px));
+    justify-content: center;
     gap: 16px;
 }
 
@@ -170,6 +184,11 @@
     border-radius: $lat-r-md;
     padding: 22px 20px;
     text-align: center;
+    // Con `minmax(140px, 200px)` el tile ya no puede superar 200px de ancho
+    // (antes crecía a lo que el `1fr` de la columna le diera, 391px medidos
+    // a 1440) — sin este tope el grid quedaría bien pero el tile individual
+    // seguiría viéndose desproporcionado con un solo número adentro.
+    width: 100%;
 
     strong {
         display: block;
@@ -234,4 +253,475 @@
 
     // El rojo aparece solo al pasar el cursor (acento de hover).
     &:hover { background: $lat-red; color: #fff; transform: translateY(-2px); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// HERO — texto + collage de 6 fotos reales (rediseño 2026-08-11, mockup
+// 02-nosotros-parte1). Fondo oscuro sólido (no foto): la foto que había
+// (`Rectangle 19215.jpg`) traía marca de agua de un tercero.
+// ═══════════════════════════════════════════════════════════════════════
+.lat-about-hero {
+    // Degradado sutil en vez de negro plano — mismo family de tonos que el
+    // resto de las franjas oscuras del sitio ($lat-ink), sin depender de
+    // ninguna foto de fondo.
+    background: linear-gradient(160deg, #1c1815 0%, $lat-ink 60%);
+    color: #fff;
+    padding: 40px 0 0;
+    overflow: hidden;
+
+    &__grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 48px;
+        align-items: center;
+        padding: 0 24px 60px;
+
+        @media (max-width: 980px) { grid-template-columns: 1fr; gap: 30px; padding-bottom: 40px; }
+    }
+
+    &__text {
+        h1 {
+            font-family: $lat-font-serif;
+            font-weight: 800;
+            font-size: clamp(2rem, 4vw, 2.9rem);
+            line-height: 1.15;
+            color: #fff;
+            margin: 14px 0 16px;
+        }
+    }
+
+    &__stats-wrap {
+        padding: 0 24px;
+        margin-top: -34px;
+        position: relative;
+        z-index: 2;
+
+        @media (max-width: 640px) { margin-top: -22px; }
+    }
+}
+
+// Namespace propio (.lat-about-hero__*), NO .lat-page-hero__* — esa clase
+// compartida ya la define pages/_lat-tours.scss para el resto de heroes
+// internos (tours, blog, contacto) y este parcial se importa DESPUÉS en
+// app.scss: una regla bare con el mismo nombre les habría pisado el estilo
+// a todas esas páginas (mismo error que ya documentan los comentarios de
+// .lat-btn--wa en este archivo). Aquí, el hero de Nosotros ya no es
+// `.lat-page-hero` — es `.lat-about-hero`, una sección propia.
+.lat-about-hero__crumb {
+    font-size: .8rem;
+    color: rgba(255, 255, 255, .68);
+    margin-bottom: 16px;
+
+    a { color: rgba(255, 255, 255, .68); &:hover { color: #fff; } }
+    b { color: #fff; }
+}
+
+.lat-about-hero__sub {
+    color: rgba(255, 255, 255, .82);
+    font-size: 1rem;
+    line-height: 1.65;
+    max-width: 480px;
+    margin: 0;
+}
+
+// ── Collage de 6 fotos en mosaico irregular ─────────────────────────────
+.lat-hero-collage {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 92px;
+    grid-auto-flow: dense;
+    gap: 10px;
+
+    @media (min-width: 640px) { grid-auto-rows: 100px; gap: 12px; }
+
+    &__item {
+        border-radius: $lat-r-sm;
+        overflow: hidden;
+        box-shadow: $lat-shadow-md;
+
+        img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        // 1ª foto: alta, ocupa 2 filas de la primera columna.
+        &:nth-child(1) { grid-row: span 2; }
+        // 4ª y 5ª: anchas, ocupan 2 columnas.
+        &:nth-child(4), &:nth-child(5) { grid-column: span 2; }
+    }
+}
+
+// ── Equipo ───────────────────────────────────────────────────────────────
+.lat-team-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 26px;
+    align-items: start;
+
+    @media (max-width: 980px) { grid-template-columns: 1fr; }
+}
+
+.lat-team-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+
+    @media (max-width: 980px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+.lat-team-card {
+    background: $lat-surface;
+    border: 1px solid $lat-line;
+    border-radius: $lat-r-md;
+    box-shadow: $lat-shadow-sm;
+    padding: 22px 18px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: transform .3s ease, box-shadow .3s ease;
+
+    &:hover { transform: translateY(-5px); box-shadow: $lat-shadow-lg; }
+
+    &__photo {
+        width: 92px; height: 92px; border-radius: 50%;
+        object-fit: cover; margin-bottom: 10px;
+        border: 3px solid $lat-red-tint;
+    }
+
+    // Sin retrato confirmado: marco tipográfico con inicial (nunca una foto
+    // de stock ni la cara de otra persona — ver GuideSeeder). El anillo
+    // doble + la tipografía serif hacen que se sienta una pieza de diseño
+    // deliberada, no un hueco roto de imagen faltante.
+    &__initial {
+        width: 92px; height: 92px; border-radius: 50%;
+        margin-bottom: 10px;
+        display: grid; place-items: center;
+        background: linear-gradient(145deg, $lat-red-tint, #fff);
+        border: 2px solid $lat-red;
+        outline: 1px solid $lat-line;
+        outline-offset: 4px;
+        color: $lat-red;
+        font-family: $lat-font-serif;
+        font-weight: 800;
+        font-size: 2.1rem;
+    }
+
+    b { font-family: $lat-font-serif; font-size: 1.08rem; color: $lat-ink; }
+
+    &__role { font-size: .78rem; font-weight: 700; color: $lat-red; text-transform: uppercase; letter-spacing: .04em; }
+
+    p { font-size: .84rem; color: $lat-muted; line-height: 1.5; margin: 4px 0 0; }
+
+    &__highlight { color: $lat-ink-soft; font-weight: 600; font-size: .78rem; }
+
+    &__social {
+        display: flex; gap: 10px; margin-top: 8px;
+
+        a {
+            width: 32px; height: 32px; border-radius: 50%;
+            border: 1px solid $lat-line; color: $lat-red;
+            display: grid; place-items: center;
+            transition: background .2s, color .2s, border-color .2s;
+
+            svg { width: 15px; height: 15px; }
+            &:hover { background: $lat-red; border-color: $lat-red; color: #fff; }
+        }
+    }
+}
+
+.lat-team-why {
+    background: $lat-ink;
+    color: #fff;
+    border-radius: $lat-r-md;
+    padding: 26px 24px;
+    box-shadow: $lat-shadow-md;
+
+    h3 {
+        font-family: $lat-font-serif;
+        font-weight: 800;
+        font-size: 1.15rem;
+        color: $lat-red-tint;
+        margin: 0 0 16px;
+        line-height: 1.3;
+    }
+
+    ul { list-style: none; margin: 0 0 20px; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+
+    li {
+        display: flex; align-items: flex-start; gap: 10px;
+        font-size: .88rem; color: rgba(255, 255, 255, .9); line-height: 1.4;
+
+        &::before {
+            content: "";
+            flex: none;
+            width: 18px; height: 18px; margin-top: 1px;
+            border-radius: 50%;
+            background: $lat-red;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 60% no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 60% no-repeat;
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MISIÓN, VISIÓN Y VALORES — sobre foto oscura, acento DORADO
+// ═══════════════════════════════════════════════════════════════════════
+.lat-mvv-photo {
+    position: relative;
+    isolation: isolate;
+    background-size: cover;
+    background-position: center 30%;
+    padding: 76px 0;
+
+    &__scrim {
+        position: absolute; inset: 0; z-index: -1;
+        // Doble oscurecido (igual criterio que el hero de home): controla la
+        // luminosidad efectiva bajo las tarjetas glass para que el dorado
+        // mida AA sea cual sea el punto de la foto que quede detrás.
+        background:
+            linear-gradient(180deg, rgba(10, 8, 7, .72) 0%, rgba(10, 8, 7, .8) 100%),
+            linear-gradient(100deg, rgba(10, 8, 7, .35) 0%, rgba(10, 8, 7, 0) 60%);
+    }
+
+    .lat-sec-head p { max-width: 460px; margin-left: auto; margin-right: auto; }
+}
+
+// Eyebrow con líneas laterales — "— NUESTRO PROPÓSITO —" (distinto del
+// .lat-eyebrow de siempre, que solo lleva línea antes o antes+después sin
+// espaciado simétrico grande). Dorado: es el acento de ESTA sección.
+.lat-eyebrow-lines {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: $lat-gold;
+
+    &::before, &::after { content: ""; width: 34px; height: 2px; background: $lat-gold; border-radius: 2px; }
+}
+
+.lat-mvv-gold {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 20px;
+
+    @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+.lat-mvv-gold-card {
+    position: relative;
+    // "Glass" con borde dorado tenue, tal como pide el brief. El fondo
+    // semitransparente oscuro es lo que ACOTA el contraste real del texto:
+    // controla la luminosidad detrás del dorado con independencia de qué
+    // tan clara salga la foto en ese punto (medido con Playwright, no a ojo).
+    background: rgba(10, 8, 7, .48);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(227, 176, 75, .38);
+    border-radius: $lat-r-md;
+    padding: 34px 28px 30px;
+    text-align: center;
+    color: #fff;
+
+    &__ic {
+        width: 60px; height: 60px; margin: 0 auto 18px;
+        border-radius: 50%;
+        border: 1.5px solid $lat-gold;
+        color: $lat-gold;
+        display: grid; place-items: center;
+
+        svg { width: 28px; height: 28px; }
+    }
+
+    h3 {
+        font-family: $lat-font-serif;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        font-size: 1.15rem;
+        color: #fff;
+        margin: 0 0 14px;
+    }
+
+    p { color: rgba(255, 255, 255, .82); font-size: .92rem; line-height: 1.6; margin: 0; }
+
+    &__tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+
+    &__rule {
+        display: block;
+        width: 38px; height: 2px;
+        background: $lat-gold;
+        margin: 16px auto 0;
+    }
+}
+
+// Chip de valor — dorado sobre glass oscuro. #e3b04b mide 6.3–9.5:1 contra el
+// rango de luminosidad medido de esta sección (ver _variables.scss): pasa AA
+// incluso en el punto más claro de la foto+scrim. El contraste estaba bien;
+// el defecto (Fix 3, lote mockups agosto 2026) era el TAMAÑO: medido en el
+// navegador a 1440, `.78rem` resolvía en 10.92px reales porque `html` corre
+// a 87.5% en este proyecto (1rem = 14px, no 16px — ver app.scss), demasiado
+// chico para texto de interfaz. `.86rem` = 12.04px reales, el mínimo que
+// pide el brief; se sube el padding lateral un pelo para que el chip no se
+// vea apretado con la letra más grande. Verificado sin overflow en 390 (8
+// chips, `flex-wrap` ya los acomoda).
+.lat-mvv-gold-tag {
+    display: inline-block;
+    background: $lat-gold-soft;
+    border: 1px solid rgba(227, 176, 75, .5);
+    color: $lat-gold;
+    font-size: .86rem;
+    font-weight: 700;
+    padding: 6px 15px;
+    border-radius: $lat-r-pill;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// TESTIMONIOS — franja oscura (reutiliza .lat-rcard/.lat-reviews-grid de
+// pages/lat-home; este bloque SOLO añade el fondo y el modificador oscuro
+// de la tarjeta — no redefine nada que ya exista allí).
+// ═══════════════════════════════════════════════════════════════════════
+.lat-about-reviews {
+    background: $lat-ink;
+    padding: 70px 0;
+}
+
+.lat-rcard--dark {
+    background: rgba(255, 255, 255, .05);
+    border-color: rgba(255, 255, 255, .12);
+
+    .lat-rcard__head b { color: #fff; }
+    .lat-rcard__head span { color: rgba(255, 255, 255, .6); }
+    .lat-rcard__quote { color: rgba(255, 255, 255, .82); }
+    .lat-rcard__avatar--fallback { background: $lat-red; }
+}
+
+.lat-rcard__src--dark { color: rgba(255, 255, 255, .55); }
+
+// ═══════════════════════════════════════════════════════════════════════
+// TIMELINE — apagada por defecto (sin hitos reales, ver about.blade.php);
+// el CSS queda listo para el día que el cliente confirme los años.
+// ═══════════════════════════════════════════════════════════════════════
+.lat-timeline {
+    background: $lat-ink;
+    padding: 70px 0;
+    border-top: 1px solid rgba(255, 255, 255, .08);
+
+    &__row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 26px;
+        margin-top: 10px;
+        position: relative;
+
+        &::before {
+            content: "";
+            position: absolute;
+            top: 19px; left: 0; right: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, .14);
+
+            @media (max-width: 780px) { display: none; }
+        }
+    }
+
+    &__item {
+        position: relative;
+        text-align: center;
+        color: #fff;
+
+        b { display: block; font-family: $font-price; font-size: 1.4rem; color: $lat-red-tint; margin: 10px 0 6px; }
+        p { font-size: .82rem; color: rgba(255, 255, 255, .72); line-height: 1.45; margin: 0; }
+    }
+
+    &__dot {
+        display: inline-flex;
+        width: 38px; height: 38px;
+        border-radius: 50%;
+        background: $lat-red;
+        position: relative;
+        z-index: 1;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// BANDA DE ESTADÍSTICAS — variante con foto + fila de confianza
+// ═══════════════════════════════════════════════════════════════════════
+.lat-stats-band__grid--trust {
+    grid-template-columns: 1.3fr .9fr;
+
+    @media (max-width: 1060px) { grid-template-columns: 1fr; }
+}
+
+.lat-stats-band__col { display: flex; flex-direction: column; gap: 22px; }
+
+.lat-stats-band__photo {
+    border-radius: $lat-r-lg;
+    overflow: hidden;
+    min-height: 320px;
+    box-shadow: $lat-shadow-lg;
+
+    img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    @media (max-width: 1060px) { min-height: 240px; }
+}
+
+.lat-trust-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 24px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, .12);
+}
+
+.lat-trust-row__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .84rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, .85);
+
+    svg { width: 20px; height: 20px; color: $lat-red-tint; flex: none; }
+
+    b {
+        font-family: $font-price;
+        font-size: 1.2rem;
+        font-weight: 400;
+        color: #fff;
+        margin-right: 2px;
+    }
+
+    .lat-stars { gap: 2px; }
+    .lat-stars__s svg { width: 12px; height: 12px; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// CTA FINAL — fila de 4 features (mockup, item 9)
+// ═══════════════════════════════════════════════════════════════════════
+.lat-cta-final__features {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-top: 48px;
+    padding-top: 36px;
+    border-top: 1px solid rgba(255, 255, 255, .14);
+    text-align: left;
+
+    @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 520px) { grid-template-columns: 1fr; }
+}
+
+.lat-cta-final__feature {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+
+    svg { width: 26px; height: 26px; color: $lat-red-tint; flex: none; margin-top: 2px; }
+
+    b { display: block; font-size: .9rem; color: #fff; margin-bottom: 2px; }
+    span { font-size: .8rem; color: rgba(255, 255, 255, .68); line-height: 1.4; }
 }

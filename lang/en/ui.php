@@ -78,7 +78,8 @@ culture',
     'contact_channel_office' => 'Our Office',
     'contact_channel_office_desc' => 'Visit us in our office',
     'contact_channel_phone' => 'Phone',
-    'contact_channel_phone_desc' => 'Available Mon–Sun from 9:00 a.m. – 6:30 p.m.',
+    // 'contact_channel_phone_desc' removed 2026-08-11: unused key, also a
+    // hardcoded hours literal contradicting the panel value.
     'contact_channels' => 'Contact channels',
     'contact_email_placeholder' => 'Enter your email address',
     'contact_form_title' => 'Contact<br>form',

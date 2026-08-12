@@ -1,8 +1,13 @@
 <?php
+
 namespace Database\Seeders\AutoTrans;
+
 use Illuminate\Support\Facades\DB;
-class Tour9Trans {
-    public function run(): void {
+
+class Tour9Trans
+{
+    public function run(): void
+    {
         $data = [
             'title_pt' => 'LAGOA HUMANTAY',
             'description_en' => 'Embark on an unforgettable journey to one of Peru\'s most breathtaking natural destinations: Laguna Humantay. Our tour will take you through the majestic landscapes of the Peruvian Andes, where you\'ll enjoy panoramic views, explore nature in its purest state, and immerse yourself in the local culture. From your hotel pickup in Cusco to your return at the end of the day, we guarantee a day full of adventure and discovery. Join us and discover the beauty of Laguna Humantay!
@@ -18,27 +23,27 @@ Embarque em uma experiência inesquecível rumo a um dos destinos naturais mais 
             'itinerary_en' => json_encode([
                 [
                     'time' => '4:30 am - 5:00 am',
-                    'image' => 'tours/Rectangle-19210.jpg',
+                    'image' => 'tours/2024-12-humantay.jpg',
                     'description' => 'Hotel pickup — our transport service will pick you up at your hotel in Cusco. It is important to be ready to leave early, as Laguna Humantay is some distance away and we want to make the most of the day.',
                 ],
                 [
                     'time' => '5:00 am - 8:30 am',
-                    'image' => 'tours/Rectangle-19211.jpg',
+                    'image' => 'tours/2024-12-humantay_1-1-1-1-1.jpg',
                     'description' => 'Journey to Laguna Humantay — enjoy a scenic drive through the stunning landscapes of the Peruvian Andes on the way to Laguna Humantay. Strategic stops will be made for photos and to take in the views.',
                 ],
                 [
                     'time' => '8:30 am - 9:00 am',
-                    'image' => 'tours/Rectangle-19212.jpg',
+                    'image' => 'tours/2024-12-laguna-de-humantay-750x536-1.jpg',
                     'description' => 'Breakfast — we will arrive at a meeting point where a buffet breakfast will be served to fuel up before the hike. (Buffet breakfast included in the price.)',
                 ],
                 [
                     'time' => '9:00 am - 11:30 am',
-                    'image' => 'tours/image.jpg',
+                    'image' => 'tours/humantay.jpg',
                     'description' => 'Hike to Laguna Humantay — we begin the hike toward Laguna Humantay. The trail offers panoramic views and the chance to appreciate the natural beauty of the region. Comfortable clothing and proper footwear are recommended.',
                 ],
                 [
                     'time' => '11:30 am - 12:30 pm',
-                    'image' => 'tours/Rectangle-19214.jpg',
+                    'image' => 'tours/Lake-Humantay-Peru_.jpeg',
                     'description' => 'Free time at Laguna Humantay — upon arriving at Laguna Humantay, you will have free time to explore, take photos, and soak in the natural surroundings.',
                 ],
                 [
@@ -60,27 +65,27 @@ Embarque em uma experiência inesquecível rumo a um dos destinos naturais mais 
             'itinerary_pt' => json_encode([
                 [
                     'time' => '4:30 am - 5:00 am',
-                    'image' => 'tours/Rectangle-19210.jpg',
+                    'image' => 'tours/2024-12-humantay.jpg',
                     'description' => 'Busca no hotel — nosso serviço de transporte irá buscá-lo no seu hotel em Cusco. É importante estar pronto para sair cedo, pois a Lagoa Humantay fica a certa distância e queremos aproveitar ao máximo o dia.',
                 ],
                 [
                     'time' => '5:00 am - 8:30 am',
-                    'image' => 'tours/Rectangle-19211.jpg',
+                    'image' => 'tours/2024-12-humantay_1-1-1-1-1.jpg',
                     'description' => 'Viagem à Lagoa Humantay — desfrutaremos de uma viagem panorâmica pelas impressionantes paisagens dos Andes peruanos enquanto nos dirigimos à Lagoa Humantay. Serão realizadas paradas estratégicas para fotografias e para apreciar as vistas.',
                 ],
                 [
                     'time' => '8:30 am - 9:00 am',
-                    'image' => 'tours/Rectangle-19212.jpg',
+                    'image' => 'tours/2024-12-laguna-de-humantay-750x536-1.jpg',
                     'description' => 'Café da manhã — chegaremos a um ponto de encontro onde será servido um café da manhã buffet para recarregar as energias antes da caminhada. (Café da manhã buffet incluído no preço.)',
                 ],
                 [
                     'time' => '9:00 am - 11:30 am',
-                    'image' => 'tours/image.jpg',
+                    'image' => 'tours/humantay.jpg',
                     'description' => 'Caminhada até a Lagoa Humantay — iniciamos a trilha em direção à Lagoa Humantay. O percurso oferece vistas panorâmicas e a oportunidade de apreciar a beleza natural da região. Recomenda-se roupas confortáveis e calçado adequado.',
                 ],
                 [
                     'time' => '11:30 am - 12:30 pm',
-                    'image' => 'tours/Rectangle-19214.jpg',
+                    'image' => 'tours/Lake-Humantay-Peru_.jpeg',
                     'description' => 'Tempo livre na Lagoa Humantay — ao chegar à Lagoa Humantay, você terá tempo livre para explorar, tirar fotos e desfrutar do entorno natural.',
                 ],
                 [
@@ -116,7 +121,7 @@ Embarque em uma experiência inesquecível rumo a um dos destinos naturais mais 
                 'Almoço buffet incluído',
             ], JSON_UNESCAPED_UNICODE),
         ];
-        $data = array_filter($data, fn($v) => $v !== null && $v !== '');
+        $data = array_filter($data, fn ($v) => $v !== null && $v !== '');
         if ($data) {
             DB::table('tours')->where('id', 9)->update($data);
         }

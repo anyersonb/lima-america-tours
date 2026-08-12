@@ -73,11 +73,18 @@
     $heroTaglineDefault = $L("10 años mostrando\nlo mejor del Perú", "10 years showcasing\nthe best of Peru", "10 anos mostrando\no melhor do Peru");
     $heroTagline = \App\Models\Setting::get('home_hero_tagline_' . $locale) ?: $heroTaglineDefault;
 
-    $heroYearsNumber = \App\Models\Setting::get('home_hero_years_number') ?: '10+';
+    // Badge "10+ años" — corrección 2026-08-11: antes era texto libre en
+    // Settings con default "10+" y un subtítulo "Miles de viajeros
+    // descubriendo el Perú" (la MISMA cifra de viajeros que ya está apagada
+    // en la barra de stats de abajo: no podía volver a entrar como texto
+    // suelto aquí). Ahora sale del MISMO resolver que la barra de stats
+    // (HomeStatsResolver::yearsActiveBadge(), fuente Setting
+    // company_started_year) y se oculta entero sin ese dato — ver
+    // docs/rebrand/LOTE-MOCKUPS-AGO-2026.md, tabla "Lo que NO se publica".
+    // El subtítulo de "viajeros" no se reemplaza por otro texto: se retira.
+    $heroYearsBadge = app(\App\Services\HomeStatsResolver::class)->yearsActiveBadge();
     $heroYearsLabel = \App\Models\Setting::get('home_hero_years_label_' . $locale)
         ?: $L('Años de experiencia', 'Years of experience', 'Anos de experiência');
-    $heroYearsSub = \App\Models\Setting::get('home_hero_years_sub_' . $locale)
-        ?: $L('Miles de viajeros descubriendo el Perú', 'Thousands of travelers discovering Peru', 'Milhares de viajantes descobrindo o Peru');
 
     // ── Los 4 "trust chips" del hero (guía experto / tours seguros / atención
     // personalizada / mejor precio) quedan RETIRADOS del hero en el rediseño
@@ -116,6 +123,14 @@
         ?: $L('Reservar Ahora', 'Book Now', 'Reservar Agora');
     $heroPrimaryUrlSetting = trim((string) (\App\Models\Setting::get('home_hero_cta_primary_url') ?: ''));
     $heroPrimaryHref = $heroPrimaryUrlSetting !== '' ? $heroPrimaryUrlSetting : route('tours.index', ['locale' => $locale]);
+
+    // ── CTA secundario del hero "Ver Tours" (mockup 01-home: outline blanco,
+    // junto al rojo "Reservar Ahora") — faltaba por completo, editable con
+    // el mismo criterio que el primario. ──
+    $heroSecondaryLabel = \App\Models\Setting::get('home_hero_cta_secondary_' . $locale)
+        ?: $L('Ver Tours', 'View Tours', 'Ver Tours');
+    $heroSecondaryUrlSetting = trim((string) (\App\Models\Setting::get('home_hero_cta_secondary_url') ?: ''));
+    $heroSecondaryHref = $heroSecondaryUrlSetting !== '' ? $heroSecondaryUrlSetting : route('tours.index', ['locale' => $locale]);
 
     // ── Destinos reales para el select del buscador (mismo dataset que usa
     // el resto del home / tours.index — modelo Region, ya cargado por
@@ -191,8 +206,10 @@
     // tarjetas dos veces en la misma página (ver reporte). ──
     $offers = $offers ?? collect();
 
-    // ── Barra de STATS clara (A2) — reemplaza la tarjeta de trust chips
-    // del hero (ver nota arriba). 4 slots numéricos, editables por
+    // ── Stats del hero — card roja (Fix 2, lote mockups agosto 2026;
+    // antes era una barra clara horizontal fuera de lugar, ver
+    // .lat-hero__stats-card en _lat-home.scss) — reemplaza la tarjeta de
+    // trust chips del hero (ver nota arriba). Slots numéricos, editables por
     // Settings con default en código; ícono del catálogo cerrado
     // App\Support\HeroIcons (mismo criterio que el resto del hero). ──
     // 2026-08-02: el valor de cada slot ya NO se lee aquí desde Settings. Lo
@@ -221,7 +238,7 @@
         ])
         ->values();
 
-    // Si ningún slot tiene dato que mostrar, la barra entera sobra.
+    // Si ningún slot tiene dato que mostrar, la card entera sobra.
     if ($homeStats->isEmpty()) {
         $homeStatsEnabled = false;
     }
@@ -247,8 +264,17 @@
 
     $newsEyebrow = \App\Models\Setting::get('home_news_eyebrow_' . $locale)
         ?: $L('Viaja. Explora. Vive.', 'Travel. Explore. Live.', 'Viaje. Explore. Viva.');
+    // Fix 1 (lote mockups agosto 2026): este H2 y el de la banda roja
+    // .lat-home-cta (más abajo) traían el MISMO texto por defecto ("Tu
+    // próxima aventura empieza aquí"), medido como dos <h2> consecutivos
+    // idénticos en la página — se leía como un copy-paste sin terminar. La
+    // banda roja mantiene esa frase (encaja con su CTA "Ver todos los
+    // tours"); este bloque es el formulario de newsletter, así que su
+    // titular por defecto pasa a hablar de lo que el formulario realmente
+    // hace: suscribirse a ofertas y novedades. Sigue siendo un Setting
+    // editable (home_news_title_{locale}); solo cambia el default en código.
     $newsTitle = \App\Models\Setting::get('home_news_title_' . $locale)
-        ?: $L('Tu próxima aventura empieza aquí', 'Your next adventure starts here', 'Sua próxima aventura começa aqui');
+        ?: $L('Suscríbete a nuestras ofertas y novedades', 'Subscribe to our deals and updates', 'Inscreva-se em nossas ofertas e novidades');
     $newsSub = \App\Models\Setting::get('home_news_sub_' . $locale)
         ?: $L(
             'Suscríbete a nuestro boletín para recibir noticias, ofertas y promociones especiales.',
@@ -289,15 +315,34 @@
         default   => '',
     };
 
-    // ── Categorías reales (modelo Category) con conteo e imagen del primer tour ──
-    try {
-        $categories = \App\Models\Category::active()->orderBy('order')
-            ->with(['tours' => fn ($q) => $q->published()->limit(1)])
-            ->withCount(['tours' => fn ($q) => $q->published()])
-            ->limit(4)->get();
-    } catch (\Throwable $e) {
-        $categories = collect();
+    // ── Categorías reales — ya vienen resueltas por HomeController
+    // ($homeCategories: Category::active()->withPublishedTours(), guard
+    // automático). Antes esta vista volvía a consultar el modelo aquí mismo
+    // (duplicando la query del controller) con un bug real: eager-loadear
+    // `tours` con `->limit(1)` dentro del closure NO limita "1 por categoría"
+    // — Eloquent aplica un único LIMIT a la consulta combinada de las 4
+    // categorías, así que solo la PRIMERA se quedaba con foto y las otras 3
+    // recibían `tours` vacío y caían todas al mismo fallback genérico (la
+    // panorámica del hero) — el defecto "categorías con la misma foto
+    // repetida y una en gris" que reporta el brief. Cargar el tour SIN limit
+    // (25 tours en total entre las 4 categorías, carga liviana) y tomar
+    // `first()` en PHP sí es por-categoría. Verificado contra la BD real:
+    // las 4 categorías ya tienen cada una su propia foto distinta.
+    $categories = $homeCategories ?? collect();
+    if ($categories->isNotEmpty()) {
+        $categories->load(['tours' => fn ($q) => $q->published()->orderBy('order')]);
     }
+
+    // Ícono propio por categoría para la tira "encimada" al borde del hero
+    // (mockup: foto + ícono + label). Catálogo cerrado de 4 SVG (no hay campo
+    // de ícono en el modelo Category) — se asigna por SLUG, con un ícono
+    // genérico de respaldo si el cliente crea una 5ª categoría con otro slug.
+    $catStripIcons = [
+        'tours-culturales' => '<path d="M4 21h16M5 21V9l7-5 7 5v12M9 21v-6h6v6"/>',
+        'tours-de-aventura' => '<path d="m8 21 4-13 4 13M6 13h12M12 3l2 4h-4l2-4z"/>',
+        'experiencias-culinarias' => '<path d="M7 2v20M7 2a5 5 0 0 0-5 5v4h5M17 2v20M17 2a5 5 0 0 1 5 5v4a5 5 0 0 1-5 5"/>',
+    ];
+    $catStripIconDefault = '<circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/>';
 
     // ── Galería "Descubre la belleza del Perú" — editable en Settings → Home,
     // fallback a fotos de destinos reales ya presentes en storage/app/public/tours
@@ -333,7 +378,13 @@
         ['key' => 'home_gallery_img_1', 'fallback' => 'tours/OASIS-DE-HUACACHINA-ISLAS-BALLESTAS-EN-PARACAS-1.jpg', 'alt' => [
             'es' => 'Islas Ballestas y costa de Paracas, Perú', 'en' => 'Ballestas Islands and Paracas coastline, Peru', 'pt' => 'Ilhas Ballestas e litoral de Paracas, Peru',
         ]],
-        ['key' => 'home_gallery_img_2', 'fallback' => 'tours/machu-picchu-paquete-de-4-dias-lima-view-tours.jpg', 'alt' => [
+        // El fallback de este slot apuntaba a un asset de LIMA VIEW TOURS (otro
+        // cliente, competencia directa): con el Setting vacío, la home publicaba
+        // material ajeno. Un default que publica lo que no es del cliente es un
+        // defecto, no un pendiente de configuración. Ahora es una foto del propio
+        // catálogo (658×903, vertical, sin upscale para el derivado de 640).
+        // Lo vigila NoForeignClientAssetsTest.
+        ['key' => 'home_gallery_img_2', 'fallback' => 'tours/MACHU-2-DIAS-1.jpg', 'alt' => [
             'es' => 'Machu Picchu, Cusco', 'en' => 'Machu Picchu, Cusco', 'pt' => 'Machu Picchu, Cusco',
         ]],
         ['key' => 'home_gallery_img_3', 'fallback' => 'tours/2024-12-MONTANA-1-1.png', 'alt' => [
@@ -375,6 +426,21 @@
             'Unique experiences in incredible destinations that will win you over.',
             'Experiências únicas em destinos incríveis que vão te encantar.'
         );
+
+    // ── Testimonios reales (mockup: 3 tarjetas + 1 tarjeta de agregado) ──
+    // $realTestimonials ya viene resuelto por HomeController (Testimonial::active(),
+    // con nombre+fecha+tour real — NO la mezcla con la API de Google que usa
+    // $testimonials, esa no trae fecha confiable). El agregado ("5.0 · 18 opiniones")
+    // es la MISMA cuenta que usa /resenas y el hero (ReviewAggregator::overallStats),
+    // nunca un número calculado aparte.
+    $homeReviewCards = ($realTestimonials ?? collect())->take(3);
+    $homeOverallStats = app(\App\Services\ReviewAggregator::class)->overallStats($locale);
+
+    // ── Destinos reales (mockup: "Explora los increíbles destinos del Perú") ──
+    // $destinationRegions ya viene resuelto por HomeController (Region::active()
+    // ->withPublishedTours(), guard automático). Hoy son 3 (Lima, Cusco, Ica); el
+    // grid tiene que verse bien con 3, no con los 6 del mockup.
+    $homeDestinations = $destinationRegions ?? collect();
 @endphp
 
 {{-- Precarga de la foto del hero (LCP del sitio). Mismo src/srcset/sizes que
@@ -399,9 +465,10 @@
          en la columna/bloque superior, con velo hacia crema en desktop).
          Contenido superpuesto: eyebrow, H1 (marca + tagline roja),
          párrafo, botones "Reservar Ahora" / "Ver Video", badge "10+ años",
-         tarjetas de PROMOCIÓN (A3) y barra de STATS clara (A2) encimada al
-         borde inferior. El buscador de 4 campos queda FUERA del hero, ya
-         en la sección siguiente (evita solapar la tarjeta de stats).
+         card ROJA de stats (Fix 2, lote mockups agosto 2026 — junto al
+         título en ≥1024, debajo en mobile/tablet) y tarjetas de PROMOCIÓN
+         (A3). El buscador de 4 campos queda FUERA del hero, ya en la
+         sección siguiente (evita solapar la card de stats).
          ============================================================ --}}
     <section class="lat-hero" aria-labelledby="hero-title">
         <div class="lat-hero__bg">
@@ -445,6 +512,10 @@
 
                 <div class="lat-hero__actions">
                     <a href="{{ $heroPrimaryHref }}" class="lat-btn lat-btn--red">{{ $heroPrimaryLabel }}</a>
+                    <a href="{{ $heroSecondaryHref }}" class="lat-btn lat-btn--outline-white">
+                        {{ $heroSecondaryLabel }}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </a>
 
                     @if ($heroVideoUrl !== '')
                         <button type="button" class="lat-btn lat-btn--outline-white" id="heroVideoBtn"
@@ -460,12 +531,54 @@
 
             {{-- Badge rojo "10+ años", superpuesto a la foto (mockup mobile; se
                  conserva también en desktop porque el brief lo pide como pieza
-                 fija del hero — ver reporte sobre el recorte del mockup desktop). --}}
+                 fija del hero — ver reporte sobre el recorte del mockup desktop).
+                 Oculto entero sin company_started_year: ver HomeStatsResolver
+                 ::yearsActiveBadge() y la corrección 1 del reporte de este lote. --}}
+            @if ($heroYearsBadge['show'])
             <div class="lat-hero__years">
-                <strong>{{ $heroYearsNumber }}</strong>
+                <strong>{{ $heroYearsBadge['value'] }}</strong>
                 <span class="lat-hero__years-label">{{ $heroYearsLabel }}</span>
-                <span class="lat-hero__years-sub">{!! nl2br(e($heroYearsSub)) !!}</span>
             </div>
+            @endif
+
+            {{-- ── Card roja de stats (Fix 2, lote mockups agosto 2026) ──
+                 Antes era una barra blanca horizontal encimada al borde
+                 INFERIOR del hero (.lat-hero__stats-wrap + .lat-hero-stats +
+                 .lat-htc, medida en rgb(255,255,255) con top absoluto 1174
+                 contra un hero de 139 a 1367 — muy por debajo del título).
+                 El mockup 01-home la pone como una card ROJA flotando a la
+                 DERECHA del hero, a la altura del titular, con las filas
+                 apiladas e ícono a la izquierda de cada una. Vive ahora
+                 DENTRO de .lat-hero__content, como hermana de .lat-hero__text,
+                 para que en ≥1024 el flex las ponga lado a lado (ver
+                 .lat-hero__content en _lat-home.scss) y en mobile/tablet caiga
+                 en flujo normal debajo del texto — nunca tapando título ni
+                 CTAs. Misma fuente de datos que antes ($homeStats, ya
+                 filtrado por HomeStatsResolver): slots sin dato no se pintan
+                 y la card se adapta al alto sola (flex column, sin altura
+                 fija). .lat-hero-stats / .lat-htc NO se tocan ni se
+                 reutilizan aquí a propósito: about.blade.php las sigue usando
+                 tal cual para su propia franja de stats (fuera de alcance de
+                 este lote) — namespace nuevo (.lat-hero__stats-card /
+                 .lat-hsc__*) para no compartir cascada con esa página. --}}
+            @if ($homeStatsEnabled)
+                <div class="lat-hero__stats-card" style="--lat-stats-n:{{ $homeStats->count() }}">
+                    @foreach ($homeStats as $stat)
+                        <div class="lat-hsc__row">
+                            <span class="lat-hsc__ic">{!! $stat['icon'] !!}</span>
+                            <div class="lat-hsc__text">
+                                @if (! empty($stat['url']))
+                                    <a class="lat-hsc__value lat-hsc__value--src" href="{{ $stat['url'] }}"
+                                       target="_blank" rel="noopener nofollow">{{ $stat['value'] }}</a>
+                                @else
+                                    <span class="lat-hsc__value">{{ $stat['value'] }}</span>
+                                @endif
+                                <span class="lat-hsc__label">{{ $stat['label'] }}</span>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
 
         {{-- ── Tarjetas PROMOCIÓN (A3) — mismas 3 ofertas reales ($offers,
@@ -506,35 +619,37 @@
             </div>
         @endif
 
-        {{-- ── Barra de stats clara (A2), encimada al borde inferior del hero.
-             Se oculta entera si home_stats_enabled es explícitamente falso. ── --}}
-        @if ($homeStatsEnabled)
-            <div class="lat-wrap lat-hero__stats-wrap">
-                {{-- --lat-stats-n: número de tarjetas con dato real. La barra
-                     puede traer menos de 4 porque el resolvedor oculta los slots
-                     sin dato; sin esto el grid dejaba columnas vacías. --}}
-                <div class="lat-hero-stats" style="--lat-stats-n:{{ $homeStats->count() }}">
-                    @foreach ($homeStats as $stat)
-                        <div class="lat-htc">
-                            <span class="lat-htc__ic">{!! $stat['icon'] !!}</span>
-                            {{-- Cuando la cifra viene de un agregado externo (Google /
-                                 TripAdvisor) se pinta como enlace a la ficha pública: el
-                                 dato comprobable es lo que la separa de un número
-                                 inventado. Sin URL, el marcado es exactamente el de
-                                 antes. --}}
-                            @if (! empty($stat['url']))
-                                <a class="lat-hstat__value lat-hstat__value--src" href="{{ $stat['url'] }}"
-                                   target="_blank" rel="noopener nofollow">{{ $stat['value'] }}</a>
-                            @else
-                                <span class="lat-hstat__value">{{ $stat['value'] }}</span>
-                            @endif
-                            <span class="lat-htc__label">{{ $stat['label'] }}</span>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        @endif
     </section>
+
+    {{-- ============================================================
+         TIRA DE CATEGORÍAS — foto + ícono + label, encimada al borde donde
+         arranca el fondo claro (mockup 01-home). El mockup pinta 6 (Aventura/
+         Cultura/Naturaleza/Grupos/Experiencias/Relajación, decorativas, sin
+         dato real detrás); van las 4 categorías reales con su conteo
+         ($homeCategories, guard automático — si el cliente da de baja
+         "Otros" la tira baja a 3 columnas sola). Distinta de "Explora por
+         categoría" de abajo: esta es la tira compacta pegada al hero, esa es
+         la grilla grande con descripción.
+         ============================================================ --}}
+    @if ($categories->isNotEmpty())
+        <section class="lat-cat-strip" aria-label="{{ $L('Categorías de tours', 'Tour categories', 'Categorias de tours') }}">
+            <div class="lat-wrap lat-cat-strip__grid" style="--lat-catstrip-n:{{ $categories->count() }}">
+                @foreach ($categories as $cat)
+                    @php
+                        $catStripImg = optional($cat->tours->first())->cover_url ?? \App\Support\ResponsiveImage::defaultPhotoUrl(360);
+                        $catStripIcon = $catStripIcons[$cat->slug] ?? $catStripIconDefault;
+                    @endphp
+                    <a href="{{ route('tours.index', ['locale' => $locale, 'cat' => $cat->slug]) }}" class="lat-cat-strip__item">
+                        <img src="{{ $catStripImg }}" alt="" loading="lazy" width="220" height="220">
+                        <span class="lat-cat-strip__ic" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $catStripIcon !!}</svg>
+                        </span>
+                        <span class="lat-cat-strip__label">{{ $cat->name }}</span>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
 
     {{-- ============================================================
          BUSCADOR — 4 campos reales (doble marco: contenedor oscuro + barra
@@ -781,10 +896,10 @@
                         // original de 2.5 MB que se usaba antes.
                         $catImg = optional($cat->tours->first())->cover_url ?? \App\Support\ResponsiveImage::defaultPhotoUrl(640);
                     @endphp
-                    <a href="{{ route('tours.index', ['locale' => $locale]) }}" class="lat-cat">
+                    <a href="{{ route('tours.index', ['locale' => $locale, 'cat' => $cat->slug]) }}" class="lat-cat">
                         <img src="{{ $catImg }}" alt="{{ $cat->name }}" loading="lazy" width="360" height="230">
-                        @if ($cat->tours_count)
-                            <span class="lat-cat__count">{{ $cat->tours_count }} {{ $cat->tours_count === 1 ? $L('tour', 'tour', 'tour') : $L('tours', 'tours', 'tours') }}</span>
+                        @if ($cat->published_tours_count)
+                            <span class="lat-cat__count">{{ $cat->published_tours_count }} {{ $cat->published_tours_count === 1 ? $L('tour', 'tour', 'tour') : $L('tours', 'tours', 'tours') }}</span>
                         @endif
                         <div class="lat-cat__body">
                             <div class="lat-cat__name">{{ $cat->name }}</div>
@@ -807,6 +922,156 @@
          página. $offers sigue siendo el mismo modelo Offer real
          (HomeController::fetchOffers()) — no se tocó ninguna consulta.
          ============================================================ --}}
+
+    {{-- ============================================================
+         VIAJA CON CONFIANZA — 5 columnas (mockup: "¿Por qué elegirnos?").
+         Título + bajada de cada tarjeta ahora vienen de Configuración → Home
+         → "Razones 'Viaja con confianza...'" (Setting home_why_items, un
+         repeater que ya existía en el panel pero al que ninguna vista leía
+         — hallazgo 2026-08-11). Fallback a las 5 razones de siempre cuando
+         el admin no cargó nada. El ícono se asigna por posición (ciclando
+         sobre los 5 de diseño): el repeater no guarda ícono, igual que
+         blocks.stats en Nosotros.
+         ============================================================ --}}
+    <section class="lat-wrap lat-why" aria-labelledby="why-title">
+        <div class="lat-sec-head lat-sec-head--home">
+            <span class="lat-eyebrow is-center">{{ $L('¿Por qué elegirnos?', 'Why choose us?', 'Por que nos escolher?') }}</span>
+            <h2 id="why-title">{{ $L('Viaja con confianza y vive la mejor experiencia', 'Travel with confidence and live the best experience', 'Viaje com confiança e viva a melhor experiência') }}</h2>
+        </div>
+
+        @php
+            $whyIcons = [
+                '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.7"/>',
+                '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+                '<path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .58 1.41l9.6 9.6a2 2 0 0 0 2.83 0l4.34-4.34a2 2 0 0 0 0-2.85z"/><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/>',
+                '<path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>',
+                '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+            ];
+
+            $defaultWhyItems = [
+                ['title' => $L('Guías certificados', 'Certified guides', 'Guias certificados'), 'text' => $L('Expertos locales apasionados por compartir lo mejor del Perú.', 'Local experts passionate about sharing the best of Peru.', 'Especialistas locais apaixonados por compartilhar o melhor do Peru.')],
+                ['title' => $L('Viajes seguros', 'Safe travel', 'Viagens seguras'), 'text' => $L('Tu seguridad es nuestra prioridad en cada tour.', 'Your safety is our priority on every tour.', 'Sua segurança é nossa prioridade em cada tour.')],
+                ['title' => $L('Mejor precio garantizado', 'Best price guaranteed', 'Melhor preço garantido'), 'text' => $L('Calidad y experiencia al mejor precio del mercado.', 'Quality and experience at the best market price.', 'Qualidade e experiência ao melhor preço do mercado.')],
+                ['title' => $L('Atención personalizada', 'Personalized support', 'Atendimento personalizado'), 'text' => $L('Soporte antes, durante y después de tu viaje.', 'Support before, during and after your trip.', 'Suporte antes, durante e depois da sua viagem.')],
+                ['title' => $L('Cancelación flexible', 'Flexible cancellation', 'Cancelamento flexível'), 'text' => $L('Cambia tus planes con flexibilidad y sin complicaciones.', 'Change your plans with flexibility and no hassle.', 'Mude seus planos com flexibilidade e sem complicações.')],
+            ];
+
+            $rawWhyItems = \App\Models\Setting::get('home_why_items');
+            $whyItemsSrc = is_string($rawWhyItems) ? (json_decode($rawWhyItems, true) ?? []) : (is_array($rawWhyItems) ? $rawWhyItems : []);
+
+            $whyItems = collect($whyItemsSrc)
+                ->map(fn ($item) => [
+                    'title' => trim((string) ($item['title_' . $locale] ?? ($item['title_es'] ?? ''))),
+                    'text'  => trim((string) ($item['desc_' . $locale] ?? ($item['desc_es'] ?? ''))),
+                ])
+                ->filter(fn ($item) => $item['title'] !== '')
+                ->values()
+                ->all();
+
+            if (empty($whyItems)) {
+                $whyItems = $defaultWhyItems;
+            }
+        @endphp
+
+        <div class="lat-why__grid">
+            @foreach ($whyItems as $i => $why)
+                <div class="lat-why__item">
+                    <span class="lat-why__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $whyIcons[$i % count($whyIcons)] !!}</svg></span>
+                    <b>{{ $why['title'] }}</b>
+                    @if ($why['text'] !== '')
+                        <span>{{ $why['text'] }}</span>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+    </section>
+
+    {{-- ============================================================
+         TESTIMONIOS — reales ($realTestimonials, HomeController), con
+         nombre + fecha + tour. 3 tarjetas + 1 tarjeta de agregado (el mismo
+         "5.0 · 18 opiniones" del hero, vía ReviewAggregator — nunca un
+         número calculado aparte). Sección entera oculta si no hay ninguna
+         reseña real cargada (guard, no "0 opiniones" a la vista).
+         ============================================================ --}}
+    @if ($homeReviewCards->isNotEmpty())
+        <section class="lat-wrap" style="padding:20px 24px 70px" aria-labelledby="reviews-title">
+            <div class="lat-sec-head-row">
+                <div>
+                    <span class="lat-eyebrow">{{ $L('Lo que dicen nuestros viajeros', 'What our travelers say', 'O que dizem nossos viajantes') }}</span>
+                    <h2 id="reviews-title">{{ $L('Miles de viajeros ya vivieron la experiencia', 'Thousands of travelers have already lived the experience', 'Milhares de viajantes já viveram a experiência') }}</h2>
+                </div>
+                <a href="{{ route('reviews', ['locale' => $locale]) }}" class="lat-link-arrow">{{ $L('Ver todas las reseñas', 'See all reviews', 'Ver todas as avaliações') }} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            </div>
+
+            <div class="lat-reviews-grid">
+                @foreach ($homeReviewCards as $t)
+                    @php
+                        $tInitial = strtoupper(mb_substr(trim((string) $t->name), 0, 1));
+                        $tSrc = app(\App\Services\ReviewAggregator::class)->normalizeSource($t->source);
+                        $tSrcLabel = ['google' => 'Google', 'tripadvisor' => 'Tripadvisor', 'trivago' => 'Trivago', 'web' => $L('Nuestra web', 'Our website', 'Nosso site')][$tSrc];
+                    @endphp
+                    <article class="lat-rcard">
+                        <div class="lat-rcard__head">
+                            @if (!empty($t->avatar))
+                                <img src="{{ $t->avatar }}" alt="" class="lat-rcard__avatar" loading="lazy" width="44" height="44">
+                            @else
+                                <span class="lat-rcard__avatar lat-rcard__avatar--fallback" aria-hidden="true">{{ $tInitial }}</span>
+                            @endif
+                            <div>
+                                <b>{{ $t->name }}</b>
+                                <span>{{ $t->country ?: $t->displayDate()?->translatedFormat('M Y') }}</span>
+                            </div>
+                        </div>
+                        <span class="lat-stars"><span class="lat-stars__s">@for ($i = 0; $i < 5; $i++)<svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6L12 2z"/></svg>@endfor</span></span>
+                        <p class="lat-rcard__quote clamp-3">{{ $t->quote }}</p>
+                        <span class="lat-rcard__src">{{ $tSrcLabel }}</span>
+                    </article>
+                @endforeach
+
+                @if (! is_null($homeOverallStats['rating']))
+                    <article class="lat-rcard lat-rcard--agg">
+                        <span class="lat-rcard__agg-num">{{ number_format($homeOverallStats['rating'], 1) }}<small>/5</small></span>
+                        <span class="lat-stars"><span class="lat-stars__s">@for ($i = 0; $i < 5; $i++)<svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6L12 2z"/></svg>@endfor</span></span>
+                        <span class="lat-rcard__agg-count">
+                            {{ $L('Basado en', 'Based on', 'Baseado em') }} {{ number_format($homeOverallStats['count']) }}
+                            {{ $L('opiniones', 'reviews', 'avaliações') }}
+                        </span>
+                    </article>
+                @endif
+            </div>
+        </section>
+    @endif
+
+    {{-- ============================================================
+         DESTINOS POPULARES — reales ($destinationRegions, HomeController):
+         solo regiones activas con al menos un tour publicado, guard
+         automático. Hoy son 3 (Lima/Cusco/Ica); el mockup pinta 6, pero acá
+         no se inventan Arequipa/Paracas/Puno sin tour detrás.
+         ============================================================ --}}
+    @if ($homeDestinations->isNotEmpty())
+        <section class="lat-wrap" style="padding:20px 24px 70px" aria-labelledby="dest-title">
+            <div class="lat-sec-head lat-sec-head--home">
+                <span class="lat-eyebrow is-center">{{ $L('Destinos populares', 'Popular destinations', 'Destinos populares') }}</span>
+                <h2 id="dest-title">{{ $L('Explora los increíbles destinos del Perú', 'Explore the incredible destinations of Peru', 'Explore os incríveis destinos do Peru') }}</h2>
+            </div>
+
+            <div class="lat-dest-cards" style="--lat-dest-n:{{ min($homeDestinations->count(), 3) }}">
+                @foreach ($homeDestinations as $region)
+                    <a href="{{ route('tours.category', ['locale' => $locale, 'categoria' => $region->slug]) }}" class="lat-dest-card">
+                        <img src="{{ $region->image_url ?? \App\Support\ResponsiveImage::defaultPhotoUrl(640) }}" alt="{{ $region->name }}" loading="lazy" width="360" height="440">
+                        <div class="lat-dest-card__body">
+                            <b>{{ $region->name }}</b>
+                            <span>{{ $region->description ? \Illuminate\Support\Str::limit($region->description, 32) : ($region->published_tours_count . ' ' . ($region->published_tours_count === 1 ? $L('tour', 'tour', 'tour') : $L('tours', 'tours', 'tours'))) }}</span>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+
+            <div class="lat-dest-cta">
+                <a href="{{ route('tours.index', ['locale' => $locale]) }}" class="lat-btn lat-btn--red">{{ $L('Ver todos los destinos', 'View all destinations', 'Ver todos os destinos') }} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            </div>
+        </section>
+    @endif
 
     {{-- ============================================================
          FAQ (AEO) — se mantiene por su valor SEO; solo renderiza si hay

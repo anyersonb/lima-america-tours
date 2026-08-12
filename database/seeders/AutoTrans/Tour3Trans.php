@@ -1,14 +1,19 @@
 <?php
+
 namespace Database\Seeders\AutoTrans;
+
 use Illuminate\Support\Facades\DB;
-class Tour3Trans {
-    public function run(): void {
+
+class Tour3Trans
+{
+    public function run(): void
+    {
         $data = [
             'title_pt' => 'Full Day Lima: Centro Histórico, Pachacamac, Miraflores e Parque das Águas',
-            'description_en' => 'Discover the cultural and archaeological richness of Lima on this full-day tour. Visit the Sanctuary of Pachacamac, explore the charming districts of Barranco and Miraflores, and marvel at the history of the historic center. End the day with a spectacular light show at the Parque de las Aguas. An experience that combines history, art, and gastronomy all in one day.' . "\n\n" . 'Discover the cultural and archaeological richness of Lima on this full-day tour. Visit the Sanctuary of Pachacamac, explore the charming districts of Barranco and Miraflores, and marvel at the history of the historic center. End the day with a spectacular light show at the Parque de las Aguas. An experience that combines history, art, and gastronomy all in one day.',
-            'description_pt' => 'Descubra a riqueza cultural e arqueológica de Lima neste tour de dia completo. Visite o Santuário de Pachacamac, explore os encantadores bairros de Barranco e Miraflores e maravilhe-se com a história do centro histórico. Finalize com um espetáculo de luzes no Parque das Águas. Uma experiência que combina história, arte e gastronomia em um único dia.' . "\n\n" . 'Descubra a riqueza cultural e arqueológica de Lima neste tour de dia completo. Visite o Santuário de Pachacamac, explore os encantadores bairros de Barranco e Miraflores e maravilhe-se com a história do centro histórico. Finalize com um espetáculo de luzes no Parque das Águas. Uma experiência que combina história, arte e gastronomia em um único dia.',
-            'recommendations_en' => 'Comfortable clothing and shoes.' . "\r\n" . ' Sunglasses' . "\r\n" . ' Sunscreen' . "\r\n" . ' A hat' . "\r\n" . ' Water',
-            'recommendations_pt' => 'Roupas e sapatos confortáveis.' . "\r\n" . ' Óculos de sol' . "\r\n" . ' Protetor solar' . "\r\n" . ' Um chapéu' . "\r\n" . ' Água',
+            'description_en' => 'Discover the cultural and archaeological richness of Lima on this full-day tour. Visit the Sanctuary of Pachacamac, explore the charming districts of Barranco and Miraflores, and marvel at the history of the historic center. End the day with a spectacular light show at the Parque de las Aguas. An experience that combines history, art, and gastronomy all in one day.'."\n\n".'Discover the cultural and archaeological richness of Lima on this full-day tour. Visit the Sanctuary of Pachacamac, explore the charming districts of Barranco and Miraflores, and marvel at the history of the historic center. End the day with a spectacular light show at the Parque de las Aguas. An experience that combines history, art, and gastronomy all in one day.',
+            'description_pt' => 'Descubra a riqueza cultural e arqueológica de Lima neste tour de dia completo. Visite o Santuário de Pachacamac, explore os encantadores bairros de Barranco e Miraflores e maravilhe-se com a história do centro histórico. Finalize com um espetáculo de luzes no Parque das Águas. Uma experiência que combina história, arte e gastronomia em um único dia.'."\n\n".'Descubra a riqueza cultural e arqueológica de Lima neste tour de dia completo. Visite o Santuário de Pachacamac, explore os encantadores bairros de Barranco e Miraflores e maravilhe-se com a história do centro histórico. Finalize com um espetáculo de luzes no Parque das Águas. Uma experiência que combina história, arte e gastronomia em um único dia.',
+            'recommendations_en' => 'Comfortable clothing and shoes.'."\r\n".' Sunglasses'."\r\n".' Sunscreen'."\r\n".' A hat'."\r\n".' Water',
+            'recommendations_pt' => 'Roupas e sapatos confortáveis.'."\r\n".' Óculos de sol'."\r\n".' Protetor solar'."\r\n".' Um chapéu'."\r\n".' Água',
             'notes_en' => 'Our hotel pickup and drop-off service covers the Miraflores, Barranco, and San Isidro districts. If your hotel or accommodation is outside these districts, we offer the option to pick you up at Parque del Amor (MIRAFLORES).',
             'notes_pt' => 'Nosso serviço de busca e retorno ao hotel cobre as áreas de Miraflores, Barranco e San Isidro. Se o seu hotel ou acomodação estiver fora desses distritos, oferecemos a possibilidade de buscá-lo no Parque del Amor (MIRAFLORES).',
             'itinerary_en' => json_encode([
@@ -29,7 +34,7 @@ class Tour3Trans {
                 ],
                 [
                     'time' => 'Lunch in Barranco or Miraflores',
-                    'image' => 'tours/image.jpg',
+                    'image' => 'tours/CENTRO-HISTORICO-DE-LIMA-PARQUE-DE-LAS-AGUAS-4.jpg',
                     'description' => 'Enjoy a delicious lunch at a local restaurant in Barranco or the neighboring district of Miraflores, where you can savor the varied and exquisite Peruvian cuisine.',
                 ],
                 [
@@ -45,7 +50,7 @@ class Tour3Trans {
                 [
                     'time' => 'Parque de las Aguas',
                     'image' => 'tours/CENTRO-HISTORICO-DE-LIMA-PARQUE-DE-LAS-AGUAS-7.jpg',
-                    'description' => 'We will end our tour with a visit to the Parque de las Aguas, a theme park featuring spectacular illuminated fountains. Enjoy a dazzling water and light show in a magical and relaxing setting.' . "\r\n\r\n" . 'This itinerary will take you to discover the best of Lima, from its ancient ruins to its modern districts, offering you a complete and memorable experience in the Peruvian capital.',
+                    'description' => 'We will end our tour with a visit to the Parque de las Aguas, a theme park featuring spectacular illuminated fountains. Enjoy a dazzling water and light show in a magical and relaxing setting.'."\r\n\r\n".'This itinerary will take you to discover the best of Lima, from its ancient ruins to its modern districts, offering you a complete and memorable experience in the Peruvian capital.',
                 ],
                 [
                     'time' => 'Return to Hotel',
@@ -71,7 +76,7 @@ class Tour3Trans {
                 ],
                 [
                     'time' => 'Almoço em Barranco ou Miraflores',
-                    'image' => 'tours/image.jpg',
+                    'image' => 'tours/CENTRO-HISTORICO-DE-LIMA-PARQUE-DE-LAS-AGUAS-4.jpg',
                     'description' => 'Desfrute de um delicioso almoço em um restaurante local em Barranco ou no bairro vizinho de Miraflores, onde você poderá saborear a variada e requintada gastronomia peruana.',
                 ],
                 [
@@ -87,7 +92,7 @@ class Tour3Trans {
                 [
                     'time' => 'Parque das Águas',
                     'image' => 'tours/CENTRO-HISTORICO-DE-LIMA-PARQUE-DE-LAS-AGUAS-7.jpg',
-                    'description' => 'Encerraremos nosso tour com uma visita ao Parque das Águas, um parque temático com espetaculares fontes iluminadas. Desfrute de um show de água e luz em um ambiente mágico e relaxante.' . "\r\n\r\n" . 'Este roteiro levará você a descobrir o melhor de Lima, desde suas ruínas antigas até seus bairros modernos, proporcionando uma experiência completa e inesquecível na capital peruana.',
+                    'description' => 'Encerraremos nosso tour com uma visita ao Parque das Águas, um parque temático com espetaculares fontes iluminadas. Desfrute de um show de água e luz em um ambiente mágico e relaxante.'."\r\n\r\n".'Este roteiro levará você a descobrir o melhor de Lima, desde suas ruínas antigas até seus bairros modernos, proporcionando uma experiência completa e inesquecível na capital peruana.',
                 ],
                 [
                     'time' => 'Retorno ao hotel',
@@ -108,7 +113,7 @@ class Tour3Trans {
                 'Busca no seu hotel ou Airbnb',
             ], JSON_UNESCAPED_UNICODE),
         ];
-        $data = array_filter($data, fn($v) => $v !== null && $v !== '');
+        $data = array_filter($data, fn ($v) => $v !== null && $v !== '');
         if ($data) {
             DB::table('tours')->where('id', 3)->update($data);
         }

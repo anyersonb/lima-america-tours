@@ -73,4 +73,51 @@ class GuideModelTest extends TestCase
         $this->assertIsArray($guide->languages);
         $this->assertSame(['Español', 'Inglés', 'Quechua'], $guide->languages);
     }
+
+    /**
+     * Mockup 02-nosotros pinta un ícono de Instagram y uno de WhatsApp por
+     * guía, pero SOLO cuando hay un handle real cargado — nunca un ícono
+     * roto/vacío. Sin dato, el accessor debe devolver null (guard que la
+     * vista usa para no pintar el ícono).
+     */
+    public function test_instagram_url_accessor_is_null_without_a_handle(): void
+    {
+        $guide = Guide::factory()->create(['instagram_handle' => null]);
+        $this->assertNull($guide->instagram_url);
+
+        $guide->instagram_handle = '@lima.tours';
+        $this->assertSame('https://instagram.com/lima.tours', $guide->instagram_url);
+    }
+
+    public function test_whatsapp_url_accessor_is_null_without_a_number(): void
+    {
+        $guide = Guide::factory()->create(['whatsapp_number' => null]);
+        $this->assertNull($guide->whatsapp_url);
+
+        $guide->whatsapp_number = '51987654321';
+        $this->assertSame('https://wa.me/51987654321', $guide->whatsapp_url);
+    }
+
+    /**
+     * El "dato de valor" (ej. el caso real de Samira, elogiada por nombre en
+     * 15 de 20 reseñas) es opcional y localizado con el mismo fallback a
+     * español que role/bio.
+     */
+    public function test_highlight_accessor_falls_back_to_spanish(): void
+    {
+        $guide = Guide::factory()->create([
+            'highlight_es' => 'Mencionada en 15 de 20 reseñas.',
+            'highlight_en' => null,
+        ]);
+
+        app()->setLocale('en');
+        $this->assertSame('Mencionada en 15 de 20 reseñas.', $guide->highlight);
+        app()->setLocale('es');
+    }
+
+    public function test_highlight_is_null_when_not_set(): void
+    {
+        $guide = Guide::factory()->create(['highlight_es' => null]);
+        $this->assertNull($guide->highlight);
+    }
 }

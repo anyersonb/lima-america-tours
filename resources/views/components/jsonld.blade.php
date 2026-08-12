@@ -16,16 +16,22 @@
     // Google es peor que no declarar la propiedad.
     $waDigits   = \App\Models\Setting::whatsappNumber();
     $telephone  = $waDigits ? ('+' . $waDigits) : \App\Models\Setting::contactPhone();
+    // RUC: sin default. El footer y Términos llegaron a publicar DOS RUC
+    // contradictorios (20616108264 "Viaja con LAT S.A.C." / 10720481826
+    // "Díaz Córdova Augusto Manuel"), ninguno confirmado — ver
+    // App\Models\Setting::companyRuc() y docs/rebrand/ESTADO.md.
+    $companyRuc = \App\Models\Setting::companyRuc();
 
     // GEO settings
     $geoName    = ($settings['geo_business_name'] ?? '') ?: $siteName;
     // Dirección real: prioriza geo_street (campo dedicado del tab GEO); si está
-    // vacío, cae a la dirección real ya cargada en el tab Contacto para el
-    // idioma actual y, si ese idioma no tiene equivalente (p.ej. no existe
-    // contact_address_pt), cae a la versión en español antes del literal "Lima".
-    $geoStreet  = ($settings['geo_street'] ?? '')
-                  ?: (($settings['contact_address_' . $locale] ?? '')
-                  ?: (($settings['contact_address_es'] ?? '') ?: 'Lima'));
+    // vacío, cae a la dirección real ya cargada en el tab Contacto (Setting::
+    // contactAddress(), con su propio fallback ES). SIN "Lima" como último
+    // recurso desde 2026-08-11: "Lima" no es una calle, y las dos direcciones
+    // que circulaban antes eran de otro cliente o sin confirmar (ver
+    // docs/rebrand/ESTADO.md). Sin dato real, `streetAddress` se omite del
+    // schema en vez de imprimir un valor sin sentido.
+    $geoStreet  = ($settings['geo_street'] ?? '') ?: \App\Models\Setting::contactAddress($locale);
     $geoCity    = ($settings['geo_city'] ?? '')          ?: 'Lima';
     $geoRegion  = ($settings['geo_region'] ?? '')        ?: 'Lima';
     $geoPostal  = $settings['geo_postal_code']   ?? null;
@@ -87,6 +93,10 @@
     // Omitir "telephone" del schema si no hay dato — ver comentario arriba.
     if ($telephone) {
         $organization['telephone'] = $telephone;
+    }
+
+    if ($companyRuc) {
+        $organization['taxID'] = $companyRuc;
     }
 
     // Add geo coordinates only when available
