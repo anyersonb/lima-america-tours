@@ -51,7 +51,19 @@ SSH_OPTS=(-i "$SSH_KEY" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15
 # ACTUALIZA `DEPLOYED_COMMIT` cada vez que despliegues, o pásalo por entorno.
 # El servidor no tiene repo git (el deploy es por copia), así que este valor es
 # la única memoria de qué hay publicado.
-DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-e1e3c38}"  # menú completo en cabecera y footer + scroll-padding del ancla (2026-08-03, sin migraciones)
+# 2026-08-12 · c7ea46c — las 4 pantallas del lote validadas en pantalla.
+# OJO: este lote SÍ trajo migración y necesitó datos a mano en el servidor, porque
+# el script no corre ni migraciones ni seeders. Lo que se ejecutó después del deploy,
+# siempre como `sudo -u limaa3133 $PHP artisan ... < /dev/null`:
+#   migrate --force                          (add_social_and_highlight_to_guides_table)
+#   db:seed --class=GuideSeeder              (staging tenía 0 guías: el equipo salía vacío)
+#   db:seed --class=BlogPostCategorySeeder   (12 posts sin categoría: filtros del blog vacíos)
+#   db:seed --class=TourCoverImageFixSeeder  (5 portadas con el placeholder de 205×123 px)
+# más dos updates directos: los `hero_image` de lima/ica/cusco, que seguían en
+# `Rectangle 192xx`, y el `price` de las 3 ofertas a NULL, que publicaban "Desde $200"
+# las tres. NO correr `TranslateContentSeeder`: su mapeo tour↔ID está desactualizado y
+# escribe el contenido de un tour sobre otro.
+DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-c7ea46c}"
 
 mapfile -t FILES < <(
   git -C "$LOCAL" diff --name-only "$DEPLOYED_COMMIT..HEAD" \
