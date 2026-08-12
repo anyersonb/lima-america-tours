@@ -63,7 +63,15 @@ SSH_OPTS=(-i "$SSH_KEY" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15
 # `Rectangle 192xx`, y el `price` de las 3 ofertas a NULL, que publicaban "Desde $200"
 # las tres. NO correr `TranslateContentSeeder`: su mapeo tour↔ID está desactualizado y
 # escribe el contenido de un tour sobre otro.
-DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-c7ea46c}"
+# 2026-08-12 (segunda pasada) · 7aec0b6 — cierre del gate de QA. Además del deploy
+# hubo que limpiar DATOS en el servidor, que es donde estaba el problema: las filas
+# `contact_address_es/_en` de `settings` tenían la dirección de Lima View Tours (otro
+# cliente) y se publicaban en footer, JSON-LD, Términos y Privacidad, con el código
+# ya corregido y la base local vacía. Se vaciaron a mano, más 3 reservas `LVT-` y 2
+# leads de prueba. Después de CADA deploy conviene correr:
+#   sudo -u limaa3133 $PHP artisan data:audit-foreign < /dev/null
+# que devuelve código 1 si quedó algún dato de otro cliente en ESTE entorno.
+DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-7aec0b6}"
 
 mapfile -t FILES < <(
   git -C "$LOCAL" diff --name-only "$DEPLOYED_COMMIT..HEAD" \

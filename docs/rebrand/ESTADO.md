@@ -5,6 +5,52 @@ Actualizado: 2026-08-12 · Rama `feat/mockups-ago-2026`
 Este archivo existe para que el siguiente que abra el proyecto (o yo mismo dentro
 de un mes) no tenga que reconstruir de memoria en qué quedó todo.
 
+## Lote 2026-08-12 (segunda pasada) — el gate de QA y la dirección de otro cliente
+
+El lote se publicó en staging (`c7ea46c`) y el gate de verificación lo devolvió
+**NO APTO**. Los dos bloqueantes eran reales:
+
+1. **La dirección de Lima View Tours seguía publicada en staging.** `Av. Larcomar
+   233, Of. 410 — Miraflores, Lima` aparecía en el footer de todas las páginas, en
+   el JSON-LD como `streetAddress` y en los textos de Términos y Privacidad. El
+   código estaba corregido desde el 2026-08-11 y el seeder fuente vacío: lo que
+   nunca se limpió fue **la fila en la base de datos del servidor**. En la base
+   local ya estaba vacía, y de ahí que nadie lo viera en tres revisiones.
+   Se vaciaron `contact_address_es/_en/_pt` en staging (`geo_street` ya estaba
+   vacío) y se verificó 0 ocurrencias en los 3 idiomas × 5 páginas.
+
+   **Es el tercer dato del otro cliente que llega a publicarse acá**, y los tres
+   tuvieron el mismo patrón: el WhatsApp `51925886725` en julio, una foto de la
+   galería esa misma madrugada, y ahora la dirección. Por eso existe
+   **`php artisan data:audit-foreign`**: busca en la base de CUALQUIER entorno los
+   datos que identifican al otro cliente (dirección, teléfono, assets, prefijo
+   `LVT-` de reservas) y devuelve código de salida **1** si encuentra algo, para
+   encadenarlo al final de un deploy. Un test de PHPUnit no sirve para esto: corre
+   sobre sqlite en memoria, que es justo donde el problema no está.
+   Correrlo después de cada deploy:
+   `sudo -u limaa3133 <php> artisan data:audit-foreign < /dev/null`
+
+2. **Saltos en la jerarquía de encabezados.** H1→H3 en el bloque de promociones del
+   home (tarjetas `<h3>` sin un `<h2>` que las agrupe) y **H2→H4 en el footer**,
+   que al ser componente compartido rompía TODAS las páginas del sitio. Se cierran
+   con `<h2 class="sr-only">` donde el diseño no lleva título visible, y subiendo
+   los títulos del footer a `<h3>` (no a `<h2>`: competirían con los títulos de
+   sección). Midiendo apareció **un tercer salto que el gate no había reportado**:
+   el mismo defecto en el grid del catálogo (`/es/tours`). Las 15 combinaciones de
+   idioma × página quedaron con 0 saltos y H1 único, y lo vigila
+   `HeadingHierarchyTest`.
+
+**Datos de prueba borrados** (local y staging): 3 reservas con prefijo `LVT-`
+—el del otro cliente, de antes del rebrand—, 2 leads y 1 suscriptor con dominios
+reservados para pruebas. El prefijo que genera el código hoy es `LAT-`, verificado
+en `Booking::booted()`: las filas eran históricas, no un defecto activo.
+
+**Aclaración sobre los posts del blog:** el gate observó que el listado muestra 10
+posts y este documento decía 12. No es un defecto: hay 12 posts, **10 publicados**;
+los 2 restantes (uno de "Destinos", uno de "Lima") están en borrador con categoría
+y portada ya cargadas. "12/12 clasificados" era sobre la clasificación, no sobre la
+publicación.
+
 ## Lote 2026-08-12 — validación en navegador de las 4 pantallas y ronda de fixes
 
 Las 4 pantallas del lote se habían maquetado **sin validar una sola en pantalla**
