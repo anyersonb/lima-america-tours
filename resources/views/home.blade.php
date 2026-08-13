@@ -1186,8 +1186,37 @@
          de este lote) para no compartir cascada entre archivos.
          ============================================================ --}}
     <section class="lat-home-cta" aria-labelledby="home-cta-title">
+        {{-- Motivo de fondo: geoglifo tipo líneas de Nazca (un colibrí y las rectas de
+             la pampa), dibujado acá en SVG y no con una foto ni un asset de terceros —
+             mismo criterio que `.lat-gallery__mark`. Reemplaza al recorte de la silueta
+             del logo, que a este tamaño se leía como un dibujo suelto encima del rojo
+             en vez de como una textura. Puramente decorativo: aria-hidden, sin relleno,
+             trazo blanco a muy baja opacidad y detrás del contenido. --}}
         <div class="lat-home-cta__mark" aria-hidden="true">
-            <img src="{{ asset('assets/logos/logo-america-white.webp') }}" alt="" loading="lazy" width="768" height="379">
+            <svg viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+                {{-- Se probaron dos figuras antes de llegar acá y las dos fallaron en
+                     pantalla: un colibrí con alas horizontales se leía como torre de alta
+                     tensión, y con alas en V como avión de combate. A este tamaño y con
+                     trazo fino, la lectura correcta no es figurativa: lo que dice "Nazca"
+                     sin ambigüedad es la GEOMETRÍA de la pampa — un centro radial del que
+                     salen rectas larguísimas, trapecios, y la espiral. --}}
+
+                {{-- Centro radial: el punto del que parten las líneas. --}}
+                <path d="M296 128 L-30 236" opacity=".85"/>
+                <path d="M296 128 L-30 154" opacity=".85"/>
+                <path d="M296 128 L20 440" opacity=".7"/>
+                <path d="M296 128 L142 448" opacity=".7"/>
+                <path d="M296 128 L286 452" opacity=".55"/>
+                <path d="M296 128 L444 392" opacity=".55"/>
+                <path d="M296 128 L448 76" opacity=".7"/>
+                <circle cx="296" cy="128" r="7" opacity=".9"/>
+
+                {{-- Trapecio: la forma más repetida de la pampa, se abre hacia el fondo. --}}
+                <path d="M118 30 L86 402 L214 418 L182 34" opacity=".8"/>
+
+                {{-- Espiral, el remate de varias figuras de Nazca. --}}
+                <path d="M112 300 A11 11 0 0 1 134 300 A17 17 0 0 1 100 300 A23 23 0 0 1 146 300 A29 29 0 0 1 88 300" opacity=".9"/>
+            </svg>
         </div>
         <div class="lat-wrap lat-home-cta__inner">
             <span class="lat-eyebrow is-center">{{ $L('Vive la experiencia', 'Live the experience', 'Viva a experiência') }}</span>
