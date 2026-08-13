@@ -1,9 +1,102 @@
 # Estado del rebrand "anti-IA" y del lote de mockups
 
-Actualizado: 2026-08-12 · Rama `feat/mockups-ago-2026`
+Actualizado: 2026-08-13 · Rama `feat/mockups-ago-2026` · Publicado en staging: **75b00eb**
 
 Este archivo existe para que el siguiente que abra el proyecto (o yo mismo dentro
 de un mes) no tenga que reconstruir de memoria en qué quedó todo.
+
+## Lote 2026-08-13 — hero: antigüedad, slider, badge, y el motivo del CTA
+
+### 1. El hero ya no afirma una antigüedad que nadie sostiene
+
+El subtítulo tenía como **default en código** "10 años mostrando lo mejor del Perú",
+mientras el badge de años de al lado estaba oculto por no existir
+`company_started_year`: el sitio se contradecía a 40 píxeles de distancia, y el texto
+se publicaba precisamente cuando nadie había cargado nada — el mismo patrón del
+fallback que publicó la foto de otro cliente.
+
+Ahora la cifra sale del **mismo resolver** que el badge y la barra de stats
+(`HomeStatsResolver::yearsActiveBadge()`): con dato aparece en los dos lugares con el
+mismo número, sin dato el texto dice "Mostrando lo mejor del Perú". El Setting
+`home_hero_tagline_{locale}` sigue mandando por encima. Lo vigila
+`HeroTaglineYearsCoherenceTest` (3 casos, probados en rojo).
+
+### 2. El slider del hero existe y es administrable
+
+Se construyó la capa que faltaba en vez de improvisar un carrusel de una sola foto:
+modelo `HeroSlide` + migración + recurso de Filament (cargar y **reordenar**) +
+`HeroSlideSeeder` idempotente + `HeroSlidesResolver`, y después la vista.
+
+Contrato que consume el Blade: colección ordenada con
+`url`, `srcset`, `sizes`, `width`, `height`, `alt`, `is_first`.
+
+Dos reglas que no se negocian, ambas verificadas:
+- **Sin diapositivas cargadas la home sirve EXACTAMENTE la misma imagen que antes**
+  (probado con la tabla en 0 filas contra el servidor real: mismo hash de derivado).
+- **Con UNA diapositiva no se pinta ni un dot ni una flecha** y el hero queda idéntico
+  (mismo alto de 1081 px en 1440). Con dos o más aparecen los dots centrados y las
+  flechas abajo a la derecha, como el mockup.
+- La primera es la única precargada (`fetchpriority="high"`); las demás **no se piden
+  por red** hasta que el usuario navega, así que el LCP no compite con ellas.
+
+Controles: `<button>` reales con `aria-label`, `aria-current` en el dot activo,
+región `aria-live` que anuncia "Diapositiva N de M", navegación por teclado y **sin
+autoplay** (nadie lo pidió y el movimiento automático perjudica la lectura).
+
+### 3. El badge rojo de años se retiró del hero
+
+Solo se veía cargando `company_started_year` a mano, y entonces **caía encima de la
+card roja de stats** (badge en `x:1201–1354 / y:384–469` sobre una card de
+`x:1101–1401 / y:295–537` en 1440) **y publicaba la cifra dos veces**, porque la card
+ya trae su propia fila de años. El badge venía del mockup de julio, cuando la card no
+existía. Los años son ahora una fila más de la card, que aparece y desaparece sola.
+
+### 4. El CTA rojo lleva un motivo de líneas de Nazca
+
+Pedido del jefe sobre una captura: la silueta del logo con el excursionista se leía
+como un dibujo pegado encima del rojo, no como textura. Va un motivo tipo líneas de
+Nazca, dibujado en **SVG inline** (mismo criterio que `.lat-gallery__mark`, sin foto
+ni asset de terceros).
+
+**Se descartaron dos figuras EN PANTALLA antes de llegar a la definitiva**, y conviene
+no repetirlas: un colibrí con alas horizontales se lee como **torre de alta tensión**,
+y con alas en V como **avión de combate**. A este tamaño y con trazo fino al 9% de
+opacidad, lo que dice "Nazca" sin ambigüedad no es la figura sino la **geometría de la
+pampa**: centro radial con rectas larguísimas, trapecio y espiral. Para juzgar la forma
+hay que **subir la opacidad a propósito** (a 9% cualquier dibujo parece "sutil y lindo"
+aunque esté mal) y volver a la real.
+
+El motivo queda **detrás del texto en 390, 768 y 1024** (en 1440 no), así que el
+contraste se midió en vez de suponerse: titular **6.74–6.9:1** y párrafo **7.01:1**,
+sobre AA. `aria-hidden`, `pointer-events:none`, y el botón sigue recibiendo el clic.
+Al ser trazo y no una imagen recortada, **desaparece la deuda** de volver a medir el
+perfil de alfa del lockup cada vez que cambie el logo.
+
+### 5. El deploy ya no depende de recordar el commit publicado
+
+`deploy-america-staging.sh` escribe **`.deployed-commit`** en el docroot al terminar y
+lo **lee** al arrancar: el diff se calcula contra lo que el servidor tiene de verdad.
+Si el valor remoto no existe en el repo local, aborta en vez de subir un diff
+inventado; si difiere del respaldo del script, avisa y gana el servidor.
+
+Se agregó porque rompí staging: pasé a mano el SHA de un commit que el servidor no
+tenía y el script subió una vista **sin su modelo ni su migración** → HTTP 500 con
+"Table 'hero_slides' doesn't exist". La advertencia ya estaba escrita en el archivo
+desde julio y no alcanzó, porque el problema era depender de la memoria de quien
+despliega. Probado en el servidor real: pasándole a propósito el SHA que rompió todo,
+gana el servidor y el diff sale correcto.
+
+### Pendiente abierto y medido: la home pesa 7,5 MB en imágenes
+
+29 imágenes, **7.551 KB**. Las peores sirven el **original** en contenedores de 444 px:
+`Machu_Picchu_Peru_-_Laslovarga_262-scaled.jpg` (1105 KB, 2560 px intrínsecos) y
+`OASIS-DE-HUACACHINA-CON-BUGGIE-6-scaled-1.jpg` (807 KB), **cada una pedida dos veces**
+(promos y tarjetas de destino), más `2024-02-barranco-timeout.jpg` (413 KB) y
+`FULL-DAY-LIMA-ANCESTRAL-5-1-1.jpg` (374 KB).
+
+Es en parte consecuencia de este lote: al reemplazar los placeholders de 205 px por
+fotos reales se fue el borroso y entró el peso. El arreglo es pasar esas tarjetas por
+`App\Support\ResponsiveImage`, como ya hace el hero, y verificar LCP después.
 
 ## Lote 2026-08-12 (segunda pasada) — el gate de QA y la dirección de otro cliente
 
