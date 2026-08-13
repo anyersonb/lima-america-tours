@@ -270,92 +270,12 @@
     svg { width: 11px; height: 11px; margin-left: 1px; }
 }
 
-// ── Badge rojo "10+ años", superpuesto a la foto ────────────────────────
-// En mobile va en flujo (debajo de los botones — el bloque completo ya
-// cae sobre la foto, así que sigue "sobre la foto" aunque no flote en
-// columna aparte). A partir de 640px hay espacio de sobra a la derecha del
-// texto: se saca del flujo y se ancla a la foto, centrada verticalmente,
-// para que nunca choque con el H1/párrafo sea cual sea su longitud (copy
-// editable desde Settings, no se puede asumir cuánto ocupa).
-//
-// Fix 7 (informe CRO 2026-08-01) — reintentado tras pasar el H1 a Hedvig
-// Letters Serif (Fix 1): el prototipo (WhatsApp Image 2026-07-31 13.09.04)
-// SÍ flota el badge a la altura del título incluso en 390px. Medido en el
-// navegador con la serif ya aplicada: a 390px el ancho de contenido es
-// 327px y la SOLA palabra "América" (la más corta de las 3 líneas del
-// brand por defecto) mide 225.5px a los 58.5px de font-size que resuelve
-// el clamp en ese ancho. Un badge flotante necesita ≥150px (170px máx-width
-// + gap) para no verse aplastado, lo que deja ≤160px de columna de texto —
-// menos que el ancho de esa única palabra, y el título es un Setting de
-// texto libre (el cliente puede escribir cualquier frase, no solo "Lima
-// América Tours"). Con esta tipografía, flotar el badge en mobile rompe el
-// wrap del H1 con el copy por defecto y con cualquier copy más largo con
-// más razón. Se mantiene en flujo — la serif más grande empeora el
-// problema que ya documentaba la nota anterior, no lo resuelve.
-.lat-hero__years {
-    position: relative;
-    align-self: flex-start;
-    margin-top: 26px;
-    background: $lat-red;
-    color: #fff;
-    padding: 14px 20px;
-    border-radius: $lat-r-md;
-    box-shadow: $lat-shadow-lg;
-    max-width: 210px;
-    line-height: 1.2;
-
-    strong {
-        display: block;
-        // Numeral (no titular): Instrument Serif, igual que el resto de cifras
-        // del sitio (stats, precios) — Fix 2, informe CRO 2026-08-01. Google
-        // Fonts solo sirve esta familia en 400 (ital@0;1, sin eje wght) — un
-        // font-weight distinto de 400 solo dispara negrita sintética del
-        // navegador, que rompe el trazo fino/alto-contraste de la fuente.
-        font-family: $font-price;
-        font-size: clamp(2rem, 9vw, 2.6rem);
-        font-weight: 400;
-    }
-
-    &-label {
-        display: block;
-        font-size: .62rem;
-        font-weight: 700;
-        letter-spacing: .1em;
-        text-transform: uppercase;
-        margin-top: 3px;
-    }
-
-    &-sub {
-        display: block;
-        font-size: .74rem;
-        color: rgba(255, 255, 255, .88);
-        margin-top: 6px;
-    }
-
-    @media (min-width: 640px) {
-        position: absolute;
-        top: 50%;
-        right: 24px;
-        transform: translateY(-50%);
-        margin-top: 0;
-    }
-
-    @media (min-width: $bp-lg) { right: 5%; }
-
-    @media (max-width: 480px) {
-        max-width: 170px;
-        padding: 11px 15px;
-        strong { font-size: 1.5rem; }
-        &-sub { font-size: .68rem; }
-    }
-
-    // NOTA: hoy este badge nunca se pinta ($heroYearsBadge['show'] es false
-    // sin company_started_year — ver home.blade.php) así que no se pudo medir
-    // en el navegador cómo conviven su posición absoluta (right:5% en ≥1024)
-    // y la card roja de stats nueva (.lat-hero__stats-card, mismo lado). Si
-    // el cliente carga el año de inicio y el badge se activa, revisar que no
-    // se solapen — no se fuerza una posición a ciegas sobre algo invisible.
-}
+// .lat-hero__years (badge rojo suelto "10+ años") se RETIRÓ el 2026-08-13:
+// medido con company_started_year cargado, caía encima de la card roja de
+// stats (badge x:1201-1354/y:384-469 sobre card x:1101-1401/y:295-537+ en
+// 1440). La cifra de años ya es una fila más de esa card (HomeStatsResolver,
+// slot 4 = 'years_active' por defecto) — con el dato cargado se publicaba
+// DOS VECES. Ver .lat-hero__stats-card más abajo y el reporte del lote.
 
 // ── Card roja de stats del hero (Fix 2, lote mockups agosto 2026) ───────
 // Reemplaza la barra blanca horizontal que colgaba del borde INFERIOR del
@@ -456,6 +376,126 @@
     font-weight: 600;
     color: #fff;
     line-height: 1.3;
+}
+
+// ── Slider del hero (mockup 01-home.jpeg: 4 puntos + flechas ←→) ───────
+// Solo existe en el DOM con 2+ diapositivas activas (home.blade.php,
+// $heroSlides->count() > 1) — con 1 sola no hay nada que pintar. Fila en
+// flujo normal DESPUÉS de .lat-hero__content y ANTES de .lat-hero__promos:
+// como la foto de .lat-hero__bg cubre TODO el hero (inset:0 hasta donde
+// terminan las tarjetas de promoción), esta fila sigue leyéndose "sobre la
+// foto" tal como en el mockup aunque ya no sea literalmente el borde
+// inferior de la sección (acá el hero es más alto: tiene además la card de
+// stats y las promos, piezas que el mockup original no traía).
+// Puntos centrados de verdad (no "centrados en el hueco que dejan las
+// flechas"): cada grupo se ancla por separado con position:absolute dentro
+// de esta fila relativa, igual que hace .lat-gal__dots / .lat-gal__nav en
+// la galería de la ficha de tour (pages/_lat-tour.scss) — mismo criterio,
+// namespace propio.
+.lat-hero__slider {
+    position: relative;
+    z-index: 2;
+    min-height: 46px;
+    padding: 0 24px 26px;
+
+    @media (min-width: $bp-lg) { padding: 0 5% 34px; }
+}
+
+.lat-hero__dots {
+    position: absolute;
+    left: 50%;
+    bottom: 4px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+// Área de toque de 22px (WCAG 2.5.5) con el punto visual pequeño del
+// mockup dentro, vía ::after — el mismo truco que .lat-gal__dot pero con
+// hit-target más generoso porque acá no hay una tira de miniaturas debajo
+// que ya cubra la necesidad de un blanco grande.
+.lat-hero__dot {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+
+    &::after {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(255, 255, 255, .75);
+        background: transparent;
+        transition: background .2s ease, border-color .2s ease, transform .2s ease;
+    }
+
+    // Rojo #ff1f2d, no $lat-red: mismo criterio que .lat-eyebrow--on-dark y
+    // .lat-hero__tagline — el rojo de marca no pasa el 3:1 de WCAG 1.4.11
+    // para componentes gráficos sobre esta foto, medido en el resto del hero.
+    &.is-active::after {
+        background: #ff1f2d;
+        border-color: #ff1f2d;
+        transform: scale(1.25);
+    }
+
+    &:hover::after { border-color: #fff; }
+
+    &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 1px;
+        border-radius: 50%;
+    }
+}
+
+.lat-hero__arrows {
+    position: absolute;
+    right: 24px;
+    bottom: 0;
+    display: flex;
+    gap: 10px;
+
+    @media (min-width: $bp-lg) { right: 5%; }
+}
+
+.lat-hero__arrow {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    border: 1.5px solid rgba(255, 255, 255, .6);
+    background: rgba(10, 8, 7, .4);
+    color: #fff;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, transform .2s ease;
+
+    svg { width: 16px; height: 16px; }
+
+    &:hover { transform: translateY(-2px); border-color: #fff; }
+
+    &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+    // La flecha "siguiente" en rojo relleno (mockup); #ff1f2d por el mismo
+    // motivo que los dots — la card de stats usa $lat-red porque ahí el
+    // fondo detrás es la propia card roja, no la foto.
+    &--next {
+        background: #ff1f2d;
+        border-color: #ff1f2d;
+
+        &:hover { background: #e01521; border-color: #e01521; }
+    }
+
+    @media (max-width: 480px) {
+        width: 34px;
+        height: 34px;
+        svg { width: 14px; height: 14px; }
+    }
 }
 
 // ── Tarjetas PROMOCIÓN (A3) — sobre la foto, dentro del hero ────────────

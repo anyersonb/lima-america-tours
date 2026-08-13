@@ -118,18 +118,19 @@
         : $L("Mostrando\nlo mejor del Perú", "Showcasing\nthe best of Peru", "Mostrando\no melhor do Peru");
     $heroTagline = \App\Models\Setting::get('home_hero_tagline_' . $locale) ?: $heroTaglineDefault;
 
-    // Badge "10+ años" — corrección 2026-08-11: antes era texto libre en
-    // Settings con default "10+" y un subtítulo "Miles de viajeros
-    // descubriendo el Perú" (la MISMA cifra de viajeros que ya está apagada
-    // en la barra de stats de abajo: no podía volver a entrar como texto
-    // suelto aquí). Ahora sale del MISMO resolver que la barra de stats
-    // (HomeStatsResolver::yearsActiveBadge(), fuente Setting
-    // company_started_year) y se oculta entero sin ese dato — ver
-    // docs/rebrand/LOTE-MOCKUPS-AGO-2026.md, tabla "Lo que NO se publica".
-    // El subtítulo de "viajeros" no se reemplaza por otro texto: se retira.
-    $heroYearsBadge = app(\App\Services\HomeStatsResolver::class)->yearsActiveBadge();
-    $heroYearsLabel = \App\Models\Setting::get('home_hero_years_label_' . $locale)
-        ?: $L('Años de experiencia', 'Years of experience', 'Anos de experiência');
+    // El badge suelto "10+ años" (mockup de julio, cuando la card de stats
+    // todavía no existía) se RETIRÓ el 2026-08-13: medido con
+    // company_started_year cargado, caía encima de la card roja de stats
+    // (badge x:1201-1354/y:384-469 contra card x:1101-1401/y:295-537 o más
+    // si crece — ver reporte del lote). La salida no era moverlo: el dato de
+    // años YA es una fila más de esa card, porque HomeStatsResolver::resolve()
+    // trae el slot 4 en 'years_active' por defecto (mismo Setting
+    // company_started_year, mismo valor "X+" que exponía este badge) — con el
+    // dato cargado ya aparecía DOS VECES en pantalla antes de este cambio. No
+    // se tocó app/** para esto: $homeStats (más abajo) ya trae esa fila sola,
+    // se oculta sola sin el dato, y se adapta de alto sola. Las claves de
+    // Settings home_hero_years_label_* quedan sin leer aquí (no se borran del
+    // panel: es dato del cliente, no huérfano de nadie).
 
     // ── Los 4 "trust chips" del hero (guía experto / tours seguros / atención
     // personalizada / mejor precio) quedan RETIRADOS del hero en el rediseño
@@ -510,11 +511,14 @@
          cubriendo TODO el hero en cualquier breakpoint (antes: foto solo
          en la columna/bloque superior, con velo hacia crema en desktop).
          Contenido superpuesto: eyebrow, H1 (marca + tagline roja),
-         párrafo, botones "Reservar Ahora" / "Ver Video", badge "10+ años",
-         card ROJA de stats (Fix 2, lote mockups agosto 2026 — junto al
-         título en ≥1024, debajo en mobile/tablet) y tarjetas de PROMOCIÓN
-         (A3). El buscador de 4 campos queda FUERA del hero, ya en la
-         sección siguiente (evita solapar la card de stats).
+         párrafo, botones "Reservar Ahora" / "Ver Video", card ROJA de stats
+         (Fix 2, lote mockups agosto 2026 — junto al título en ≥1024, debajo
+         en mobile/tablet; el badge suelto "10+ años" se retiró el
+         2026-08-13, ver nota junto a $heroYearsForTagline: la cifra de años
+         es hoy una fila más de esta misma card), slider administrable
+         (dots + flechas, ver más abajo) y tarjetas de PROMOCIÓN (A3). El
+         buscador de 4 campos queda FUERA del hero, ya en la sección
+         siguiente (evita solapar la card de stats).
          ============================================================ --}}
     <section class="lat-hero" aria-labelledby="hero-title">
         <div class="lat-hero__bg">
@@ -530,11 +534,21 @@
                  su posicionamiento (capa de fondo en vez de columna), nunca se
                  reemplaza por un background-image de CSS.
 
-                 PENDIENTE DE ALCANCE APARTE (no de este cambio): el maquetado
-                 del slider en sí (dots + flechas del mockup 01-home.jpeg,
-                 navegación entre $heroSlides->skip(1) cuando haya más de una)
-                 no se construye acá — ver docs/rebrand/ESTADO.md. --}}
+                 SLIDER (2026-08-13): con 2+ diapositivas activas, este MISMO
+                 <img> es el visor — su src/srcset/sizes/width/height/alt se
+                 reemplazan por JS al navegar (mismo patrón que la galería de
+                 la ficha de tour, .lat-gal__main-btn en tours/show.blade.php:
+                 UN visor, no N <img> apiladas). Consecuencia deliberada: las
+                 diapositivas 2..N NUNCA se piden por red hasta que el usuario
+                 hace clic/usa el teclado — más fuerte que loading="lazy" (que
+                 no defiere nada si el elemento ya está en el viewport al
+                 cargar, como es el caso de todo el hero). El array completo
+                 (url/srcset/sizes/width/height/alt) viaja una sola vez como
+                 JSON en el script de más abajo. Con 1 sola diapositiva (tabla
+                 en 1 fila, el estado de hoy) no se pinta ningún control y este
+                 <img> quedó IDÉNTICO al de antes de este cambio. --}}
             <img
+                id="heroSlideImg"
                 src="{{ $heroImg['src'] }}"
                 @if ($heroImg['srcset'] !== '')
                     srcset="{{ $heroImg['srcset'] }}"
@@ -583,18 +597,6 @@
                 </div>
             </div>
 
-            {{-- Badge rojo "10+ años", superpuesto a la foto (mockup mobile; se
-                 conserva también en desktop porque el brief lo pide como pieza
-                 fija del hero — ver reporte sobre el recorte del mockup desktop).
-                 Oculto entero sin company_started_year: ver HomeStatsResolver
-                 ::yearsActiveBadge() y la corrección 1 del reporte de este lote. --}}
-            @if ($heroYearsBadge['show'])
-            <div class="lat-hero__years">
-                <strong>{{ $heroYearsBadge['value'] }}</strong>
-                <span class="lat-hero__years-label">{{ $heroYearsLabel }}</span>
-            </div>
-            @endif
-
             {{-- ── Card roja de stats (Fix 2, lote mockups agosto 2026) ──
                  Antes era una barra blanca horizontal encimada al borde
                  INFERIOR del hero (.lat-hero__stats-wrap + .lat-hero-stats +
@@ -634,6 +636,42 @@
                 </div>
             @endif
         </div>
+
+        {{-- ── Slider del hero (mockup 01-home.jpeg: 4 puntos + flechas ←→) ──
+             Solo se pinta con 2+ diapositivas ACTIVAS reales — con 1 sola
+             (hoy) no hay nada que navegar y un carrusel de una foto es peor
+             que no tener carrusel (contrato de HeroSlidesResolver, regla 1).
+             Sin autoplay: se mueve solo con clic, flecha o teclado (← →) con
+             el foco dentro de este bloque. $heroSlides completo (con la
+             primera) viaja como JSON al script de abajo para no tener que
+             volver a pedirle nada a PHP al navegar. --}}
+        @if ($heroSlides->count() > 1)
+            <div class="lat-hero__slider lat-wrap" id="heroSlider"
+                 role="group" aria-roledescription="carousel"
+                 aria-label="{{ $L('Diapositivas destacadas', 'Featured slides', 'Slides em destaque') }}">
+                <div class="lat-hero__dots">
+                    @foreach ($heroSlides as $i => $slide)
+                        <button type="button" class="lat-hero__dot {{ $i === 0 ? 'is-active' : '' }}"
+                                data-index="{{ $i }}"
+                                aria-label="{{ $L('Ir a la diapositiva', 'Go to slide', 'Ir para o slide') }} {{ $i + 1 }}"
+                                @if ($i === 0) aria-current="true" @endif></button>
+                    @endforeach
+                </div>
+                <div class="lat-hero__arrows">
+                    <button type="button" class="lat-hero__arrow lat-hero__arrow--prev" id="heroPrevBtn"
+                            aria-label="{{ $L('Diapositiva anterior', 'Previous slide', 'Slide anterior') }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                    <button type="button" class="lat-hero__arrow lat-hero__arrow--next" id="heroNextBtn"
+                            aria-label="{{ $L('Siguiente diapositiva', 'Next slide', 'Próximo slide') }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                </div>
+                {{-- Anuncio discreto del cambio de diapositiva para lectores de
+                     pantalla — no es visible, no duplica el <img> ni sus alt. --}}
+                <span class="sr-only" id="heroSliderLive" aria-live="polite"></span>
+            </div>
+        @endif
 
         {{-- ── Tarjetas PROMOCIÓN (A3) — mismas 3 ofertas reales ($offers,
              modelo Offer, HomeController::fetchOffers()) que antes vivían en
@@ -1318,3 +1356,80 @@
 </script>
 @endpush
 @endif
+
+{{-- ── Slider del hero: navegación (B/2026-08-13) ──────────────────────────
+     Mismo patrón que la galería de la ficha de tour (.lat-gal, tours/show.blade.php):
+     UN visor (#heroSlideImg) cuyo src/srcset/alt cambian por JS, no N <img>
+     apiladas — así las diapositivas 2..N nunca compiten por red al cargar la
+     home, solo se piden cuando el usuario navega de verdad. Guard de existencia
+     (`if (!slider || !img) return`): con 1 sola diapositiva activa el bloque
+     #heroSlider no se imprime (ver home.blade.php más arriba) y este script
+     no hace nada — ni un listener queda colgado. --}}
+@push('scripts')
+<script>
+(function () {
+    var slider = document.getElementById('heroSlider');
+    var img = document.getElementById('heroSlideImg');
+    if (!slider || !img) return;
+
+    var slides = @json($heroSlides->values());
+    var total = slides.length;
+    if (total < 2) return;
+
+    var index = 0;
+    var dots = Array.prototype.slice.call(slider.querySelectorAll('.lat-hero__dot'));
+    var prevBtn = document.getElementById('heroPrevBtn');
+    var nextBtn = document.getElementById('heroNextBtn');
+    var live = document.getElementById('heroSliderLive');
+    var liveLabel = @json($L('Diapositiva', 'Slide', 'Slide'));
+    var liveOf = @json($L('de', 'of', 'de'));
+
+    function render(i) {
+        index = ((i % total) + total) % total;
+        var s = slides[index];
+
+        img.src = s.url;
+        if (s.srcset) {
+            img.srcset = s.srcset;
+            img.sizes = s.sizes;
+        } else {
+            img.removeAttribute('srcset');
+            img.removeAttribute('sizes');
+        }
+        img.alt = s.alt;
+        if (s.width && s.height) {
+            img.width = s.width;
+            img.height = s.height;
+        }
+
+        dots.forEach(function (d) {
+            var isActive = parseInt(d.getAttribute('data-index'), 10) === index;
+            d.classList.toggle('is-active', isActive);
+            if (isActive) d.setAttribute('aria-current', 'true');
+            else d.removeAttribute('aria-current');
+        });
+
+        // aria-live discreto: anuncia el CAMBIO, no el estado inicial (por
+        // eso este textContent nunca se fija en el primer render de la página).
+        if (live) live.textContent = liveLabel + ' ' + (index + 1) + ' ' + liveOf + ' ' + total + ': ' + s.alt;
+    }
+
+    dots.forEach(function (dot) {
+        dot.addEventListener('click', function () {
+            render(parseInt(dot.getAttribute('data-index'), 10));
+        });
+    });
+
+    if (prevBtn) prevBtn.addEventListener('click', function () { render(index - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', function () { render(index + 1); });
+
+    // Flechas del teclado: solo cuando el foco está DENTRO del slider (un dot
+    // o una flecha ya enfocados) — nunca a nivel document, para no robarle
+    // ← → a un <select>/<input> de otra parte de la página.
+    slider.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft') { e.preventDefault(); render(index - 1); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); render(index + 1); }
+    });
+})();
+</script>
+@endpush
