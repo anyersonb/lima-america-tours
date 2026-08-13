@@ -83,7 +83,16 @@ SSH_OPTS=(-i "$SSH_KEY" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15
 # 2026-08-12 (tercera pasada) · el salto de encabezados de la ficha de tour y el
 # site.webmanifest con rutas absolutas, que bajo /staging apuntaban al WordPress de la
 # raiz. 486 tests verdes. Gate de QA: PASS.
-DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-977828e}"
+# 2026-08-13 · 9468dd4 — subtitulo del hero sin antiguedad inventada, CMS de
+# diapositivas (modelo HeroSlide) y el slider. **Trajo migracion**:
+#   migrate --force  +  db:seed --class=HeroSlideSeeder
+# ERROR QUE COMETI Y NO HAY QUE REPETIR: pase DEPLOYED_COMMIT del commit que estaba a
+# medio publicar (85f0673) en vez del que realmente estaba en el servidor (977828e).
+# El diff salio de 5 archivos: subio la vista que llama al modelo SIN el modelo ni la
+# migracion, y staging quedo en 500 con "Table hero_slides doesn t exist". Es
+# exactamente el gotcha escrito arriba. **Verificar contra el servidor cual es el
+# commit publicado antes de pasar esta variable.**
+DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-9468dd4}"
 
 mapfile -t FILES < <(
   git -C "$LOCAL" diff --name-only "$DEPLOYED_COMMIT..HEAD" \
