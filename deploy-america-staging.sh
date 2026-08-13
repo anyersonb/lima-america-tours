@@ -92,7 +92,39 @@ SSH_OPTS=(-i "$SSH_KEY" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15
 # migracion, y staging quedo en 500 con "Table hero_slides doesn t exist". Es
 # exactamente el gotcha escrito arriba. **Verificar contra el servidor cual es el
 # commit publicado antes de pasar esta variable.**
-DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-9468dd4}"
+# Desde el 2026-08-13 este valor es solo un respaldo: manda `.deployed-commit` del
+# servidor (ver el bloque de abajo). Ya no hace falta actualizarlo a mano en cada
+# deploy, pero se deja apuntando al último publicado por si el archivo remoto se pierde.
+DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-486337e}"
+
+# --- La fuente de verdad la tiene el SERVIDOR, no este archivo ---------------
+# El valor de arriba es un respaldo para el primer deploy y para leerlo como
+# historia. Lo que manda es `.deployed-commit`, que este script escribe en el
+# docroot al terminar: así el diff se calcula contra lo que el servidor TIENE de
+# verdad, y no contra lo que alguien creyó recordar. Sin esto, pasar un SHA
+# equivocado sube la vista sin su modelo y deja el sitio en 500 (pasó el
+# 2026-08-13, ver la nota de arriba).
+REMOTE_COMMIT="$(ssh "${SSH_OPTS[@]}" "$SSH_USER@$HOST" "cat '$REMOTE/.deployed-commit' 2>/dev/null | tr -d '[:space:]'" 2>/dev/null || true)"
+
+if [ -n "$REMOTE_COMMIT" ]; then
+  if ! git -C "$LOCAL" cat-file -e "$REMOTE_COMMIT^{commit}" 2>/dev/null; then
+    echo "!! El servidor dice tener '$REMOTE_COMMIT', que no existe en este repo."
+    echo "   ¿Falta un fetch, o se desplegó desde otra copia? Abortando para no subir un diff inventado."
+    exit 1
+  fi
+
+  if [ "$REMOTE_COMMIT" != "$DEPLOYED_COMMIT" ]; then
+    echo "== Aviso: el servidor tiene $REMOTE_COMMIT y el script decía $DEPLOYED_COMMIT =="
+    echo "   Manda el servidor. El diff se calcula desde $REMOTE_COMMIT."
+  fi
+
+  DEPLOYED_COMMIT="$REMOTE_COMMIT"
+else
+  echo "== Aviso: el servidor no tiene .deployed-commit todavía =="
+  echo "   Se usa $DEPLOYED_COMMIT del script. Verificá que sea lo publicado ANTES de seguir."
+fi
+
+echo "== Diff desde $DEPLOYED_COMMIT hasta $(git -C "$LOCAL" rev-parse --short HEAD) =="
 
 mapfile -t FILES < <(
   git -C "$LOCAL" diff --name-only "$DEPLOYED_COMMIT..HEAD" \
@@ -159,6 +191,14 @@ rm -f public/assets/banners/hero-machu-picchu.png
 
 echo "   cachés regeneradas"
 REMOTE_EOF
+
+# --- Dejar constancia en el servidor de QUÉ quedó publicado -------------------
+# Se escribe DESPUÉS de que la subida y las cachés salieron bien, y ANTES de la
+# verificación: si la verificación falla, el archivo igual refleja lo que hay en
+# disco, que es lo que el próximo diff necesita saber.
+HEAD_SHA="$(git -C "$LOCAL" rev-parse --short HEAD)"
+ssh "${SSH_OPTS[@]}" "$SSH_USER@$HOST" "printf '%s' '$HEAD_SHA' > '$REMOTE/.deployed-commit' && chown $SITE_USER:$SITE_USER '$REMOTE/.deployed-commit'"
+echo "   servidor marcado como $HEAD_SHA (.deployed-commit)"
 
 echo "== 5. Verificación en caliente =="
 
