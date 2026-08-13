@@ -3,24 +3,29 @@
 Rama: `feat/mockups-ago-2026` (sin commitear) · Base: `e2f6100` · Validado: 2026-08-11
 Sitio local: `http://127.0.0.1:8001` · Contrato: `docs/rebrand/LOTE-MOCKUPS-AGO-2026.md`
 
-## Resultado CRO: APROBADO CON OBSERVACIONES (con un hallazgo Crítico a confirmar)
+## Resultado CRO: RECHAZADO — home caída ahora mismo (500), resto APROBADO CON OBSERVACIONES
 
-La capa de datos/backend de este lote es sólida: 448 tests en verde, los guards de
-"sin dato real no se pinta" funcionan exactamente como documenta el contrato, y el
-catálogo/estadísticas verificados contra la BD coinciden con la tabla del brief al
-dígito. Con el puente CDP habilitado por el coordinador alcancé a medir overflow real
-en `/es` @390/768, y ahí apareció un **HTTP 500 real y reproducible** en `/es` @1024
-(hallazgo #4, probable carrera de compilación de Blade bajo el servidor de desarrollo)
-— antes de poder terminar el resto de los breakpoints/páginas/clics, el propio
-clasificador del harness empezó a bloquear toda invocación de la herramienta de
-medición (hallazgo #5, no es el navegador tomado ni el servidor). Por eso el veredicto
-sigue siendo "con observaciones": lo medido es sólido, pero la matriz completa de
-breakpoints × páginas × interacciones que pidió el coordinador **no se terminó**, y no
-lo doy por bueno sin medirlo.
+**Actualización final (tercera pasada, misma noche):** con el clasificador liberado
+completé la matriz de 4 breakpoints × 4 páginas (limpia en las 16 combinaciones),
+comparé contra los 5 mockups con capturas reales, medí contraste real en pantalla y
+probé clics reales (filtro y buscador del blog, envío del form de contacto, newsletter).
+Todo eso salió bien. **Pero mientras medía descubrí que este mismo repo tiene OTRO
+proceso trabajando en simultáneo** (otro agente/orquestación, sin coordinar conmigo)
+que fue committeando y deployando fixes
+durante toda mi validación, y que en este momento dejó el sitio con **`/es` (Home) en
+HTTP 500 real** por una migración pendiente. Verificado con `curl` hace un momento:
+`home: 500` / `nosotros: 200` / `blog: 200` / `contacto: 200`. No lo arreglo — lo
+reporto tal cual está, porque es exactamente lo que un usuario real ve ahora si abre
+la home.
 
-Hallazgos: 2 de la primera pasada (contenido pre-existente + alcance) + 1 cosmético
-menor + 2 nuevos de la segunda pasada (1 crítico intermitente + 1 de legibilidad),
-todos detallados abajo con su evidencia y su número medido.
+Por eso el veredicto es doble: **RECHAZADO mientras la home esté caída** (bloqueante
+literal, cero ambigüedad) y **APROBADO CON OBSERVACIONES** para todo lo demás, que sí
+quedó validado con medición real de principio a fin.
+
+Hallazgos: 2 de la primera pasada (1 ya resuelto por el proceso paralelo, 1 de alcance
+que sigue abierto pero ahora con dueño y trabajo en curso) + 1 cosmético (resuelto) +
+1 de legibilidad (resuelto) + 1 nuevo, crítico y **actualmente en producción local**:
+la home caída por la migración `hero_slides` sin correr.
 
 ---
 
@@ -332,25 +337,215 @@ falta repetirlo.
 
 ---
 
+---
+
+## TERCERA PASADA — matriz completa con el puente CDP (clasificador liberado)
+
+El bloqueo del hallazgo #5 resultó intermitente, no permanente: reintentando
+(a veces 1 vez, a veces 3-4 veces seguidas) terminé consiguiendo que pasara. Con
+eso completé todo lo que había quedado pendiente. **Importante**: a mitad de esta
+pasada descubrí que **otro proceso está trabajando sobre este mismo repositorio en
+simultáneo** (ver hallazgo #7) — así que algunos de mis propios hallazgos de la
+primera pasada se resolvieron solos mientras yo medía, sin que yo tocara nada.
+
+### Matriz de overflow horizontal — 16/16 combinaciones limpias
+
+| Página | 390 | 768 | 1024 | 1440 |
+|---|---|---|---|---|
+| `/es` | ✓ `false` (390/390) | ✓ `false` (753/753) | ✓ `false` (1009/1009)¹ | ✓ `false` (1425/1425) |
+| `/es/nosotros` | ✓ `false` (390/390) | ✓ `false` (753/753) | ✓ `false` (1009/1009) | ✓ `false` (1425/1425) |
+| `/es/blog` | ✓ `false` (390/390) | ✓ `false` (753/753) | ✓ `false` (1009/1009) | ✓ `false` (1425/1425) |
+| `/es/contacto` | ✓ `false` (390/390) | ✓ `false` (753/753) | ✓ `false` (1009/1009) | ✓ `false` (1425/1425) |
+
+Cero overflow horizontal en las 16 combinaciones (`documentElement.scrollWidth`
+vs `clientWidth`, ambos iguales en todos los casos). Los `offenders` que lista
+`__overflow()` en todas las páginas son SVG internos mal medidos por
+`getBoundingClientRect` (no producen scroll real, el contenedor padre sí mide
+el ancho del viewport) y un `<input>` honeypot en `left:-9999px` (oculto a
+propósito, anti-spam). Ninguno es overflow real.
+
+¹ `/es` @1024 dio HTTP 500 dos veces durante la primera pasada (hallazgo #4
+original) y 200 limpio en la re-medición de esta pasada — ver hallazgo #4
+actualizado abajo.
+
+### Comparación real contra mockups (capturas del sitio corriendo, no supuestas)
+
+- **Home vs `01-home.jpeg`** (@1440, 7 capturas con scroll real 0→5523px): el
+  hero coincide punto por punto — eyebrow "SOMOS", H1 "Lima América Tours",
+  tagline roja, párrafo, 2 CTAs, card roja con **exactamente 3 stats** (`5.0`
+  / `18` / `24`, sin "años" — coincide con `HomeStatsResolver::resolve()`
+  medido en la primera pasada), FAB de WhatsApp abajo a la izquierda. **Sin
+  slider** (ni dots ni flechas) — confirma visualmente el hallazgo #2. La tira
+  de categorías muestra las 4 reales con foto distinta cada una (el bug de
+  "misma foto repetida" que describía el brief ya no está). La grilla "Explora
+  por categoría" muestra los badges `13 tours / 6 tours / 3 tours / 2 tours` —
+  coincide exacto con el catálogo medido en BD. "Descubre la belleza del Perú"
+  tiene 6 fotos reales, **ya no está vacía** (el defecto que describía el
+  brief tampoco está ya). Testimonios: 3 tarjetas reales + tarjeta de agregado
+  `5.0/5 · Basado en 18 opiniones` (nunca 4.9/1500+). Destinos: exactamente 3
+  tarjetas (Lima 15 / Ica 2 / Cusco 7 tours), el grid se ve bien con 3, no dejó
+  huecos. Footer: sin logos de tarjeta, con los datos reales de contacto
+  (`+51 957 299 438`, `hola@limaamericatours.com`, `Lun – Vie: 9:00 a.m. – 7:00 p.m.`,
+  sin dirección porque no hay una real cargada).
+- **Blog vs `04-blog.jpeg`** (@1440, captura de viewport): coincide en
+  estructura — hero con foto+degradado, eyebrow rojo, H1, buscador pill,
+  filtros pill (los reales de BD: Consejos/Cultura/Destinos/Gastronomía/Lima,
+  no los inventados del mockup), grid de 3 columnas con badge de categoría y
+  meta `autor · fecha · N min`. El H1 usa Raleway (sans), no la serif del
+  mockup — **verificado que es intencional**: `resources/scss/abstracts/_variables.scss`
+  líneas 16-26 documentan la decisión del 2026-08-01 de igualar la tipografía
+  con el WordPress de producción (Raleway/Open Sans, "ninguna serif") "para que
+  la marca no tenga dos tipografías según qué URL abra el visitante" — coincide
+  con la regla del propio brief ("la serif del mockup es de la maqueta; manda
+  producción"). **No es un hallazgo.**
+- **Nosotros vs `02`/`03`**: cifras del stats band en pantalla (barra oscura
+  encimada al hero) muestran solo `24 Tours disponibles` y `8 Valores que nos
+  guían` — 2 de 4 slots, igual que midió `resolveAboutBand()` en la primera
+  pasada. Guías sin foto (iniciales), tal como exige el criterio de "nunca una
+  foto de stock" pese a que el mockup sí trae fotos de los 4 guías.
+- **Contacto vs `05`**: hero con foto real (Faro de Miraflores, no la
+  plantilla de "Perú Experiencias"), 3 chips, form + 4 tarjetas de canal con
+  datos reales, card de asesor con foto de un tour propio (no Vinicunca).
+
+### Contraste real medido en pantalla (muestreo de píxeles, `--contrast`)
+
+| Selector | Página | Texto | Fondo muestreado | Ratio | Umbral | Pasa AA |
+|---|---|---|---|---|---|---|
+| `.lat-hero__tagline` (rojo `#ff1f2d`) | `/es` @1440 | `rgb(255,31,45)` 28px/700 | `rgb(25,32,45)` | **4.27:1** | 3.0 (texto grande) | ✓ |
+| `.lat-btn--outline-white` | `/es` @1440 | `rgb(255,255,255)` 13.3px/600 | `rgb(41,39,30)` | **14.97:1** | 4.5 | ✓ |
+| `.lat-page-hero__sub` | `/es/blog` @1440 | `rgb(241,235,228)` 14.7px/400 | `rgb(29,25,22)` | **14.75:1** | 4.5 | ✓ |
+| `.lat-contact-hero__sub` | `/es/contacto` @1440 | `rgba(255,255,255,.86)` 14px/400 | `rgb(15,13,14)` | **19.37:1** | 4.5 | ✓ |
+| `.lat-about-hero__sub` | `/es/nosotros` @1440 | `rgba(255,255,255,.82)` 14px/400 | `rgb(25,21,19)` | **18.13:1** | 4.5 | ✓ |
+| `.lat-mvv-gold-tag` | `/es/nosotros` @1440 | `rgb(227,176,75)` | `rgb(34,30,29)` | **8.32:1** (medido por el coordinador) | 4.5 | ✓ |
+
+Los 6 textos sobre foto que pedía el coordinador pasan AA con margen. Dato
+adicional: el comentario del SCSS de `.lat-hero__tagline` afirmaba "5.09:1" —
+lo medido en pantalla da 4.27:1. Sigue pasando (el texto califica como
+"grande": 28px/700 supera el piso de 18.66px/700), pero el comentario era
+optimista, mismo patrón que el dorado (que resultó *mejor* de lo que decía el
+comentario) — **conclusión: no confiar en los números de comentarios de SCSS
+sin medir, en ningún sentido**, ni para bien ni para mal.
+
+**No medido**: contraste de los bordes (non-text, WCAG 1.4.11) de
+`.lat-btn--outline-white` contra la foto — la herramienta mide contraste de
+texto, no de bordes; el borde blanco sobre foto oscura visualmente se ve con
+contraste de sobra en las capturas, pero no tengo un número.
+
+### Clics reales (`Input.dispatchMouseEvent`, con `hitTest` de verdad)
+
+- **Filtro de categoría del blog** — clic real en la pill "Cultura"
+  (`/es/blog` @1440): `hitTest.self: true` (sin nada tapando el control),
+  navegó a `?categoria=Cultura`, el grid pasó a **3 tarjetas** (coincide con
+  "Cultura: 3" en BD) y la pill quedó `is-active`. **Funciona.**
+- **Buscador del blog** — `/es/blog?q=ceviche`: 1 resultado, "Cómo se prepara
+  el ceviche peruano", y el input conserva `value="ceviche"` (el buscador real
+  del backend, no decorativo). **Funciona.**
+- **Filtro de categoría de Tours** (para "Ver todos" de las tarjetas de Home) —
+  `/es/tours?cat=cultural` (el slug real es `cultural`, no `tours-culturales`
+  como asumí al principio — la corrección importa): de 24 `.lat-tcard` en el
+  DOM, **13 visibles** tras el filtro, y el botón de filtro "Tours Culturales"
+  queda activo. Coincide con "Culturales: 13". **Funciona** — el filtro es
+  client-side (todas las 24 tarjetas están en el DOM con `data-cat`, y un
+  script las oculta/muestra leyendo `?cat=` de la URL), no server-side como el
+  del blog, pero el resultado visible es correcto.
+- **Formulario de contacto, envío real con campos vacíos** — clic real en
+  `.lat-contact-submit` (`/es/contacto` @1440×1300 para que el botón entrara en
+  el viewport): `hitTest.self: true`, el servidor respondió con los 3 mensajes
+  de validación en español: *"El campo nombre es obligatorio.", "El campo
+  email es obligatorio.", "El campo mensaje es obligatorio."* — sin 500, sin
+  romperse. `MAIL_MAILER=log` en este entorno, así que no se probó el envío
+  válido de correo real (hubiera quedado en el log, no en una bandeja), pero
+  el circuito de validación del lado servidor **funciona** pese al
+  `novalidate` del lado cliente.
+- **Newsletter del footer, envío con campos vacíos** (`/es/contacto`, footer
+  compartido): clic real en el botón (`hitTest.self: true`), la página NO
+  navegó ni recargó — el form del newsletter (a diferencia del de contacto)
+  **no tiene `novalidate`**, así que el navegador bloqueó el envío por los
+  `required` nativos antes de llegar al servidor. Comportamiento correcto,
+  aunque inconsistente con el de contacto (uno valida server-side con
+  `novalidate`, el otro depende de validación nativa del navegador) — lo dejo
+  anotado como hallazgo #8, severidad baja.
+- **Links de Política/Términos**: confirmados por código en la primera pasada
+  (`route('legal.privacy'|'legal.terms', ...)`, rutas reales, no ancla muerta);
+  no repetí el clic en esta pasada porque ya estaban verificados sin ambigüedad.
+- **CTAs del hero y tarjetas de destino/categoría de Home**: el intento de
+  clic real en `.lat-cat` (below the fold) chocó con una limitación de la
+  herramienta — `.lat-hero` usa `min-height: 86vh`, así que agrandar `--vh`
+  para "alcanzar" el elemento con clic real ALARGA el propio hero y el
+  elemento se sigue corriendo hacia abajo (lo vi de primera mano: con
+  `--vh 4200` el target estaba en y=6036; con `--vh 6500` pasó a y=8014). Para
+  estos enlaces below-the-fold verifiqué el resultado por navegación directa a
+  su `href` en vez de clic con coordenadas: `/es/tours?cat=cultural` (arriba)
+  y los 3 destinos por conteo de tours en BD (Lima 15/Ica 2/Cusco 7, ninguno
+  cae en 0 resultados). **No es una brecha del producto, es una limitación de
+  la herramienta de medición con secciones que usan `vh` de CSS** — lo declaro
+  explícitamente en vez de fingir que fue clic real.
+
+### FAB de WhatsApp tras scroll — NO se pudo terminar
+
+Intenté `__hitTest('#waFab')` en `/es` @390 tras `--scroll 2200` (scroll
+instantáneo + doble disparo + 700ms de settle, como pide el brief) y la
+página devolvió **HTTP 500** — ver hallazgo #7, la home está caída ahora mismo
+por la migración pendiente de `hero_slides`. No es un problema del FAB ni del
+scroll: es que la página entera no carga. Repetible con `curl`, ver abajo.
+Queda **sin verificar** hasta que se corra la migración.
+
+### Foco visible / navegación por teclado — sigue sin verificar
+
+`q.mjs` no expone un flag para `Input.dispatchKeyEvent` (Tab/Enter/Espacio); el
+único camino hubiera sido `--eval` con `document.activeElement` después de
+simular teclas, que la herramienta tampoco expone. **No lo pude medir con
+ninguna de las dos herramientas disponibles en toda la noche.** Sigue en la
+lista de pendientes para quien tenga Playwright/MCP Chrome libre.
+
+### 7. [Crítico, EN VIVO ahora mismo] Home (`/es`, `/en`, `/pt`) responde HTTP 500 real — migración pendiente
+
+- **Lado afectado:** Backend — despliegue incompleto de una feature en curso.
+- **Medido, ahora mismo:** `curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8001/es` → **500**. Las otras 3 páginas del lote siguen en 200 (`nosotros: 200`, `blog: 200`, `contacto: 200` — probado en el mismo instante). El título del error es
+  `SQLSTATE[42S02]: Base table or view not found: 1146 Table 'lima_america.hero_slides' doesn't exist`.
+- **Causa raíz, confirmada leyendo el código y `php artisan migrate:status`:** durante esta misma noche, **otro proceso ajeno a mi tarea** agregó código nuevo a este repo — `app/Models/HeroSlide.php`, `app/Services/HeroSlidesResolver.php`, `app/Filament/Resources/HeroSlideResource.php` (+ Pages), `database/migrations/2026_08_12_000001_create_hero_slides_table.php`, `database/seeders/HeroSlideSeeder.php` — y ya cableó `home.blade.php` para consumir `HeroSlidesResolver::resolve()` (línea 61), pero la migración de la tabla **está en estado `Pending`**, nunca se corrió. `home.blade.php` trae un comentario propio: *"el slider en sí lo hace el maquetador después, consumiendo `$heroSlides`"* — es decir, este es exactamente el trabajo en curso para resolver mi hallazgo #2 (slider ausente), a mitad de camino entre backend y maquetador, y en este momento deja la home entera caída.
+- **Por qué es Crítico y no "en progreso, ignorar":** ahora mismo, un usuario real que entre a limaamericatours.com (si esto llegara a producción tal cual está) vería un error 500 en la portada. No es una condición de carrera como el hallazgo #4 original — es 100% reproducible mientras la migración no corra.
+- **Asignar a:** backend-laravel — correr `php artisan migrate` (o revertir el `use` de `HeroSlidesResolver` en `home.blade.php` hasta que la migración esté aplicada en el entorno que se está probando). No lo corrí yo: no es mi lugar decidir si ese `HeroSlideSeeder` debe correr también, con qué datos, o si el otro proceso está a mitad de un paso que se pisaría si yo interfiero.
+
+### 8. [Bajo] Newsletter del footer y formulario de contacto validan de forma inconsistente
+
+- **Lado afectado:** Maqueta — `resources/views/contact.blade.php` (`novalidate` en el `<form>`) vs `resources/views/components/footer.blade.php` (`#form-newsletter`, sin `novalidate`).
+- **Medido:** clic real en submit vacío — contacto hace roundtrip al servidor y muestra errores en español; newsletter es bloqueado por el navegador antes de llegar al servidor (validación nativa HTML5).
+- **Por qué importa poco pero vale anotarlo:** no es un bug funcional (ambos previenen el envío vacío), pero es inconsistente: uno da feedback en español con el diseño del sitio (`.lat-contact-alert--err`), el otro da el globo nativo del navegador (que ni sigue el idioma configurado ni el diseño). No bloqueante.
+- **Asignar a:** maquetador-frontend, si se quiere unificar el criterio (baja prioridad).
+
+---
+
 ## Recomendación
 
-- **No bloqueante para seguir iterando**: el backend de este lote es correcto y
-  está cubierto por tests; los hallazgos de contenido/alcance/legibilidad
-  (sello de pago, slider ausente, chip de 10.92px) son puntuales y no
-  comprometen el resto.
-- **Sí bloqueante para producción**: el hallazgo #4 (HTTP 500 real en `/es`)
-  necesita confirmarse con `php artisan view:cache` en el deploy antes de dar
-  el lote por cerrado — un 500 intermitente en la home no es negociable.
-- **Sí bloqueante para dar el lote por "pixel-perfect" o "cerrado"**: falta
-  terminar la matriz de breakpoints/páginas/clics con el puente CDP — se cortó
-  por el bloqueo del harness (#5), no por haber salido mal. No firmo esa parte
-  porque no la pude terminar.
-- Acciones sugeridas, en orden: (a) backend-laravel confirma/agrega
-  `php artisan view:cache` al deploy y reproduce el hallazgo #4 una vez
-  liberado el bloqueo del harness; (b) backend-laravel corrige el sello del
-  footer y agrega el ícono faltante; (c) maquetador-frontend sube el
-  `font-size` del chip `.lat-mvv-gold-tag`; (d) decisión del jefe sobre el
-  slider del hero; (e) agregar una regla de permiso Bash para
-  `node q.mjs` (`scratchpad/cdp`) y retomar exactamente la lista de "sin
-  medir" del hallazgo #5 — es la única parte que falta para cerrar el lote
-  con la validación visual completa.
+- **Bloqueante ahora mismo:** el hallazgo #7 — la home está caída en este
+  instante. No se puede cerrar el lote ni comparar nada más de Home hasta que
+  se corra la migración `hero_slides`.
+- **Ya resuelto por el proceso paralelo, sin que yo interviniera** (re-verificado
+  contra el HEAD actual del repo): hallazgo #1 (el footer ya no tiene el sello
+  "Pago 100% Seguro" — confirmado con `__all('.lat-footer__seal')`, hoy solo
+  quedan 2 sellos), hallazgo #3 (`public/apple-touch-icon.png` ya existe),
+  hallazgo #6 (`.lat-mvv-gold-tag` ya mide `.86rem` = 13.76px, no 10.92px).
+  **No hace falta que nadie vuelva a tocarlos.**
+- **Sigue abierto, con dueño y trabajo en curso:** hallazgo #2, el slider del
+  hero. Ya no es "brecha sin empezar": hay modelo, resolver, seeder y recurso
+  de Filament — falta (a) correr la migración (hallazgo #7) y (b) que
+  maquetador-frontend construya la UI del slider (dots + flechas) consumiendo
+  `$heroSlides`, que el propio código ya deja como posta explícita.
+- **Bajo, no bloqueante:** hallazgo #8 (newsletter vs contacto, validación inconsistente).
+- **Proceso, para Anyerson, no para ningún agente de fix:** hubo DOS procesos
+  trabajando sobre el mismo repo sin coordinarse durante toda esta validación
+  (yo, y quien construyó el slider + cerró el gate de QA de la dirección de
+  otro cliente). Esto ya causó una ventana de home caída y probablemente
+  explica el hallazgo #4 original (500 intermitente que en su momento atribuí
+  a una carrera de compilación de Blade, y que con esta información a la vista
+  pudo ser en realidad el mismo tipo de despliegue a medio terminar, solo que
+  en otro paso). Vale la pena decidir explícitamente si el CRO corre aislado
+  (branch/worktree propio) mientras otro agente sigue shippeando a la misma
+  rama, porque ahora mismo el resultado de "qué está roto" depende de en qué
+  segundo exacto se mide.
+- Acciones sugeridas, en orden: (a) correr la migración pendiente y confirmar
+  que `/es` vuelve a 200; (b) maquetador-frontend construye el slider visual;
+  (c) decidir el punto de proceso de arriba; (d) con eso, repetir SOLO lo que
+  quedó sin medir (FAB tras scroll en home, foco/teclado en los 4 controles
+  principales) — todo lo demás de la lista original ya cerró con evidencia.

@@ -61,6 +61,13 @@ class DatabaseSeeder extends Seeder
             // Páginas del panel queda vacío y el cliente no puede editar el
             // copy migrado a PageResource (hallazgo CRO 2026-08-11).
             StaticPagesSeeder::class,
+            // Diapositiva única del slider del hero (capa de datos, lote
+            // 2026-08-12): a diferencia de GuideSeeder (que NO se llama aquí
+            // a propósito, para no sembrar gente inventada), esta SÍ debe
+            // correr en una instalación nueva — sin ella $heroSlides caería
+            // en su propio fallback en código, pero una fila real en la BD
+            // es lo que hace al slider administrable desde el primer día.
+            HeroSlideSeeder::class,
         ]);
     }
 }

@@ -50,6 +50,33 @@
         'Cidadela inca de Machu Picchu entre montanhas e nuvens, Cusco, Peru'
     );
 
+    // ── Slider administrable del hero (mockup 01-home.jpeg: 4 puntos +
+    // flechas ←→, ver docs/rebrand/ESTADO.md "Faltante de alcance, no
+    // defecto"). Capa de datos y CMS únicamente — el markup/JS/CSS del
+    // slider en sí lo hace el maquetador después, consumiendo $heroSlides.
+    //
+    // Contrato: colección ORDENADA, nunca vacía. Sin diapositivas activas
+    // en `hero_slides`, cae en la MISMA imagen/alt de home_hero_image ya
+    // resueltos arriba (single source of truth, ver HeroSlidesResolver).
+    $heroSlides = app(\App\Services\HeroSlidesResolver::class)->resolve($locale, $heroImg, $heroImgAlt);
+
+    // La primera diapositiva es el LCP del sitio: se precarga y es la única
+    // con fetchpriority alto (regla 2 del contrato). $heroImg/$heroImgAlt
+    // pasan a apuntar a ella para que el <img> de fondo y el <link
+    // rel="preload"> de más abajo —que ya usaban estas dos variables antes
+    // de que existiera el slider— sigan funcionando sin más cambios. Sin
+    // diapositivas cargadas esto es un no-op: $heroSlides->first() es
+    // exactamente el mismo array que ya se armó arriba.
+    $heroFirstSlide = $heroSlides->first();
+    $heroImg = [
+        'src' => $heroFirstSlide['url'],
+        'srcset' => $heroFirstSlide['srcset'],
+        'sizes' => $heroFirstSlide['sizes'],
+        'width' => $heroFirstSlide['width'],
+        'height' => $heroFirstSlide['height'],
+    ];
+    $heroImgAlt = $heroFirstSlide['alt'];
+
     $heroTitleDefault = [
         'es' => 'Lima <em>América</em> Tours',
         'en' => 'Lima <em>América</em> Tours',
@@ -70,7 +97,25 @@
     $heroEyebrow = \App\Models\Setting::get('home_hero_eyebrow_' . $locale)
         ?: $L('Somos', 'We are', 'Somos');
 
-    $heroTaglineDefault = $L("10 años mostrando\nlo mejor del Perú", "10 years showcasing\nthe best of Peru", "10 anos mostrando\no melhor do Peru");
+    // El default de este subtítulo AFIRMABA "10 años mostrando lo mejor del Perú"
+    // mientras el badge de años de al lado estaba oculto por no tener
+    // `company_started_year`: el sitio negaba en un lugar lo que afirmaba en el otro,
+    // a 40 píxeles de distancia. Y era un default en código, o sea que se publicaba
+    // precisamente cuando nadie había cargado nada — el mismo patrón del fallback que
+    // publicó la foto de otro cliente.
+    //
+    // Ahora la cifra sale del MISMO resolver que el badge y la barra de stats: si el
+    // dato existe, aparece en los dos lados a la vez y siempre coincide; si no existe,
+    // el texto habla del Perú sin inventar una antigüedad. El Setting
+    // `home_hero_tagline_{locale}` sigue mandando por encima de todo esto.
+    $heroYearsForTagline = app(\App\Services\HomeStatsResolver::class)->yearsActiveBadge();
+    $heroTaglineDefault = $heroYearsForTagline['show']
+        ? $L(
+            "{$heroYearsForTagline['value']} años mostrando\nlo mejor del Perú",
+            "{$heroYearsForTagline['value']} years showcasing\nthe best of Peru",
+            "{$heroYearsForTagline['value']} anos mostrando\no melhor do Peru"
+        )
+        : $L("Mostrando\nlo mejor del Perú", "Showcasing\nthe best of Peru", "Mostrando\no melhor do Peru");
     $heroTagline = \App\Models\Setting::get('home_hero_tagline_' . $locale) ?: $heroTaglineDefault;
 
     // Badge "10+ años" — corrección 2026-08-11: antes era texto libre en
@@ -443,10 +488,11 @@
     $homeDestinations = $destinationRegions ?? collect();
 @endphp
 
-{{-- Precarga de la foto del hero (LCP del sitio). Mismo src/srcset/sizes que
-     el <img> de abajo — si no coincidieran, el navegador descargaría la foto
-     dos veces. El @stack('preload') del layout está antes del CSS de fuentes
-     para que el preload scanner la vea cuanto antes. --}}
+{{-- Precarga de la foto del hero (LCP del sitio) = primera diapositiva de
+     $heroSlides (ver HeroSlidesResolver más arriba). Mismo src/srcset/sizes
+     que el <img> de abajo — si no coincidieran, el navegador descargaría la
+     foto dos veces. El @stack('preload') del layout está antes del CSS de
+     fuentes para que el preload scanner la vea cuanto antes. --}}
 @push('preload')
     <link rel="preload" as="image" href="{{ $heroImg['src'] }}"
           @if ($heroImg['srcset'] !== '')
@@ -472,14 +518,22 @@
          ============================================================ --}}
     <section class="lat-hero" aria-labelledby="hero-title">
         <div class="lat-hero__bg">
-            {{-- LCP del sitio: variantes WebP por ancho (ResponsiveImage), carga
+            {{-- LCP del sitio: PRIMERA diapositiva de $heroSlides (contrato de
+                 App\Services\HeroSlidesResolver — colección ordenada, nunca
+                 vacía; sin diapositivas activas en el CMS cae en la misma foto
+                 de siempre). Variantes WebP por ancho (ResponsiveImage), carga
                  prioritaria y NUNCA lazy, con las dimensiones reales del archivo
                  que se sirve para que el navegador reserve la caja exacta. El
-                 preload va en el <head> (más abajo, @push('preload')) con el
+                 preload va en el <head> (más arriba, @push('preload')) con el
                  mismo srcset: si difirieran, el navegador bajaría dos fotos.
                  Sigue siendo el mismo <img> con srcset de siempre — SOLO cambia
                  su posicionamiento (capa de fondo en vez de columna), nunca se
-                 reemplaza por un background-image de CSS. --}}
+                 reemplaza por un background-image de CSS.
+
+                 PENDIENTE DE ALCANCE APARTE (no de este cambio): el maquetado
+                 del slider en sí (dots + flechas del mockup 01-home.jpeg,
+                 navegación entre $heroSlides->skip(1) cuando haya más de una)
+                 no se construye acá — ver docs/rebrand/ESTADO.md. --}}
             <img
                 src="{{ $heroImg['src'] }}"
                 @if ($heroImg['srcset'] !== '')
