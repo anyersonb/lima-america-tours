@@ -1,9 +1,120 @@
 # Estado del rebrand "anti-IA" y del lote de mockups
 
-Actualizado: 2026-08-13 · Rama `feat/mockups-ago-2026` · Publicado en staging: **75b00eb**
+Actualizado: 2026-08-14 · Rama `feat/mockups-ago-2026` · Publicado en staging: **75b00eb**
 
 Este archivo existe para que el siguiente que abra el proyecto (o yo mismo dentro
 de un mes) no tenga que reconstruir de memoria en qué quedó todo.
+
+## Lote 2026-08-14 — la home según las referencias del cliente
+
+El cliente mandó tres capturas por WhatsApp y pidió esa dirección, "pero que no se
+vea tan IA, que se vea profesional". Dos de las capturas eran del propio staging; la
+tercera, una propuesta ajena con otro tratamiento (foto continua de fondo, titulares
+de serif con una parte en itálica, footer de cinco columnas).
+
+Qué hacía exactamente que la home se leyera como plantilla, y qué se hizo con cada
+cosa:
+
+### 1. Todos los titulares eran sans bold → serif editorial
+
+`Playfair Display` en titulares (500, no 800: una serif de alto contraste se apelmaza
+al engordar) y `Open Sans` en todo lo demás. **Raleway sale del sitio**; las cifras
+que la usaban (`$font-price`) pasan a Open Sans 700.
+
+Hay que tocar TRES lugares o el cambio queda a medias: `tailwind.config.js` (de ahí
+salen `body` y `h1..h6`), `abstracts/_variables.scss` y el `<link>` de Google Fonts
+del layout. Se pide también el peso 700 de Playfair porque el resto del sitio tiene
+decenas de reglas con `font-weight: 800` sobre serif: sin una cara bold real el
+navegador las sintetiza y se ven sucias. **Pendiente**: bajar esas reglas a 600 al
+repasar nosotros / contacto / blog / checkout / ficha.
+
+**Ojo con la decisión que esto revierte**: el 2026-08-01 se puso Raleway justamente
+para igualar al WordPress de producción y no tener dos marcas según qué URL abriera
+el visitante. Ese riesgo sigue vivo mientras los dos sitios convivan; la salida es
+llevar Playfair al tema de WordPress cuando este sitio reemplace al viejo, no volver
+a Raleway acá.
+
+### 2. La serif estaba aplicada también a los rótulos chicos
+
+Playfair vive ahora en H1/H2/H3 y en los nombres de tarjeta grandes. Los rótulos de
+16px (garantías, "por qué elegirnos", inicial del avatar) vuelven a sans: aplicar la
+serif a todo es lo que hacía que "todo pareciera titular".
+
+### 3. Tres filas de iconitos en cajas rojas casi idénticas
+
+Garantías, "¿por qué elegirnos?" y los beneficios del newsletter resolvían igual: un
+círculo o cuadro rojo relleno con un ícono adentro, repetido 4-5 veces. Ahora cada
+fila resuelve distinto — trazo suelto con separadores verticales / regla superior con
+texto a la izquierda / ícono sobre la foto sin caja.
+
+De paso apareció un defecto viejo: en "por qué elegirnos" y en los beneficios del
+newsletter el ícono **también es un `<span>`**, así que la regla `span { color:
+$lat-muted }` de la bajada se lo llevaba puesto. Los iconos se pintaban en gris
+(medido: `rgb(111,106,99)`), no en rojo. Se arregló con `b + span`.
+
+### 4. La barrita roja del eyebrow, seis veces en la misma página
+
+`.lat-eyebrow` ya no dibuja las líneas de 26px a los lados: versalita, tracking
+abierto y color, como la prensa de viajes. Se limpiaron las reglas muertas que
+pintaban esos pseudo-elementos en blog, galería y tours.
+
+### 5. Seis encabezados centrados idénticos, uno tras otro
+
+"Explora por categoría" pasa a encabezado a la izquierda con enlace a la derecha
+(reutiliza `.lat-sec-head-row`, que ya existía para testimonios). El ritmo queda
+alternado: centrado → izquierda → centrado → izquierda → centrado.
+
+El `style="padding:70px 24px"` inline repetido en cinco secciones se reemplazó por
+`.lat-sec` / `.lat-sec--follow`.
+
+### 6. La banda roja plana del CTA — el peor delator
+
+Era una masa de rojo de ~380 px de alto y, pegado abajo, otro bloque oscuro con su
+propia foto: dos superficies para el mismo momento de la visita. Ahora hay **un solo
+bloque de cierre** (`.lat-closing`) que pinta foto + velo una vez, con el CTA arriba y
+el newsletter debajo separados por una línea fina — como lo resuelve la referencia 3.
+El rojo queda en el botón, donde funciona como señal.
+
+- El **motivo de Nazca se conserva** (pedido del jefe el 13/08), pero sobre foto
+  necesita más opacidad que sobre el rojo plano: al 9% no existía. Va al 16% con
+  `mix-blend-mode: soft-light`.
+- La **silueta punteada del Perú se retira**: dos motivos decorativos en la misma
+  superficie compiten y no se lee ninguno.
+- El fallback de foto ya **no** es `ResponsiveImage::defaultPhotoUrl()`: era la misma
+  panorámica del hero, o sea que sin foto cargada la home abría y cerraba con la
+  misma imagen. Ahora es Barranco (1920×1080, del catálogo real), con guard por si el
+  archivo no está en el servidor.
+
+### 7. Contraste: medido, no supuesto
+
+Se ocultó el contenido del bloque de cierre, se capturó el fondo (foto + velo) y se
+muestreó el píxel más claro de cada mitad con la fórmula WCAG:
+
+| Zona | Peor caso del fondo | Blanco | Crema `#f2e9de` | Bajada 74% | Rojo `#ff1f2d` |
+|---|---|---|---|---|---|
+| CTA | `rgb(58,62,31)` | 11.12:1 | 9.26:1 | 6.20:1 | **2.90:1** |
+| Newsletter | `rgb(53,48,45)` | 13.03:1 | — | 7.27:1 | **3.40:1** |
+
+O sea: el rojo aclarado que sí sirve sobre fondos parejos **no llega a AA sobre una
+foto luminosa**. Los dos eyebrows del bloque van en crema. El rojo se queda en el
+botón (fondo propio) y en los iconos de beneficios, que son gráficos y no texto — ahí
+el mínimo es 3:1 (WCAG 1.4.11) y 3.40 cumple.
+
+El velo del cierre subió a `.74 → .93` por lo mismo, y el del hero a `.68` arriba: la
+panorámica tiene el cielo claro justo donde cae la primera línea del titular.
+
+### 8. Lo que NO se tocó, a propósito
+
+- **El copy**: los textos son del cliente y varios están blindados por tests
+  (`HomeHeroH1KeywordTest` exige Lima/América/Tours/Perú dentro del H1;
+  `HeroTaglineYearsCoherenceTest`, que el subtítulo no invente una antigüedad). El
+  titular del hero sigue siendo el nombre de marca; lo que cambió es el tratamiento:
+  la segunda línea pasó de rojo bold a itálica clara, como en la referencia 2.
+- Con eso desaparece de raíz el **rojo sobre foto del hero**, que arrastraba una deuda
+  de contraste a recalcular cada vez que cambiara la foto — y la foto ahora la cambia
+  la clienta sola, desde el slider administrable.
+
+Verificado en 390 / 768 / 1024 / 1440 sin scroll horizontal, y **510 tests en verde**.
 
 ## Lote 2026-08-13 — hero: antigüedad, slider, badge, y el motivo del CTA
 

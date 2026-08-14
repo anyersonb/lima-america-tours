@@ -151,13 +151,32 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    {{-- Solo las dos familias que usa el sitio en producción (WordPress +
-         Hello Elementor): Raleway en titulares y Open Sans en cuerpo. Antes se
-         pedían CINCO (Albert Sans, Hedvig Letters Serif, Instrument Serif,
-         Raleway, Roboto) — tres de ellas ya no se usan tras alinear la
-         tipografía con producción el 2026-08-01, y cada familia de más es
-         descarga y render-blocking en el LCP. --}}
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Raleway:wght@400;500;600;700;800&display=swap">
+    {{-- DOS familias, ni una más (cada familia de más es descarga y
+         render-blocking en el LCP):
+
+         - Playfair Display en titulares. Reemplaza a Raleway el 2026-08-14, por
+           las referencias que aprobó el cliente: las tres traen titulares de
+           serif editorial con una parte en itálica, y ese es el rasgo que
+           separa el sitio del "template" de sans bold en todas las secciones.
+           Los titulares de la home van en 500, NO en 800: una serif de alto
+           contraste engorda mucho al subir de peso y ahí se pierde el aire
+           editorial. Se pide igual el 700 porque el resto del sitio (nosotros,
+           contacto, blog, checkout, ficha) tiene decenas de reglas con
+           `font-weight: 800` sobre titulares serif: sin una cara bold real el
+           navegador las SINTETIZA (faux bold) y se ven sucias. Con el 700
+           cargado, un 800 declarado cae en 700 real. Esas reglas se irán
+           bajando a 600 al repasar cada pantalla.
+         - Open Sans en cuerpo, UI y cifras (antes las cifras eran Raleway; al
+           salir Raleway del sitio, los precios pasan a Open Sans 700 — ver
+           $font-price en abstracts/_variables.scss).
+
+         Nota de continuidad: el 2026-08-01 se alineó la tipografía con el
+         WordPress de producción (Raleway/Open Sans) para no tener dos marcas
+         según qué URL abriera el visitante. Ese motivo sigue vigente y hay que
+         resolverlo del otro lado: cuando este sitio reemplace a producción, el
+         punto queda saldado; si conviven, hay que llevar Playfair al tema de
+         WordPress. Está anotado en docs/rebrand/ESTADO.md. --}}
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
 
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">

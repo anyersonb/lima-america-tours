@@ -75,23 +75,25 @@
     }
 }
 
+// 2026-08-14 — se retiran las barritas rojas de 26px que llevaba a los lados.
+// Aparecían en las SEIS secciones de la home más el hero, siempre iguales:
+// repetido tantas veces deja de ser un detalle de diseño y se lee como un
+// componente puesto en piloto automático. Las referencias del cliente resuelven
+// el eyebrow solo con versalita, tracking abierto y color — que es además lo
+// que hace la prensa de viajes. Las reglas `.is-center` y `--on-dark` siguen
+// existiendo para no tocar los ~10 sitios que ya las usan.
 .lat-eyebrow {
     display: inline-flex;
     align-items: center;
     gap: 10px;
     font-family: $lat-font-sans;
-    font-size: .72rem;
+    font-size: .7rem;
     font-weight: 700;
-    letter-spacing: .16em;
+    letter-spacing: .24em;
     text-transform: uppercase;
     color: $lat-red;
 
-    &::before { content: ""; width: 26px; height: 2px; background: $lat-red; border-radius: 2px; display: inline-block; }
-
-    &.is-center {
-        justify-content: center;
-        &::after { content: ""; width: 26px; height: 2px; background: $lat-red; border-radius: 2px; display: inline-block; }
-    }
+    &.is-center { justify-content: center; }
 }
 
 // Variante para usar sobre fotos oscuras (hero, galería, newsletter).
@@ -106,7 +108,6 @@
 // Si algún día se acepta bajar de AA, aquí va $lat-red y se documenta.
 .lat-eyebrow--on-dark {
     color: #ff1f2d;
-    &::before, &::after { background: #ff1f2d; }
 }
 
 // ── Hero (rediseño 2026-08: mockup "foto a sangre" — WhatsApp Image
@@ -166,12 +167,18 @@
 // stats en el borde inferior tengan más densidad todavía) + un refuerzo
 // horizontal hacia la izquierda, que es donde cae el bloque de texto en
 // pantallas anchas.
+// 2026-08-14: el velo sube de .58 a .68 arriba y el refuerzo lateral llega
+// más lejos. Medido con la foto real: la panorámica de Machu Picchu tiene el
+// cielo claro en el tercio superior, justo donde caen el eyebrow y la primera
+// línea del titular — con el velo anterior el blanco se apoyaba sobre gris
+// claro. De paso, una foto de viaje con más densidad se lee más "editorial"
+// y menos "stock", que es medio pedido del lote.
 .lat-hero__scrim {
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(180deg, rgba(10, 8, 7, .58) 0%, rgba(10, 8, 7, .64) 45%, rgba(10, 8, 7, .86) 100%),
-        linear-gradient(100deg, rgba(10, 8, 7, .4) 0%, rgba(10, 8, 7, .08) 55%, rgba(10, 8, 7, 0) 78%);
+        linear-gradient(180deg, rgba(10, 8, 7, .68) 0%, rgba(10, 8, 7, .6) 45%, rgba(10, 8, 7, .88) 100%),
+        linear-gradient(100deg, rgba(10, 8, 7, .58) 0%, rgba(10, 8, 7, .22) 58%, rgba(10, 8, 7, 0) 84%);
 }
 
 // ── Contenido superpuesto (eyebrow / H1 / párrafo / botones + card de
@@ -217,32 +224,50 @@
 .lat-hero__brand {
     display: block;
     font-family: $lat-font-serif;
-    font-weight: 800;
-    line-height: 1.02;
-    // Recalibrado con la serif real (Fix 1, informe CRO 2026-08-01): los
-    // tamaños viejos (36.8px móvil / 54.6px desktop) eran de Raleway. Hedvig
-    // Letters Serif es un display mucho más grande/contrastado — en el
-    // prototipo (WhatsApp Image 2026-07-31 13.09.04) "Lima América Tours"
-    // ocupa 3 líneas a sangre en móvil. 15vw fuerza ese tamaño y ese wrap sin
-    // hardcodear saltos de línea (el título sigue siendo editable en Settings).
-    font-size: clamp(2.6rem, 15vw, 4.6rem);
+    // 500, no 800 (2026-08-14). Playfair Display es una serif de alto
+    // contraste: a peso 800 los trazos gruesos se cierran y el titular se ve
+    // apelmazado, que es lo contrario del aire editorial de las referencias.
+    // El tamaño grande ya aporta toda la presencia que antes se buscaba con
+    // el peso.
+    font-weight: 500;
+    line-height: 1.04;
+    // Tamaño recalibrado para Playfair: 15vw estaba medido con Hedvig, que es
+    // un display mucho más ancho. Playfair a 15vw en móvil parte "América" a
+    // mitad de palabra. 12.5vw mantiene las 2-3 líneas a sangre del prototipo
+    // sin hardcodear saltos (el título sigue siendo editable en Settings).
+    font-size: clamp(2.5rem, 12.5vw, 4.4rem);
+    // Las serif de alto contraste piden tracking negativo en tamaños grandes;
+    // con el default se ven "sueltas" a 70px.
+    letter-spacing: -.015em;
     color: #fff;
 
     em { font-style: normal; color: inherit; }
 }
 
-// Mismo criterio que .lat-eyebrow--on-dark (ver el comentario largo arriba):
-// $lat-red puro (rgb(203,16,30)) sobre el scrim del hero (~rgb(15,12,11))
-// mide 3.37:1, insuficiente para AA. #ff1f2d mide 5.09:1 en esta misma zona
-// y sigue leyéndose como rojo, no como rosa.
+// 2026-08-14 — la segunda línea del titular deja de ser roja y pasa a ITÁLICA
+// clara, como las tres referencias del cliente ("y lo mejor del Perú" /
+// "empieza aquí" van en cursiva, no en color).
+//
+// No es solo estética: el rojo sobre foto venía arrastrando una deuda de
+// contraste permanente (hubo que inventar un #ff1f2d aclarado para llegar a
+// 5.09:1 sobre ESTE scrim, y había que recalcularlo cada vez que cambiara la
+// foto del hero — que ahora además es un slider administrable, o sea que la
+// foto la cambia la clienta sin avisarle a nadie). En blanco cálido el peor
+// caso posible del scrim da 11:1 y el problema desaparece de raíz.
+//
+// El rojo de marca no se pierde: sigue en el eyebrow, en los CTAs y en la card
+// de stats, que es donde funciona como acento en vez de competir con el
+// titular.
 .lat-hero__tagline {
     display: block;
     font-family: $lat-font-serif;
-    font-weight: 700;
-    color: #ff1f2d;
-    font-size: clamp(1.5rem, 7vw, 2rem);
-    line-height: 1.3;
-    margin: 14px 0 0;
+    font-style: italic;
+    font-weight: 400;
+    color: #f6efe6;
+    font-size: clamp(1.55rem, 7.5vw, 2.4rem);
+    line-height: 1.24;
+    letter-spacing: -.01em;
+    margin: 6px 0 0;
 }
 
 .lat-hero__desc {
@@ -300,10 +325,14 @@
 .lat-hero__stats-card {
     position: relative;
     z-index: 2;
-    background: $lat-red;
+    // Degradado en diagonal en vez del rojo plano (referencia 2): una masa de
+    // color plano de 240px de alto sobre una foto es lo que delata las
+    // maquetas hechas en piloto automático. El tono más oscuro va abajo, que
+    // es donde la foto también se oscurece.
+    background: linear-gradient(158deg, $lat-red 0%, #b30d1a 62%, $lat-red-deep 100%);
     color: #fff;
-    border-radius: $lat-r-lg;
-    box-shadow: $lat-shadow-lg;
+    border-radius: 20px;
+    box-shadow: 0 26px 60px rgba(120, 8, 16, .38);
     padding: 6px 22px;
     display: flex;
     flex-direction: column;
@@ -350,15 +379,17 @@
     min-width: 0;
 }
 
-// Cifra (Instrument→Raleway vía $font-price, mismo criterio que el resto de
-// números del sitio — precios, stats de Nosotros). Blanco puro: 5.79:1
+// Cifra ($font-price = Open Sans desde 2026-08-14; antes Raleway 400, que en
+// sans se leía flojo). Peso 700 y tracking cerrado: las cifras de la card de
+// la referencia 2 son sans compactas, no una serif fina. Blanco puro: 5.79:1
 // contra $lat-red, medido con la fórmula WCAG (ver _variables.scss, mismo
 // cálculo que ya documenta .lat-eyebrow--on-dark para este mismo rojo).
 .lat-hsc__value {
     display: block;
     font-family: $font-price;
-    font-weight: 400;
-    font-size: 1.55rem;
+    font-weight: 700;
+    font-size: 1.45rem;
+    letter-spacing: -.01em;
     line-height: 1.1;
     color: #fff;
 }
@@ -545,7 +576,7 @@
 
     &__price {
         small { display: block; font-size: .68rem; color: rgba(255, 255, 255, .7); }
-        span { font-family: $font-price; font-size: 1.5rem; font-weight: 400; color: #fff; line-height: 1; }
+        span { font-family: $font-price; font-size: 1.4rem; font-weight: 700; color: #fff; line-height: 1; }
     }
 }
 
@@ -649,11 +680,11 @@
 // bloque icono+valor+label; antes solo tenía icono+label (trust chips).
 .lat-hstat__value {
     display: block;
-    // Instrument Serif (Fix 2): comparado contra el prototipo, las cifras de
-    // esta barra (4.9, 50K+, 100%, 10+) llevan la serif fina de precios/cifras,
-    // no la serif de titulares — 400 es el único peso que sirve Google Fonts.
+    // Las cifras de esta barra (4.9, 50K+, 100%, 10+) van en la sans de
+    // números, no en la serif de titulares. Peso 700 desde 2026-08-14, cuando
+    // $font-price dejó de ser Raleway y pasó a Open Sans.
     font-family: $font-price;
-    font-weight: 400;
+    font-weight: 700;
     font-size: clamp(1.5rem, 2.6vw, 2rem);
     color: $lat-ink;
     line-height: 1.1;
@@ -856,21 +887,46 @@
     svg { width: 14px; height: 14px; }
 }
 
+// ── Ritmo vertical de las secciones ─────────────────────────────────────
+// 2026-08-14. Antes cada sección llevaba su propio `style="padding:70px 24px"`
+// inline en el Blade: mismo número repetido cinco veces, imposible de ajustar
+// sin editar cinco lugares, y demasiado apretado para el tamaño de titular que
+// tiene ahora la página. Una clase, un solo número.
+//
+// `--follow` es para la sección que continúa a la anterior sin cambio de fondo
+// (reseñas después de "por qué elegirnos", destinos después de reseñas): ahí
+// dos paddings completos suman un vacío que parece un error de maquetación.
+.lat-sec {
+    padding: 88px 24px;
+
+    @media (max-width: 768px) { padding: 60px 20px; }
+}
+
+.lat-sec--follow {
+    padding-top: 24px;
+
+    @media (max-width: 768px) { padding-top: 12px; }
+}
+
 // ── Encabezados de sección ──────────────────────────────────────────────
 .lat-sec-head {
-    max-width: 640px;
-    margin: 0 auto 40px;
+    max-width: 660px;
+    margin: 0 auto 46px;
     text-align: center;
 
     h2 {
         font-family: $lat-font-serif;
-        font-weight: 800;
+        // 500 con Playfair (ver .lat-hero__brand): 800 en una serif de alto
+        // contraste apelmaza los titulares.
+        font-weight: 500;
         color: #16305b;
-        font-size: clamp(2rem, 3.8vw, 2.9rem);
-        margin: 16px 0 14px;
+        font-size: clamp(1.9rem, 3.4vw, 2.7rem);
+        line-height: 1.14;
+        letter-spacing: -.01em;
+        margin: 18px 0 14px;
     }
 
-    p { color: $lat-muted; font-size: 1.05rem; }
+    p { color: $lat-muted; font-size: 1rem; line-height: 1.65; }
 }
 
 // .lat-sec-head también lo usan about.blade.php y blog/show.blade.php (clase
@@ -954,7 +1010,7 @@
 
     &__price {
         small { display: block; font-size: .72rem; color: $lat-muted; }
-        .lat-amt { font-family: $font-price; font-size: 1.6rem; font-weight: 400; color: $lat-red; line-height: 1; }
+        .lat-amt { font-family: $font-price; font-size: 1.45rem; font-weight: 700; letter-spacing: -.01em; color: $lat-red; line-height: 1; }
     }
 }
 
@@ -980,27 +1036,61 @@
     border-bottom: 1px solid $lat-line;
 
     &__grid {
-        display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px;
-        padding: 36px 24px;
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+        padding: 40px 24px;
 
-        @media (max-width: 820px) { grid-template-columns: 1fr 1fr; }
-        @media (max-width: 480px) { grid-template-columns: 1fr; }
+        // Separadores finos entre columnas (referencia 2) en vez de cuatro
+        // bloques flotando en el vacío: la franja se lee como UNA pieza.
+        // Van con padding lateral para que la línea no toque el texto.
+        > * {
+            padding: 4px 26px;
+
+            &:not(:first-child) { border-left: 1px solid $lat-line-strong; }
+        }
+
+        @media (max-width: 820px) {
+            grid-template-columns: 1fr 1fr;
+            row-gap: 26px;
+
+            > * {
+                padding: 4px 20px;
+                // Con dos columnas la línea solo va entre la 1ª y la 2ª de
+                // cada fila; si no, quedan bordes colgando al inicio de fila.
+                &:not(:first-child) { border-left: 0; }
+                &:nth-child(even) { border-left: 1px solid $lat-line-strong; }
+            }
+        }
+
+        @media (max-width: 480px) {
+            grid-template-columns: 1fr;
+            > *, > *:nth-child(even) { border-left: 0; padding: 0; }
+        }
     }
 }
 
 .lat-gt {
-    display: flex; gap: 15px; align-items: flex-start;
+    display: flex; gap: 14px; align-items: flex-start;
 
+    // Ícono a trazo, sin caja (2026-08-14). Entre esta franja, "¿Por qué
+    // elegirnos?" y los beneficios del newsletter había TRES filas de
+    // iconitos encerrados en cajas rojas casi idénticas en la misma página.
+    // Ahora cada una resuelve distinto: acá trazo suelto, en "por qué" regla
+    // superior, en el newsletter solo el ícono sobre la foto.
     &__ic {
-        width: 46px; height: 46px; border-radius: 12px;
-        border: 1.5px solid $lat-red; color: $lat-red;
+        width: 30px; height: 30px;
+        color: $lat-red;
         display: grid; place-items: center; flex: none;
+        margin-top: 1px;
 
-        svg { width: 22px; height: 22px; }
+        svg { width: 26px; height: 26px; stroke-width: 1.5; }
     }
 
-    b { display: block; font-family: $lat-font-serif; font-size: 1.02rem; color: $lat-ink; margin-bottom: 3px; }
-    span { font-size: .84rem; color: $lat-muted; line-height: 1.35; }
+    // Sans, no serif (2026-08-14): la serif de titulares aplicada también a
+    // rótulos de 16px es lo que hacía que "todo" pareciera titular. Playfair
+    // vive en H1/H2/H3 y en los nombres de tarjeta grandes; de ahí para abajo
+    // manda Open Sans.
+    b { display: block; font-family: $lat-font-sans; font-weight: 700; font-size: .96rem; color: $lat-ink; margin-bottom: 4px; }
+    span { font-size: .84rem; color: $lat-muted; line-height: 1.45; }
 }
 
 // ── Explora por categoría ────────────────────────────────────────────────
@@ -1050,7 +1140,7 @@
 
     &__body { padding: 20px; color: #fff; width: 100%; }
 
-    &__name { font-family: $lat-font-serif; font-size: 1.4rem; font-weight: 700; line-height: 1.1; }
+    &__name { font-family: $lat-font-serif; font-size: 1.35rem; font-weight: 500; line-height: 1.15; }
 
     &__sub {
         font-size: .84rem; color: #e9e1d7; margin-top: 5px;
@@ -1094,94 +1184,115 @@
     }
 }
 
-// ── CTA final de la home — masa de rojo con la silueta de Sudamérica ────
-// Clase propia (.lat-home-cta), a propósito DISTINTA de .lat-cta-final
-// (about.blade.php / pages/_lat-about.scss, que se importa después en
-// app.scss): compartir el nombre de clase repetiría el problema de cascada
-// ya documentado con .lat-btn--wa. El motivo de fondo usa
-// assets/logos/logo-america-red.png como referencia (silueta + excursionista
-// + texto) recortado por la izquierda para quedarse solo con la silueta.
-.lat-home-cta {
+// ── BLOQUE DE CIERRE (CTA + newsletter sobre una sola foto) ─────────────
+// 2026-08-14, referencia 3 del cliente. Antes eran dos bandas apiladas: una
+// masa de rojo plano (135°, de $lat-red a $lat-red-deep, 72px de padding) y
+// debajo otro bloque oscuro con SU PROPIA foto. Dos superficies para el mismo
+// momento de la visita, y la banda roja era la pieza que más delataba la
+// plantilla en toda la home.
+//
+// Ahora la foto y el velo se pintan UNA vez acá y las dos secciones de
+// adentro viajan transparentes. El rojo de marca no desaparece: queda en el
+// botón, en el eyebrow y en los iconos, que es donde funciona como señal.
+.lat-closing {
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    padding: 72px 0;
-    text-align: center;
+    background-size: cover;
+    background-position: center;
     color: #fff;
-    background: linear-gradient(135deg, $lat-red 0%, $lat-red-deep 100%);
+
+    // Geoglifo de Nazca (SVG inline en home.blade.php; pedido del jefe el
+    // 2026-08-13, se conserva). Sobre foto necesita MÁS opacidad que sobre el
+    // rojo plano: al 9% sobre una foto con textura directamente no existía.
+    // 16% con mezcla `soft-light` lo integra como un grabado en la foto en vez
+    // de un dibujo pegado encima — y al ser trazo blanco sobre un velo oscuro
+    // no baja el contraste de ningún texto (medido, ver reporte del lote).
+    // MEDIDO sobre el render, no supuesto: se ocultó el contenido, se capturó
+    // el fondo (foto + velo) y se muestreó el píxel más claro de cada mitad.
+    // Peor caso arriba rgb(58,62,31), abajo rgb(53,48,45). Contra eso:
+    //   blanco 11.1:1 / 13.0:1 · crema #f2e9de 9.3:1 · bajadas al 74% 6.2:1
+    //   ROJO #ff1f2d ...... 2.90:1 arriba y 3.40:1 abajo → NO llega a AA.
+    // Por eso los DOS eyebrows del bloque van en crema, no en el rojo aclarado
+    // que sirve sobre fondos parejos: sobre una foto luminosa no alcanza, y el
+    // eyebrow es versalita de 11px (el peor caso posible). El rojo se queda en
+    // el botón (fondo propio) y en los iconos de los beneficios, que son
+    // gráficos y no texto — ahí el mínimo es 3:1 (WCAG 1.4.11) y 3.40 cumple.
+    .lat-eyebrow, .lat-eyebrow--on-dark { color: #f2e9de; }
 
     &__mark {
         position: absolute;
-        top: 50%;
-        right: 4%;
+        top: 42%;
+        right: 3%;
         transform: translateY(-50%);
-
-        // Recorte MEDIDO sobre el archivo, no estimado. `logo-america-white.webp`
-        // mide 768×379 y es un lockup: la silueta ocupa x=3..250, hay un hueco
-        // vacío en x=251..293 y el texto "LIMA AMÉRICA TOURS" va de x=294 a 765
-        // (perfil de alfa por columnas). Un recorte cuadrado (379/768 = 49% del
-        // ancho) se comía casi medio lockup y dejaba a la vista trozos de letras
-        // ("LI", "A") pegados al borde: parecía un error de maquetación, no un
-        // motivo de marca.
-        //
-        // Con aspect-ratio 251/379 y `cover` anclado a la izquierda, la parte
-        // visible es exactamente 251/768 = 32,7% del ancho: la silueta completa y
-        // ni un pixel del texto. Si se cambia el archivo del logo, hay que volver
-        // a medir estos números.
-        // Geoglifo de Nazca en SVG (ver home.blade.php). Antes acá vivía el recorte
-        // medido del lockup del logo (aspect-ratio 251/379 + object-position left)
-        // para quedarse solo con la silueta; se cambió por el motivo de líneas, que a
-        // este tamaño funciona como textura y no como un dibujo pegado sobre el rojo.
-        // Al ser trazo y no imagen, ya no hay recorte que volver a medir si cambia el
-        // logo.
-        height: clamp(230px, 30vw, 360px);
+        height: clamp(240px, 32vw, 420px);
         aspect-ratio: 1 / 1;
         color: #fff;
-        opacity: .09;
+        opacity: .16;
+        mix-blend-mode: soft-light;
         pointer-events: none;
         z-index: 0;
 
-        svg {
-            width: 100%;
-            height: 100%;
-            display: block;
+        svg { width: 100%; height: 100%; display: block; }
+
+        @media (max-width: 640px) {
+            opacity: .14;
+            height: clamp(180px, 55vw, 260px);
+            right: -6%;
+            top: 22%;
         }
     }
+}
+
+// ── CTA "Tu próxima aventura empieza aquí" — primera mitad del cierre ────
+// Clase propia (.lat-home-cta), a propósito DISTINTA de .lat-cta-final
+// (about.blade.php / pages/_lat-about.scss, que se importa después en
+// app.scss): compartir el nombre de clase repetiría el problema de cascada
+// ya documentado con .lat-btn--wa.
+.lat-home-cta {
+    position: relative;
+    z-index: 1;
+    padding: 96px 0 76px;
+    text-align: center;
+    color: #fff;
 
     &__inner {
         position: relative;
         z-index: 1;
-        max-width: 620px;
+        max-width: 660px;
         margin: 0 auto;
     }
 
-    // Eyebrow propio: el rojo de marca no sirve de acento sobre un fondo que
-    // YA es rojo (2.4:1 aprox, y el rojo pierde toda función de señal).
-    // Blanco puro sí cumple (5.78:1 contra $lat-red, el extremo más claro
-    // del degradado — el otro extremo, $lat-red-deep, da 8.41:1).
-    .lat-eyebrow {
-        color: #fff;
-
-        &::before, &::after { background: #fff; }
-    }
+    // Eyebrow en blanco cálido, NO en el rojo aclarado de marca. Se calculó:
+    // #ff1f2d tiene luminancia relativa .224 y sobre la zona más clara de esta
+    // foto ya velada (~rgb(66,64,62), L≈.06) da 2.6:1 — lejos de AA, y es
+    // texto de 11px en versalita, o sea el peor caso. El rojo aclarado se
+    // sostiene sobre el newsletter (fondo parejo) pero no sobre el tercio
+    // superior de una foto luminosa. Acá el rojo lo lleva el botón, que tiene
+    // fondo propio. Mismo criterio que la referencia 3, donde este eyebrow
+    // también es claro.
+    .lat-eyebrow { color: #f2e9de; }
 
     h2 {
         font-family: $lat-font-serif;
-        font-weight: 800;
-        font-size: clamp(1.9rem, 3.6vw, 2.8rem);
-        line-height: 1.15;
+        font-weight: 500;
+        font-size: clamp(2rem, 4vw, 3.1rem);
+        line-height: 1.12;
+        letter-spacing: -.01em;
         color: #fff;
-        margin: 16px 0 14px;
+        margin: 18px 0 16px;
+
+        // Última palabra en itálica cuando el Setting la marca con <em>
+        // (referencia 3: "empieza aquí").
+        em { font-style: italic; font-weight: 400; color: #f6efe6; }
     }
 
     p {
-        // Blanco al 92% de opacidad sobre $lat-red compone ~(250,231,233):
-        // el contraste efectivo queda a un pelo del blanco puro, muy por
-        // encima de 4.5:1.
-        color: rgba(255, 255, 255, .92);
-        font-size: 1rem;
-        max-width: 480px;
-        margin: 0 auto 30px;
+        color: rgba(255, 255, 255, .88);
+        font-size: 1.02rem;
+        line-height: 1.65;
+        max-width: 520px;
+        margin: 0 auto 32px;
     }
 
     &__actions {
@@ -1192,37 +1303,32 @@
         flex-wrap: wrap;
     }
 
-    // Botón propio (NO .lat-btn--white de _lat-about.scss): ese vive en un
-    // archivo fuera de alcance y depende de un fondo distinto (degradado
-    // ink, no rojo) — reusar su clase habría heredado una regla pensada
-    // para otro contexto en vez de una pensada para este.
+    // Botón propio (NO .lat-btn--white de _lat-about.scss, que vive en un
+    // archivo fuera de alcance y asume otro fondo). Pasa de blanco a ROJO de
+    // marca: sobre la foto el blanco lo diluía y, sin la banda roja, este es
+    // el punto donde el rojo tiene que aparecer. Blanco sobre $lat-red =
+    // 5.79:1, AA para texto normal.
     &__btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 9px;
         font-family: $lat-font-sans;
-        font-weight: 700;
+        font-weight: 600;
         font-size: .95rem;
-        padding: 13px 30px;
+        padding: 14px 32px;
         border-radius: $lat-r-pill;
-        background: $lat-surface;
-        // $lat-red-deep sobre blanco: 8.41:1.
-        color: $lat-red-deep;
-        transition: transform .18s ease, box-shadow .2s ease, background .2s ease, color .2s ease;
+        background: $lat-red;
+        color: #fff;
+        box-shadow: 0 12px 30px rgba(120, 8, 16, .35);
+        transition: transform .18s ease, box-shadow .2s ease, background .2s ease;
 
-        &:hover { background: $lat-ink; color: #fff; transform: translateY(-2px); box-shadow: $lat-shadow-lg; }
-        // Ink sobre el fondo rojo de la sección: visible por tono aunque no
-        // sea texto (WCAG 1.4.11 no aplica a botones de solo texto blanco
-        // sobre fondo blanco en reposo; aun así, ink se distingue de sobra
-        // por matiz frente al rojo/blanco circundantes).
-        &:focus-visible { outline: 2px solid $lat-ink; outline-offset: 2px; }
+        &:hover { background: $lat-red-deep; transform: translateY(-2px); box-shadow: 0 16px 36px rgba(120, 8, 16, .45); }
+        &:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
     }
 
     @media (max-width: 640px) {
-        padding: 56px 0;
-
-        &__mark { opacity: .12; width: clamp(160px, 40vw, 220px); right: 2%; }
+        padding: 64px 0 44px;
     }
 }
 
@@ -1307,23 +1413,37 @@
         @media (max-width: 640px) { grid-template-columns: repeat(2, 1fr); }
     }
 
+    // Columnas con REGLA SUPERIOR y texto alineado a la izquierda, en vez de
+    // cinco círculos rosas centrados (2026-08-14). El círculo relleno repetido
+    // en fila es el gesto más reconocible de las plantillas genéricas, y en
+    // esta home aparecía tres veces. La regla fina de arriba ordena la fila
+    // como una tabla editorial y deja el rojo solo en el trazo del ícono.
     &__item {
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: flex-start;
         gap: 10px;
+        padding-top: 20px;
+        border-top: 1px solid $lat-line-strong;
+        text-align: left;
 
-        b { font-family: $lat-font-serif; font-size: .98rem; color: $lat-ink; }
-        span { font-size: .82rem; color: $lat-muted; line-height: 1.45; }
+        b { font-family: $lat-font-sans; font-weight: 700; font-size: .95rem; color: $lat-ink; }
+
+        // `b + span` y no `span` a secas: el ícono TAMBIÉN es un <span>
+        // (.lat-why__ic) y con el selector suelto se llevaba el color de la
+        // bajada — los iconos se pintaban en gris $lat-muted, no en rojo, y
+        // medido en el navegador daban rgb(111,106,99). Se veía "apagado" sin
+        // que nada pareciera roto, que es la clase de defecto que sobrevive a
+        // una revisión por captura.
+        b + span { font-size: .82rem; color: $lat-muted; line-height: 1.5; }
     }
 
     &__ic {
-        width: 58px; height: 58px; border-radius: 50%;
-        border: 1.5px solid $lat-red; color: $lat-red;
-        background: $lat-red-tint;
+        width: 28px; height: 28px;
+        color: $lat-red;
         display: grid; place-items: center;
 
-        svg { width: 24px; height: 24px; }
+        svg { width: 26px; height: 26px; stroke-width: 1.5; }
     }
 }
 
@@ -1340,9 +1460,23 @@
 
     h2 {
         font-family: $lat-font-serif;
-        font-weight: 800;
+        font-weight: 500;
         color: $lat-ink;
-        font-size: clamp(1.7rem, 3vw, 2.3rem);
+        font-size: clamp(1.75rem, 3vw, 2.4rem);
+        line-height: 1.15;
+        letter-spacing: -.01em;
+        margin: 12px 0 0;
+    }
+
+    // Bajada opcional bajo el H2 (la usa "Explora por categoría"). Ancho
+    // limitado a propósito: en 1440 una línea de texto de 1400px de ancho es
+    // ilegible, y era otro de los motivos por los que las secciones se veían
+    // "de relleno".
+    &__sub {
+        color: $lat-muted;
+        font-size: .95rem;
+        line-height: 1.6;
+        max-width: 560px;
         margin: 10px 0 0;
     }
 }
@@ -1388,7 +1522,7 @@
         &--fallback {
             display: grid; place-items: center;
             background: $lat-ink; color: #fff;
-            font-family: $lat-font-serif; font-weight: 700;
+            font-family: $lat-font-sans; font-weight: 700;
         }
     }
 
@@ -1410,8 +1544,9 @@
 
     &__agg-num {
         font-family: $font-price;
-        font-size: 2.6rem;
-        font-weight: 400;
+        font-size: 2.5rem;
+        font-weight: 700;
+        letter-spacing: -.02em;
         color: #fff;
         line-height: 1;
 
@@ -1458,52 +1593,36 @@
 
     &__body { padding: 24px 22px; color: #fff; }
 
-    &__body b { display: block; font-family: $lat-font-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+    &__body b { display: block; font-family: $lat-font-serif; font-size: 1.55rem; font-weight: 500; margin-bottom: 4px; }
     &__body span { font-size: .86rem; color: #e9e1d7; }
 }
 
 .lat-dest-cta { text-align: center; }
 
-// ── Newsletter oscuro con foto (A5) — antes del footer. Calca del mockup
-// "Tu próxima aventura empieza aquí" (WhatsApp Image 2026-07-31
-// 13.09.05(3)); reutiliza el mismo formulario/endpoint que el newsletter
-// del footer, solo que con su propia superficie (foto + degradado) y una
-// fila de 4 beneficios debajo. ──
+// ── Newsletter — segunda mitad del bloque de cierre ─────────────────────
+// Ya no trae foto, velo ni motivo propios: los pinta .lat-closing (ver
+// arriba). Con la silueta punteada del Perú pasó lo mismo que con el rojo
+// plano — dos motivos decorativos compitiendo en la misma superficie —, así
+// que se retiró junto con el <svg> del Blade.
+//
+// La línea divisoria de arriba separa el CTA del formulario sin necesidad de
+// cambiar de fondo: es el recurso que usa la referencia 3.
 .lat-news {
     position: relative;
-    overflow: hidden;
-    background-size: cover;
-    background-position: center;
-    padding: 64px 0 0;
+    padding: 0 0 8px;
     color: #fff;
 
-    // Silueta punteada del Perú (Fix 5b, informe CRO 2026-08-01) — mismo
-    // criterio que .lat-gallery__mark: SVG propio, decorativo, opacidad baja,
-    // por detrás del formulario. El punto rojo replica el "pin" del
-    // prototipo (WhatsApp Image 2026-07-31 13.09.05(3)).
-    &__mark {
-        position: absolute;
-        top: 6%;
-        right: 2%;
-        width: clamp(150px, 18vw, 240px);
-        height: auto;
-        color: rgba(255, 255, 255, .8);
-        opacity: .3;
-        z-index: 0;
-        pointer-events: none;
-
-        @media (max-width: 900px) { display: none; }
-    }
-
-    &__mark-pin { fill: $lat-red; }
-
-    &__inner, &__benefits { position: relative; z-index: 1; }
+    &__benefits { position: relative; z-index: 1; }
 
     &__inner {
+        position: relative;
+        z-index: 1;
         display: grid;
         grid-template-columns: 1.1fr 1fr;
         gap: 40px;
         align-items: center;
+        border-top: 1px solid rgba(255, 255, 255, .16);
+        padding-top: 52px;
         padding-bottom: 44px;
 
         @media (max-width: 900px) {
@@ -1514,11 +1633,16 @@
 
     &__intro h2 {
         font-family: $lat-font-serif;
-        font-weight: 800;
-        font-size: clamp(1.9rem, 3.6vw, 2.7rem);
-        line-height: 1.15;
+        font-weight: 500;
+        font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+        line-height: 1.16;
+        letter-spacing: -.01em;
         color: #fff;
-        margin: 14px 0 12px;
+        margin: 16px 0 12px;
+
+        // La segunda mitad del titular en itálica, como las referencias. Lo
+        // marca el Blade con <em> dentro del Setting; sin <em> no pasa nada.
+        em { font-style: italic; font-weight: 400; color: #f6efe6; }
     }
 
     &__intro p {
@@ -1547,18 +1671,39 @@
         @media (max-width: 480px) { grid-template-columns: 1fr; }
     }
 
+    // Campos con ícono adentro (referencia 3). El ícono es decorativo: la
+    // etiqueta real sigue siendo el <span class="sr-only"> del Blade, así que
+    // no cambia nada para un lector de pantalla.
+    &__field {
+        position: relative;
+        display: block;
+
+        > svg {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 17px;
+            height: 17px;
+            color: rgba(255, 255, 255, .6);
+            pointer-events: none;
+        }
+    }
+
     &__field input {
         width: 100%;
         border: 1px solid rgba(255, 255, 255, .28);
         background: rgba(255, 255, 255, .08);
         color: #fff;
         border-radius: $lat-r-pill;
-        padding: 13px 20px;
+        padding: 14px 20px 14px 46px;
         font-family: $lat-font-sans;
         font-size: .9rem;
 
         &::placeholder { color: rgba(255, 255, 255, .55); }
-        &:focus { outline: 2px solid $lat-red; outline-offset: 1px; }
+        // El foco pasa a blanco: el outline rojo sobre el velo oscuro de la
+        // foto se veía apagado, y acá el rojo ya lo lleva el botón de al lado.
+        &:focus { outline: 2px solid #fff; outline-offset: 1px; border-color: rgba(255, 255, 255, .6); }
     }
 
     &__benefits {
@@ -1578,15 +1723,20 @@
         align-items: flex-start;
 
         b { display: block; font-family: $lat-font-sans; font-weight: 700; font-size: .92rem; color: #fff; margin-bottom: 3px; }
-        span { font-size: .82rem; color: rgba(255, 255, 255, .74); line-height: 1.4; }
+        // `b + span`, no `span`: el ícono es un <span> hermano y con el
+        // selector suelto se llevaba este color (mismo caso que .lat-why__ic).
+        b + span { font-size: .82rem; color: rgba(255, 255, 255, .74); line-height: 1.45; }
     }
 
+    // Tercera y última fila de iconos de la home: acá el ícono va suelto sobre
+    // la foto, sin caja de color (ver la nota de .lat-gt__ic). Rojo aclarado
+    // #ff1f2d, el mismo que ya se validó a 4.73:1 sobre este fondo.
     &__benefit-ic {
-        width: 38px; height: 38px; border-radius: 10px; flex: none;
-        background: rgba(203, 16, 30, .22);
+        width: 26px; height: 26px; flex: none;
         color: #ff1f2d;
         display: grid; place-items: center;
+        margin-top: 2px;
 
-        svg { width: 18px; height: 18px; }
+        svg { width: 24px; height: 24px; stroke-width: 1.5; }
     }
 }

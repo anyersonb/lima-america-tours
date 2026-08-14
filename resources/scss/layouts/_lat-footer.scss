@@ -61,7 +61,11 @@
         gap: 11px;
 
         a { color: #9a9186; font-size: .92rem; transition: color .15s; }
-        a:hover { color: $lat-red; }
+        // #ff1f2d y no $lat-red: sobre el ink del footer el rojo de marca da
+        // 3.4:1 y el enlace en hover queda MENOS legible que en reposo, que es
+        // exactamente al revés de lo que tiene que pasar. Es el mismo rojo
+        // aclarado que ya usa .lat-eyebrow--on-dark (5:1 acá).
+        a:hover { color: #ff1f2d; }
     }
 
     &__contact {

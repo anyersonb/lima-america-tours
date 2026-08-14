@@ -13,18 +13,24 @@ $cream-200: #e9e3da;  // = $lat-line (antes cream cálido #ece6e2)
 $state-error: #c81f21;
 $state-success: #145212;
 
-// TIPOGRAFÍA — alineada con el sitio en producción (2026-08-01, pedido del
-// jefe). limaamericatours.com corre WordPress con tema Hello Elementor, y su
-// kit declara: primary (titulares) = Raleway, text/accent (cuerpo) = Open Sans.
-// Ninguna serif. El sitio nuevo tenía Hedvig Letters Serif en titulares e
-// Instrument Serif en precios, tomadas de los prototipos: se retiran para que
-// la marca no tenga dos tipografías distintas según qué URL abra el visitante.
-// Si algún día se decide que manda el prototipo y no producción, se revierte
-// cambiando estas tres líneas (y las familias del <link> de Google Fonts en
-// layouts/app.blade.php).
-$font-sans: 'Open Sans', system-ui, sans-serif;          // Cuerpo y botones
-$font-display: 'Raleway', system-ui, sans-serif;         // Titulares
-$font-price: 'Raleway', system-ui, sans-serif;           // Precios
+// TIPOGRAFÍA — 2026-08-14, referencias aprobadas por el cliente.
+// Las tres capturas que mandó traen titulares en SERIF editorial (con una
+// parte en itálica) sobre cuerpo sans. Ese contraste es lo que hace que un
+// sitio se lea como diseñado: sans bold en TODOS los titulares es justamente
+// el acabado genérico del que se quería salir.
+//
+// Historia previa, para que nadie lo revierta sin el contexto: el 2026-08-01 se
+// puso Raleway en titulares para igualar al WordPress de producción (tema Hello
+// Elementor) y no tener dos marcas según la URL. Ese riesgo sigue existiendo
+// mientras los dos sitios convivan — la salida es llevar Playfair al tema de
+// WordPress, no volver a Raleway acá. Anotado en docs/rebrand/ESTADO.md.
+//
+// Dos familias, ni una más (cada una es descarga render-blocking antes del
+// LCP). Raleway sale del sitio: las cifras que la usaban pasan a Open Sans 700
+// — una serif de alto contraste en un precio se lee como cita, no como número.
+$font-sans: 'Open Sans', system-ui, sans-serif;          // Cuerpo, UI y botones
+$font-display: 'Playfair Display', Georgia, 'Times New Roman', serif; // Titulares
+$font-price: $font-sans;                                 // Precios y cifras (peso 700)
 
 // Breakpoints (mobile-first, mirror Tailwind)
 $bp-sm: 640px;
@@ -89,7 +95,7 @@ $lat-r-pill: 999px;
 // Se repunta a la MISMA familia que $font-display: el nombre vuelve a ser
 // cierto y las ~18 reglas de _lat-home.scss/_lat-tour.scss que ya usaban
 // $lat-font-serif quedan arregladas de una sola vez, sin tocar cada selector.
-$lat-font-serif: $font-display; // = 'Hedvig Letters Serif', Georgia, serif — Titulares
+$lat-font-serif: $font-display; // = 'Playfair Display', Georgia, serif — Titulares
 $lat-font-sans:  $font-sans; // = 'Open Sans' — Cuerpo (era Roboto; producción usa Open Sans)
 
 $lat-wrap: 1480px; // ancho máximo del contenedor

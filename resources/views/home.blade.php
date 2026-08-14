@@ -304,9 +304,32 @@
     // Igual que home_hero_image: disco `media`, directorio "home" — se
     // resuelve con ImagePath::homeImage() (NO ::url(), que es para el disco
     // `public`/`assets` — con el helper equivocado la URL sale rota).
-    $newsImgUrl = ($newsImgSetting !== '' && $newsImgSetting !== '[]' && $newsImgSetting !== '""')
-        ? \App\Support\ImagePath::homeImage($newsImgSetting)
-        : \App\Support\ResponsiveImage::defaultPhotoUrl(960);
+    // Foto del bloque de cierre (CTA + newsletter comparten superficie desde
+    // 2026-08-14). El fallback ya NO es ResponsiveImage::defaultPhotoUrl():
+    // esa constante es la MISMA panorámica de Machu Picchu del hero, así que
+    // sin foto cargada la home abría y cerraba con la misma imagen — se veía
+    // como un error, no como una decisión. El fallback pasa a una foto
+    // distinta del catálogo real: Barranco, 1920×1080 — panorámica, de Lima
+    // (que es la marca) y con densidad suficiente para leerse bien detrás del
+    // velo. Se eligió MIRÁNDOLAS: los otros candidatos anchos del catálogo son
+    // fotos de grupo o de bodega, que como fondo a sangre no funcionan.
+    // Guard: si el archivo no está en el servidor, vuelve a la de siempre
+    // antes que quedar sin fondo.
+    $newsFallbackRel = 'tours/2024-02-barranco-timeout.jpg';
+    $newsFallbackPath = public_path('storage/'.$newsFallbackRel);
+
+    if ($newsImgSetting !== '' && $newsImgSetting !== '[]' && $newsImgSetting !== '""') {
+        $newsImgUrl = \App\Support\ImagePath::homeImage($newsImgSetting);
+    } elseif (is_file($newsFallbackPath)) {
+        $newsImgUrl = \App\Support\ResponsiveImage::make(
+            $newsFallbackPath,
+            asset('storage/'.$newsFallbackRel),
+            [1600],
+            '100vw'
+        )['src'];
+    } else {
+        $newsImgUrl = \App\Support\ResponsiveImage::defaultPhotoUrl(1600);
+    }
 
     $newsEyebrow = \App\Models\Setting::get('home_news_eyebrow_' . $locale)
         ?: $L('Viaja. Explora. Vive.', 'Travel. Explore. Live.', 'Viaje. Explore. Viva.');
@@ -851,7 +874,7 @@
     {{-- ============================================================
          TOURS DESTACADOS — reales, ordenados por featured_order/compras
          ============================================================ --}}
-    <section class="lat-wrap" style="padding:70px 24px" id="tours" aria-labelledby="destacados-title">
+    <section class="lat-wrap lat-sec" id="tours" aria-labelledby="destacados-title">
         <div class="lat-sec-head lat-sec-head--home">
             <span class="lat-eyebrow is-center">{{ $L('Explora lugares increíbles', 'Explore incredible places', 'Explore lugares incríveis') }}</span>
             <h2 id="destacados-title">{{ $L('Tours Destacados', 'Featured Tours', 'Tours em Destaque') }}</h2>
@@ -979,11 +1002,20 @@
          EXPLORA POR CATEGORÍA — reales (modelo Category)
          ============================================================ --}}
     @if ($categories->isNotEmpty())
-        <section class="lat-wrap" style="padding:70px 24px" aria-labelledby="cats-title">
-            <div class="lat-sec-head lat-sec-head--home">
-                <span class="lat-eyebrow is-center">{{ $L('Elige tu experiencia', 'Choose your experience', 'Escolha sua experiência') }}</span>
-                <h2 id="cats-title">{{ $L('Explora por categoría', 'Explore by category', 'Explore por categoria') }}</h2>
-                <p>{{ $L('Descubre el tipo de aventura que más te gusta: recorridos por la ciudad, sabores peruanos, aventura y culturas milenarias.', 'Discover the kind of adventure you like best: city tours, Peruvian flavors, adventure and ancient cultures.', 'Descubra o tipo de aventura que mais gosta: passeios pela cidade, sabores peruanos, aventura e culturas milenares.') }}</p>
+        <section class="lat-wrap lat-sec" aria-labelledby="cats-title">
+            {{-- Encabezado alineado a la IZQUIERDA con enlace a la derecha, no
+                 centrado (2026-08-14). La home tenía seis encabezados centrados
+                 idénticos uno tras otro — eyebrow, H2, párrafo, siempre igual —
+                 y esa regularidad es justo lo que hace que una página se lea
+                 como generada. .lat-sec-head-row ya existía para los
+                 testimonios; acá se reutiliza tal cual. --}}
+            <div class="lat-sec-head-row">
+                <div>
+                    <span class="lat-eyebrow">{{ $L('Elige tu experiencia', 'Choose your experience', 'Escolha sua experiência') }}</span>
+                    <h2 id="cats-title">{{ $L('Explora por categoría', 'Explore by category', 'Explore por categoria') }}</h2>
+                    <p class="lat-sec-head-row__sub">{{ $L('Descubre el tipo de aventura que más te gusta: recorridos por la ciudad, sabores peruanos, aventura y culturas milenarias.', 'Discover the kind of adventure you like best: city tours, Peruvian flavors, adventure and ancient cultures.', 'Descubra o tipo de aventura que mais gosta: passeios pela cidade, sabores peruanos, aventura e culturas milenares.') }}</p>
+                </div>
+                <a href="{{ route('tours.index', ['locale' => $locale]) }}" class="lat-link-arrow">{{ $L('Ver todos los tours', 'View all tours', 'Ver todos os tours') }} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             </div>
 
             <div class="lat-cats">
@@ -1092,7 +1124,7 @@
          reseña real cargada (guard, no "0 opiniones" a la vista).
          ============================================================ --}}
     @if ($homeReviewCards->isNotEmpty())
-        <section class="lat-wrap" style="padding:20px 24px 70px" aria-labelledby="reviews-title">
+        <section class="lat-wrap lat-sec lat-sec--follow" aria-labelledby="reviews-title">
             <div class="lat-sec-head-row">
                 <div>
                     <span class="lat-eyebrow">{{ $L('Lo que dicen nuestros viajeros', 'What our travelers say', 'O que dizem nossos viajantes') }}</span>
@@ -1147,7 +1179,7 @@
          no se inventan Arequipa/Paracas/Puno sin tour detrás.
          ============================================================ --}}
     @if ($homeDestinations->isNotEmpty())
-        <section class="lat-wrap" style="padding:20px 24px 70px" aria-labelledby="dest-title">
+        <section class="lat-wrap lat-sec lat-sec--follow" aria-labelledby="dest-title">
             <div class="lat-sec-head lat-sec-head--home">
                 <span class="lat-eyebrow is-center">{{ $L('Destinos populares', 'Popular destinations', 'Destinos populares') }}</span>
                 <h2 id="dest-title">{{ $L('Explora los increíbles destinos del Perú', 'Explore the incredible destinations of Peru', 'Explore os incríveis destinos do Peru') }}</h2>
@@ -1180,19 +1212,48 @@
     <x-faq-section />
 
     {{-- ============================================================
-         CTA FINAL — masa de rojo con la silueta de Sudamérica del logo
-         como motivo. Clase propia .lat-home-cta (NO .lat-cta-final, que
-         es de about.blade.php / pages/_lat-about.scss, fuera de alcance
-         de este lote) para no compartir cascada entre archivos.
+         CIERRE DE LA HOME — CTA + newsletter sobre UNA sola foto
+         (referencia 3 del cliente, 2026-08-14).
+
+         Antes eran dos bandas apiladas: una masa de rojo plano de ~380 px
+         de alto y, pegado abajo, otro bloque oscuro con su propia foto. Dos
+         superficies distintas para dos mensajes que son el mismo momento
+         ("andá al catálogo" / "dejanos tu correo"), y la banda roja era la
+         pieza que más gritaba "plantilla" de toda la página.
+
+         La referencia que aprobó el cliente los resuelve sobre una foto
+         continua, con el rojo reducido a los botones. Eso hace este
+         contenedor: pinta la foto + el velo UNA vez y las dos <section>
+         de adentro quedan transparentes.
+
+         Nada de lo que había cambia de dueño: el CTA sigue siendo
+         .lat-home-cta y el newsletter .lat-news, con sus mismos textos,
+         Settings y endpoint. Si la clienta apaga el newsletter
+         (home_news_enabled), el CTA se queda solo sobre la foto y el bloque
+         sigue cerrando bien.
          ============================================================ --}}
-    <section class="lat-home-cta" aria-labelledby="home-cta-title">
-        {{-- Motivo de fondo: geoglifo tipo líneas de Nazca (un colibrí y las rectas de
-             la pampa), dibujado acá en SVG y no con una foto ni un asset de terceros —
-             mismo criterio que `.lat-gallery__mark`. Reemplaza al recorte de la silueta
-             del logo, que a este tamaño se leía como un dibujo suelto encima del rojo
-             en vez de como una textura. Puramente decorativo: aria-hidden, sin relleno,
-             trazo blanco a muy baja opacidad y detrás del contenido. --}}
-        <div class="lat-home-cta__mark" aria-hidden="true">
+    {{-- El velo es DENSO a propósito (.74 arriba → .93 abajo). Medido sobre la
+         foto real: Barranco es una foto luminosa y con velos más suaves el
+         texto blanco caía sobre cielo azul claro y sobre una fachada amarilla.
+         Con estos valores la zona más clara del fondo compuesto queda en
+         ~rgb(66,64,62) y el blanco mide ~10:1. Si la clienta sube otra foto
+         desde Configuración → Home, este velo sigue siendo el peor caso
+         razonable; una foto casi blanca habría que volver a medirla. --}}
+    <div class="lat-closing"
+         style="background-image:linear-gradient(rgba(14,11,10,.74), rgba(14,11,10,.93)), url('{{ $newsImgUrl }}');">
+
+        {{-- Motivo de fondo: geoglifo tipo líneas de Nazca (rectas de la pampa,
+             trapecio y espiral), dibujado en SVG y no con una foto ni un asset
+             de terceros — mismo criterio que `.lat-gallery__mark`. Venía del
+             lote del 13/08 (pedido del jefe sobre una captura) y se conserva
+             tal cual: cambia el fondo bajo el que vive, no el dibujo.
+
+             Al fusionarse los dos bloques, la silueta punteada del Perú que
+             tenía el newsletter SE RETIRA: dos motivos decorativos distintos
+             en la misma superficie compiten entre sí y ninguno se lee. Su
+             SVG sigue en el historial si algún día se la quiere en otra
+             pantalla. --}}
+        <div class="lat-closing__mark" aria-hidden="true">
             <svg viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
                 {{-- Se probaron dos figuras antes de llegar acá y las dos fallaron en
                      pantalla: un colibrí con alas horizontales se leía como torre de alta
@@ -1200,8 +1261,6 @@
                      trazo fino, la lectura correcta no es figurativa: lo que dice "Nazca"
                      sin ambigüedad es la GEOMETRÍA de la pampa — un centro radial del que
                      salen rectas larguísimas, trapecios, y la espiral. --}}
-
-                {{-- Centro radial: el punto del que parten las líneas. --}}
                 <path d="M296 128 L-30 236" opacity=".85"/>
                 <path d="M296 128 L-30 154" opacity=".85"/>
                 <path d="M296 128 L20 440" opacity=".7"/>
@@ -1210,17 +1269,24 @@
                 <path d="M296 128 L444 392" opacity=".55"/>
                 <path d="M296 128 L448 76" opacity=".7"/>
                 <circle cx="296" cy="128" r="7" opacity=".9"/>
-
-                {{-- Trapecio: la forma más repetida de la pampa, se abre hacia el fondo. --}}
                 <path d="M118 30 L86 402 L214 418 L182 34" opacity=".8"/>
-
-                {{-- Espiral, el remate de varias figuras de Nazca. --}}
                 <path d="M112 300 A11 11 0 0 1 134 300 A17 17 0 0 1 100 300 A23 23 0 0 1 146 300 A29 29 0 0 1 88 300" opacity=".9"/>
             </svg>
         </div>
+
+    <section class="lat-home-cta" aria-labelledby="home-cta-title">
         <div class="lat-wrap lat-home-cta__inner">
             <span class="lat-eyebrow is-center">{{ $L('Vive la experiencia', 'Live the experience', 'Viva a experiência') }}</span>
-            <h2 id="home-cta-title">{{ $L('Tu próxima aventura empieza aquí', 'Your next adventure starts here', 'Sua próxima aventura começa aqui') }}</h2>
+            {{-- La segunda mitad del titular va en itálica, como en las tres
+                 referencias. Se imprime sin escapar a propósito y se puede:
+                 es texto FIJO de esta vista ($L con literales), no un Setting
+                 ni nada que venga de la base — no hay entrada de usuario en
+                 esta línea. --}}
+            <h2 id="home-cta-title">{!! $L(
+                'Tu próxima aventura <em>empieza aquí</em>',
+                'Your next adventure <em>starts here</em>',
+                'Sua próxima aventura <em>começa aqui</em>'
+            ) !!}</h2>
             <p>{{ $L('Explora nuestro catálogo completo y encuentra el tour perfecto para ti.', 'Explore our full catalog and find the perfect tour for you.', 'Explore nosso catálogo completo e encontre o tour perfeito para você.') }}</p>
             <div class="lat-home-cta__actions">
                 <a href="{{ route('tours.index', ['locale' => $locale]) }}" class="lat-home-cta__btn">
@@ -1230,38 +1296,14 @@
         </div>
     </section>
 
-    {{-- ============================================================
-         NEWSLETTER (A5) — bloque oscuro con foto, antes del footer.
-         Reutiliza el MISMO endpoint/campos que el newsletter del footer
-         (NewsletterController@subscribe); el del footer se suprime en esta
-         página (ver $__env->share arriba y footer.blade.php) para no dejar
-         dos formularios del mismo canal en la misma pantalla. El CTA "Ver
-         todos los tours" del bloque rojo de arriba (.lat-home-cta) NO se
-         tocó y sigue visible antes de este bloque.
-         ============================================================ --}}
+    {{-- ── NEWSLETTER — segunda mitad del bloque de cierre. Ya NO trae foto ni
+         velo propios: los pinta el contenedor .lat-closing de arriba, una sola
+         vez para las dos secciones. Mismo endpoint, mismos campos y mismos
+         Settings que antes (NewsletterController@subscribe); el formulario del
+         footer se sigue suprimiendo en esta página (ver $__env->share arriba y
+         footer.blade.php) para no dejar dos del mismo canal en la pantalla. ── --}}
     @if ($homeNewsEnabled)
-        <section class="lat-news" aria-labelledby="news-title"
-                 style="background-image:linear-gradient(rgba(12,10,9,.72), rgba(12,10,9,.88)), url('{{ $newsImgUrl }}');">
-            {{-- Fix 5(b) — silueta punteada del Perú del prototipo (WhatsApp
-                 Image 2026-07-31 13.09.05(3)): mismo criterio que la galería
-                 (SVG inline propio, sin CDN), a la derecha detrás del
-                 formulario. Decorativo: aria-hidden, opacidad baja, no tapa
-                 texto ni controles. --}}
-            <svg class="lat-news__mark" aria-hidden="true" viewBox="0 0 300 420" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <pattern id="latNewsDots" width="10" height="10" patternUnits="userSpaceOnUse">
-                        <circle cx="2" cy="2" r="1.5" fill="currentColor"/>
-                    </pattern>
-                    <clipPath id="latPeruBlob">
-                        <path d="M155,8 C182,8 198,36 191,66 C228,88 248,128 233,166 C258,196 252,236 223,257 C232,296 208,328 179,338 C184,368 158,398 129,393 C101,388 91,359 101,330 C72,320 57,291 67,261 C43,241 38,202 57,177 C48,148 62,113 91,98 C87,63 118,12 155,8 Z"/>
-                    </clipPath>
-                </defs>
-                <g clip-path="url(#latPeruBlob)">
-                    <rect width="300" height="420" fill="url(#latNewsDots)"/>
-                </g>
-                <circle class="lat-news__mark-pin" cx="150" cy="150" r="4.5"/>
-            </svg>
-
+        <section class="lat-news" aria-labelledby="news-title">
             <div class="lat-wrap lat-news__inner">
                 <div class="lat-news__intro">
                     <span class="lat-eyebrow lat-eyebrow--on-dark">{{ $newsEyebrow }}</span>
@@ -1279,13 +1321,18 @@
                         @csrf
                         <input type="text" name="website" tabindex="-1" autocomplete="off"
                                style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+                        {{-- Los íconos dentro de los campos son decorativos
+                             (aria-hidden): la etiqueta accesible sigue siendo el
+                             <span class="sr-only"> de siempre. --}}
                         <div class="lat-news__fields">
                             <label class="lat-news__field">
                                 <span class="sr-only">{{ __('footer.newsletter_name') }}</span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                 <input type="text" name="name" required placeholder="{{ $L('Nombre', 'Name', 'Nome') }}">
                             </label>
                             <label class="lat-news__field">
                                 <span class="sr-only">{{ __('footer.newsletter_email') }}</span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
                                 <input type="email" name="email" required placeholder="{{ $L('Correo', 'Email', 'E-mail') }}">
                             </label>
                         </div>
@@ -1310,6 +1357,8 @@
             </div>
         </section>
     @endif
+
+    </div>{{-- /.lat-closing --}}
 
 </div>
 

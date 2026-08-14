@@ -520,7 +520,7 @@
         // Instrument Serif (Fix 2, informe CRO 2026-08-01): esta familia solo
         // se sirve en 400 (ital@0;1, sin eje wght) — 700 solo dispara negrita
         // sintética y rompe el trazo fino de alto contraste de la fuente.
-        font-family: $font-price; font-size: 2.7rem; font-weight: 400; line-height: 1;
+        font-family: $font-price; font-size: 2.5rem; font-weight: 700; letter-spacing: -.02em; line-height: 1;
         span { font-size: .9rem; font-weight: 500; opacity: .9; }
     }
 
@@ -588,7 +588,7 @@
     padding-top: 6px; border-top: 1px dashed $lat-line-strong;
 
     .lat-lbl { color: $lat-muted; font-size: .9rem; }
-    .lat-tot { font-family: $font-price; font-size: 1.9rem; font-weight: 400; color: $lat-red; }
+    .lat-tot { font-family: $font-price; font-size: 1.8rem; font-weight: 700; color: $lat-red; }
 }
 
 // Aviso de anticipación mínima para reservar (tour.booking_advance_hours,
@@ -629,7 +629,7 @@
 
     // h4 desde 2026-08-12 (gate SEO: los relacionados eran h5 bajo un h4).
     h4, h5 { font-family: $lat-font-sans; font-size: .9rem; line-height: 1.25; margin-bottom: 5px; color: $lat-ink; }
-    .lat-mprice { font-family: $font-price; font-weight: 400; color: $lat-red; font-size: 1.05rem; }
+    .lat-mprice { font-family: $font-price; font-weight: 700; color: $lat-red; font-size: 1.02rem; }
     .lat-stars { font-size: .76rem; }
 }
 
@@ -790,8 +790,8 @@
 
     &__amt {
         font-family: $font-price;
-        font-weight: 400;
-        font-size: 1.55rem;
+        font-weight: 700;
+        font-size: 1.5rem;
         color: $lat-red;
     }
 
