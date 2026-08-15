@@ -1339,8 +1339,15 @@
 // `--lat-catstrip-n` evita columnas muertas si el catálogo cambia.
 .lat-cat-strip {
     background: $lat-paper;
-    padding: 0 24px 26px;
+    // Aire arriba (pedido del jefe, 2026-08-14): venía con padding-top 0 —
+    // heredado de cuando la tira iba ENCIMADA al borde del hero, medio metida
+    // sobre la foto. Hoy el hero termina en las tarjetas de promoción, así que
+    // ya no se encima nada: sin este respiro las fotos cuadradas arrancaban
+    // pegadas al borde y la sección se leía como continuación del hero.
+    padding: 40px 24px 26px;
     margin-top: -1px; // muerde el borde inferior del hero, sin dejar línea de 1px visible
+
+    @media (max-width: 780px) { padding-top: 28px; }
 
     &__grid {
         display: grid;

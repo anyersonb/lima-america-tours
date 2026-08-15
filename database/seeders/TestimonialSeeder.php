@@ -2,23 +2,42 @@
 
 namespace Database\Seeders;
 
-use App\Models\Testimonial;
 use Illuminate\Database\Seeder;
 
+/**
+ * NO SIEMBRA NADA, A PROPÓSITO (2026-08-14).
+ *
+ * Este seeder creaba cinco reseñas de relleno —"Sara Fernández", "Rebeca
+ * Figueroa", "Liam Carter", "Ana Suárez" y "Valeriy Roberts"— con
+ * `is_featured = true`. Como la home y la ficha ordenan por destacadas, esas
+ * cinco se publicaban ANTES que las reseñas reales: las tres tarjetas de
+ * testimonios de la home eran las tres inventadas, y el agregado del hero
+ * ("5.0 · 18 opiniones") las contaba junto a las de verdad. Dos de ellas
+ * decían venir de Tripadvisor, así que la página de reseñas ofrecía un filtro
+ * "Tripadvisor" que solo devolvía texto escrito por nosotros.
+ *
+ * Publicar una opinión de un cliente que no existe no es un pendiente de
+ * configuración: es una reseña falsa a la vista del público, y en varios
+ * países es además publicidad engañosa. El mismo criterio que ya aplicamos con
+ * la foto de otro cliente en la galería y con las cifras sin respaldo del
+ * hero: un default que publica algo que no es del cliente es un defecto.
+ *
+ * Las reseñas REALES entran por otras dos vías, y ninguna necesita este
+ * seeder:
+ *   - `php artisan reviews:import-wp` — las 13 del WordPress de
+ *     limaamericatours.com (guía Augusto), idempotentes por `external_ref`.
+ *   - HuacachinaReviewsSeeder — las 6 migradas del WooCommerce de producción
+ *     para el tour de Huacachina, con nombre y fecha reales.
+ *   - Y el formulario público de /resenas, que las deja pendientes de revisión.
+ *
+ * La clase se conserva (en vez de borrarla) porque DatabaseSeeder la invoca y
+ * porque el nombre libre invitaría a alguien a volver a crearla con datos de
+ * relleno. Lo vigila TestimonialsAreNotSeededTest.
+ */
 class TestimonialSeeder extends Seeder
 {
     public function run(): void
     {
-        $items = [
-            ['name' => 'Sara Fernández', 'country' => 'España', 'rating' => 5, 'source' => 'Google', 'quote_es' => 'Una experiencia inolvidable. Atención impecable de principio a fin.', 'is_featured' => true, 'order' => 1],
-            ['name' => 'Rebeca Figueroa', 'country' => 'Colombia', 'rating' => 5, 'source' => 'Google', 'quote_es' => 'Reservar fue muy fácil y los guías excelentes. Volveremos seguro.', 'is_featured' => true, 'order' => 2],
-            ['name' => 'Liam Carter', 'country' => 'USA', 'rating' => 5, 'source' => 'Tripadvisor', 'quote_es' => 'Una agencia confiable y muy organizada. Cada parada del recorrido fue una sorpresa positiva.', 'is_featured' => true, 'order' => 3],
-            ['name' => 'Ana Suárez', 'country' => 'México', 'rating' => 5, 'source' => 'Google', 'quote_es' => 'El tour superó nuestras expectativas. Recomiendo 100%.', 'is_featured' => true, 'order' => 4],
-            ['name' => 'Valeriy Roberts', 'country' => 'USA', 'rating' => 5, 'source' => 'Tripadvisor', 'quote_es' => 'Logística impecable, guías apasionados y un trato cálido que hizo del viaje algo memorable.', 'is_featured' => true, 'order' => 5],
-        ];
-
-        foreach ($items as $i) {
-            Testimonial::updateOrCreate(['name' => $i['name']], $i);
-        }
+        // Intencionalmente vacío. Ver el bloque de arriba antes de agregar nada.
     }
 }
