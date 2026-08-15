@@ -1148,16 +1148,39 @@
     &:hover &__sub svg { transform: translateX(4px); }
 }
 
+// ── Aparición al hacer scroll ("tipo AOS") — CSS propio, sin librería ──
+// Encargo del jefe (2026-08-15): efectos de transición que "no dañen ni el
+// GEO ni el AEO ni la experiencia del usuario". El punto que toca SEO/AEO
+// es este: el estado oculto NO lo pone este bloque a secas. En reposo,
+// .lat-reveal es indistinguible de un elemento normal (opacity:1, sin
+// transform) — cualquier rastreador sin JS, o un visitante cuyo JS falle
+// o esté bloqueado, ve el texto completo desde el primer render.
+//
+// Quien realmente oculta es el selector .lat-reveal-armed .lat-reveal, y
+// esa clase "armed" la agrega EXCLUSIVAMENTE resources/js/reveal.js — y
+// solo después de comprobar que hay soporte de IntersectionObserver y al
+// menos un .lat-reveal que observar. No es el mismo interruptor que el
+// no-js/js genérico del <html> (layouts/app.blade.php): ese solo dice "hay
+// JS", no "el observer que va a revelar esto ya quedó armado". Si
+// reveal.js no llega a correr (error, bloqueador, rastreador sin JS),
+// .lat-reveal-armed nunca se agrega y este bloque no oculta nada.
 .lat-reveal {
+    transition: opacity .5s ease, transform .5s ease;
+}
+
+.lat-reveal-armed .lat-reveal {
     opacity: 0;
-    transform: translateY(24px);
-    transition: opacity .7s ease, transform .7s ease;
+    transform: translateY(20px);
 
     &.is-in { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .lat-reveal { opacity: 1; transform: none; transition: none; }
+    // Cinturón de seguridad: reveal.js ya evita animar y marca .is-in de
+    // entrada cuando hay motion reducido (ver ese archivo), pero si algún
+    // elemento quedara "armado" sin ese estado, esta regla lo deja visible
+    // igual, sin transición.
+    .lat-reveal-armed .lat-reveal { opacity: 1; transform: none; transition: none; }
 }
 
 // ── Galería "Descubre la belleza del Perú" — acento de marca ────────────

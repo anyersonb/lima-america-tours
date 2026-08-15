@@ -108,7 +108,11 @@
         <div class="lat-tours-grid" id="toursGrid">
             @forelse ($tours as $tour)
                 @php $pct = $tourOffer($tour); @endphp
-                <article class="lat-tcard" data-slug="{{ $tour->slug }}" data-cat="{{ $tour->category?->slug ?? '' }}" data-title="{{ mb_strtolower($tour->title) }}">
+                {{-- Aparición al hacer scroll (encargo 2026-08-15): .lat-reveal
+                     nunca oculta nada sin JS (ver _lat-home.scss/reveal.js);
+                     el delay se topa en 5 posiciones para no alargar la espera
+                     en un catálogo con muchas tarjetas. --}}
+                <article class="lat-tcard lat-reveal" style="transition-delay:{{ min($loop->index, 5) * 70 }}ms" data-slug="{{ $tour->slug }}" data-cat="{{ $tour->category?->slug ?? '' }}" data-title="{{ mb_strtolower($tour->title) }}">
                     <a href="{{ route('tours.show', ['locale' => $locale, 'slug' => $tour->slug]) }}" class="lat-tcard__media">
                         <img src="{{ $tour->cover_url }}" alt="{{ $tour->title }}" loading="lazy" width="400" height="300">
                         @if ($tour->badge_text)

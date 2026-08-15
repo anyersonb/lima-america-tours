@@ -278,12 +278,27 @@
     nav p, nav p span { color: rgba(255, 255, 255, .6) !important; }
 }
 
-// ── CTA final "¿Listo para vivir tu propia historia?" — card oscura con
-// borde discontinuo rojo (mockup), ícono de avión, CTA rojo + outline. ──
+// ── CTA final "¿Te animaste a viajar?" — card con borde discontinuo rojo
+// (mockup), ícono de avión y CTA rojo. ──
+//
+// 2026-08-15 — ERA INVISIBLE. Estaba escrito para una card OSCURA: fondo
+// `rgba(255,255,255,.04)` (o sea, casi nada) con titular en blanco puro y
+// bajada en blanco al 76%. Pero la ficha de blog tiene fondo CLARO — el
+// ancestro `.lat-page` es `rgb(250,247,242)`, medido en el navegador —, así que
+// el fondo efectivo daba ~`rgb(250,248,243)` y el titular blanco encima medía
+// **1.03:1**: blanco sobre blanco. Lo reportó el jefe leyendo la página, no un
+// test.
+//
+// Es la tercera vez que aparece este patrón en el proyecto: un bloque pensado
+// para fondo oscuro se pega en una pantalla clara y el texto desaparece. La
+// regla es medir el fondo REAL subiendo por los ancestros hasta el primer
+// background no transparente, nunca deducirlo de la regla vecina.
 .lat-blog-cta {
     margin-top: 46px;
-    background: rgba(255, 255, 255, .04);
-    border: 1.5px dashed rgba(255, 31, 45, .45);
+    // Tinte rojo muy claro: conserva la familia del borde discontinuo y da una
+    // superficie de verdad, no un velo transparente sobre el crema.
+    background: $lat-red-tint;
+    border: 1.5px dashed rgba(203, 16, 30, .55);
     border-radius: $lat-r-lg;
     padding: 32px 36px;
     display: flex;
@@ -302,8 +317,10 @@
         svg { width: 24px; height: 24px; }
     }
 
-    h2 { font-family: $lat-font-serif; font-weight: 800; font-size: 1.3rem; color: #fff; margin: 0 0 4px; }
-    p { color: rgba(255, 255, 255, .76); font-size: .92rem; margin: 0; }
+    // Ink sobre el tinte claro: 15.8:1 el titular y 10.4:1 la bajada, medidos
+    // en el navegador (antes: 1.03:1, invisible).
+    h2 { font-family: $lat-font-serif; font-weight: 800; font-size: 1.3rem; color: $lat-ink; margin: 0 0 4px; }
+    p { color: $lat-ink-soft; font-size: .92rem; margin: 0; }
 
     &__actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 
@@ -321,6 +338,24 @@
         &__actions { flex-direction: column; }
         &__actions .lat-btn { width: 100%; }
     }
+}
+
+// ── La MISMA card, sobre el listado oscuro ──────────────────────────────
+// `.lat-blog-cta` se usa en DOS pantallas con fondos opuestos:
+//   · blog/index.blade.php → dentro de `.lat-blog-body`, que es $lat-ink;
+//   · blog/show.blade.php  → dentro de `.lat-page`, que es crema.
+// La regla de arriba quedó escrita para la ficha (fondo claro), porque ahí
+// era donde el texto blanco resultaba invisible. Sin esta variante, el
+// arreglo de una pantalla rompía la otra: un recuadro rosa claro plantado en
+// mitad de una sección negra. Se sobreescribe SOLO lo que cambia con el
+// fondo — superficie, borde y colores de texto —; el layout, el ícono y los
+// botones son los mismos en las dos.
+.lat-blog-body .lat-blog-cta {
+    background: rgba(255, 255, 255, .04);
+    border-color: rgba(255, 31, 45, .45);
+
+    h2 { color: #fff; }              // sobre $lat-ink: 17.2:1
+    p { color: rgba(255, 255, 255, .76); }
 }
 
 // ── Artículo individual (show) ───────────────────────────────────────────

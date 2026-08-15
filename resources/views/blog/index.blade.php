@@ -136,7 +136,7 @@
                                 $metaParts[] = ['type' => 'text', 'value' => $post->reading_minutes . ' ' . $L('min', 'min', 'min')];
                             }
                         @endphp
-                        <article class="lat-blog-card" itemscope itemtype="https://schema.org/BlogPosting">
+                        <article class="lat-blog-card lat-reveal" style="transition-delay:{{ min($loop->index, 5) * 70 }}ms" itemscope itemtype="https://schema.org/BlogPosting">
                             <a href="{{ route('blog.show', ['locale' => $locale, 'slug' => $post->slug]) }}" class="lat-blog-card__media">
                                 <img src="{{ $post->cover_url }}" alt="{{ $post->title }}" loading="lazy" width="640" height="464" itemprop="image">
                                 @if ($post->category)

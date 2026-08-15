@@ -778,7 +778,7 @@
                         $catStripImg = optional($cat->tours->first())->cover_url ?? \App\Support\ResponsiveImage::defaultPhotoUrl(360);
                         $catStripIcon = $catStripIcons[$cat->slug] ?? $catStripIconDefault;
                     @endphp
-                    <a href="{{ route('tours.index', ['locale' => $locale, 'cat' => $cat->slug]) }}" class="lat-cat-strip__item">
+                    <a href="{{ route('tours.index', ['locale' => $locale, 'cat' => $cat->slug]) }}" class="lat-cat-strip__item lat-reveal" style="transition-delay:{{ min($loop->index, 5) * 70 }}ms">
                         <img src="{{ $catStripImg }}" alt="" loading="lazy" width="220" height="220">
                         <span class="lat-cat-strip__ic" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $catStripIcon !!}</svg>
@@ -901,7 +901,12 @@
 
         <div class="lat-dest-grid">
             @forelse ($destacados as $tour)
-                <article class="lat-dcard">
+                {{-- Aparición al hacer scroll (encargo 2026-08-15): .lat-reveal
+                     nunca oculta nada sin JS (ver _lat-home.scss/reveal.js) —
+                     el delay solo escalona el orden dentro de esta grilla,
+                     tope de 5 posiciones para no alargar la espera en listas
+                     largas. --}}
+                <article class="lat-dcard lat-reveal" style="transition-delay:{{ min($loop->index, 5) * 70 }}ms">
                     <a href="{{ route('tours.show', ['locale' => $locale, 'slug' => $tour->slug]) }}" class="lat-dcard__media">
                         <img src="{{ $tour->cover_url }}" alt="{{ $tour->title }}" loading="lazy" width="400" height="275">
                         @if ($tour->badge_text)
@@ -1009,7 +1014,7 @@
 
         <div class="lat-gallery__strip">
             @foreach ($galleryImages as $photo)
-                <div class="lat-gallery__item">
+                <div class="lat-gallery__item lat-reveal" style="transition-delay:{{ min($loop->index, 5) * 70 }}ms">
                     <img src="{{ $photo['url'] }}" alt="{{ $photo['alt'] }}" loading="lazy" width="400" height="500">
                 </div>
             @endforeach
@@ -1044,7 +1049,7 @@
                         // original de 2.5 MB que se usaba antes.
                         $catImg = optional($cat->tours->first())->cover_url ?? \App\Support\ResponsiveImage::defaultPhotoUrl(640);
                     @endphp
-                    <a href="{{ route('tours.index', ['locale' => $locale, 'cat' => $cat->slug]) }}" class="lat-cat">
+                    <a href="{{ route('tours.index', ['locale' => $locale, 'cat' => $cat->slug]) }}" class="lat-cat lat-reveal" style="transition-delay:{{ min($loop->index, 5) * 70 }}ms">
                         <img src="{{ $catImg }}" alt="{{ $cat->name }}" loading="lazy" width="360" height="230">
                         @if ($cat->published_tours_count)
                             <span class="lat-cat__count">{{ $cat->published_tours_count }} {{ $cat->published_tours_count === 1 ? $L('tour', 'tour', 'tour') : $L('tours', 'tours', 'tours') }}</span>
@@ -1123,7 +1128,7 @@
 
         <div class="lat-why__grid">
             @foreach ($whyItems as $i => $why)
-                <div class="lat-why__item">
+                <div class="lat-why__item lat-reveal" style="transition-delay:{{ min($i, 5) * 70 }}ms">
                     <span class="lat-why__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $whyIcons[$i % count($whyIcons)] !!}</svg></span>
                     <b>{{ $why['title'] }}</b>
                     @if ($why['text'] !== '')
@@ -1158,7 +1163,7 @@
                         $tSrc = app(\App\Services\ReviewAggregator::class)->normalizeSource($t->source);
                         $tSrcLabel = ['google' => 'Google', 'tripadvisor' => 'Tripadvisor', 'trivago' => 'Trivago', 'web' => $L('Nuestra web', 'Our website', 'Nosso site')][$tSrc];
                     @endphp
-                    <article class="lat-rcard">
+                    <article class="lat-rcard lat-reveal" style="transition-delay:{{ min($loop->index, 5) * 70 }}ms">
                         <div class="lat-rcard__head">
                             @if (!empty($t->avatar))
                                 <img src="{{ $t->avatar }}" alt="" class="lat-rcard__avatar" loading="lazy" width="44" height="44">
@@ -1177,7 +1182,7 @@
                 @endforeach
 
                 @if (! is_null($homeOverallStats['rating']))
-                    <article class="lat-rcard lat-rcard--agg">
+                    <article class="lat-rcard lat-rcard--agg lat-reveal" style="transition-delay:{{ min($homeReviewCards->count(), 5) * 70 }}ms">
                         <span class="lat-rcard__agg-num">{{ number_format($homeOverallStats['rating'], 1) }}<small>/5</small></span>
                         <span class="lat-stars"><span class="lat-stars__s">@for ($i = 0; $i < 5; $i++)<svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6L12 2z"/></svg>@endfor</span></span>
                         <span class="lat-rcard__agg-count">
@@ -1205,7 +1210,7 @@
 
             <div class="lat-dest-cards" style="--lat-dest-n:{{ min($homeDestinations->count(), 3) }}">
                 @foreach ($homeDestinations as $region)
-                    <a href="{{ route('tours.category', ['locale' => $locale, 'categoria' => $region->slug]) }}" class="lat-dest-card">
+                    <a href="{{ route('tours.category', ['locale' => $locale, 'categoria' => $region->slug]) }}" class="lat-dest-card lat-reveal" style="transition-delay:{{ min($loop->index, 5) * 70 }}ms">
                         <img src="{{ $region->image_url ?? \App\Support\ResponsiveImage::defaultPhotoUrl(640) }}" alt="{{ $region->name }}" loading="lazy" width="360" height="440">
                         <div class="lat-dest-card__body">
                             <b>{{ $region->name }}</b>
@@ -1293,7 +1298,7 @@
         </div>
 
     <section class="lat-home-cta" aria-labelledby="home-cta-title">
-        <div class="lat-wrap lat-home-cta__inner">
+        <div class="lat-wrap lat-home-cta__inner lat-reveal">
             <span class="lat-eyebrow is-center">{{ $L('Vive la experiencia', 'Live the experience', 'Viva a experiência') }}</span>
             {{-- La segunda mitad del titular va en itálica, como en las tres
                  referencias. Se imprime sin escapar a propósito y se puede:
@@ -1322,7 +1327,7 @@
          footer.blade.php) para no dejar dos del mismo canal en la pantalla. ── --}}
     @if ($homeNewsEnabled)
         <section class="lat-news" aria-labelledby="news-title">
-            <div class="lat-wrap lat-news__inner">
+            <div class="lat-wrap lat-news__inner lat-reveal" style="transition-delay:70ms">
                 <div class="lat-news__intro">
                     <span class="lat-eyebrow lat-eyebrow--on-dark">{{ $newsEyebrow }}</span>
                     <h2 id="news-title">{{ $newsTitle }}</h2>
@@ -1364,7 +1369,7 @@
 
             <div class="lat-wrap lat-news__benefits">
                 @foreach ($newsBenefits as $benefit)
-                    <div class="lat-news__benefit">
+                    <div class="lat-news__benefit lat-reveal" style="transition-delay:{{ min($loop->index, 5) * 70 }}ms">
                         <span class="lat-news__benefit-ic">{!! $benefit['icon'] !!}</span>
                         <div>
                             <b>{{ $benefit['title'] }}</b>

@@ -341,7 +341,7 @@
                 <div class="lat-team-grid">
                     @foreach ($aboutGuides as $guide)
                         @php $gInitial = strtoupper(mb_substr(trim($guide->name), 0, 1)); @endphp
-                        <article class="lat-team-card">
+                        <article class="lat-team-card lat-reveal" style="transition-delay:{{ min($loop->index, 5) * 70 }}ms">
                             @if ($guide->photo_url)
                                 <img src="{{ $guide->photo_url }}" alt="{{ $guide->name }}" class="lat-team-card__photo" loading="lazy" width="200" height="200">
                             @else
@@ -414,7 +414,7 @@
                             $tSrc = app(\App\Services\ReviewAggregator::class)->normalizeSource($t->source);
                             $tSrcLabel = ['google' => 'Google', 'tripadvisor' => 'Tripadvisor', 'trivago' => 'Trivago', 'web' => $L('Nuestra web', 'Our website', 'Nosso site')][$tSrc];
                         @endphp
-                        <article class="lat-rcard lat-rcard--dark">
+                        <article class="lat-rcard lat-rcard--dark lat-reveal" style="transition-delay:{{ min($loop->index, 5) * 70 }}ms">
                             <div class="lat-rcard__head">
                                 @if (!empty($t->avatar))
                                     <img src="{{ $t->avatar }}" alt="" class="lat-rcard__avatar" loading="lazy" width="44" height="44">
@@ -450,7 +450,7 @@
 
             <div class="lat-dest-cards" style="--lat-dest-n:{{ min($aboutDestinations->count(), 3) }}">
                 @foreach ($aboutDestinations as $region)
-                    <a href="{{ route('tours.category', ['locale' => $locale, 'categoria' => $region->slug]) }}" class="lat-dest-card">
+                    <a href="{{ route('tours.category', ['locale' => $locale, 'categoria' => $region->slug]) }}" class="lat-dest-card lat-reveal" style="transition-delay:{{ min($loop->index, 5) * 70 }}ms">
                         <img src="{{ $region->image_url ?? \App\Support\ResponsiveImage::defaultPhotoUrl(640) }}" alt="{{ $region->name }}" loading="lazy" width="360" height="440">
                         <div class="lat-dest-card__body">
                             <b>{{ $region->name }}</b>
@@ -482,7 +482,7 @@
                 </div>
                 <div class="lat-timeline__row">
                     @foreach ($timelineItems as $hito)
-                        <div class="lat-timeline__item">
+                        <div class="lat-timeline__item lat-reveal" style="transition-delay:{{ min($loop->index, 5) * 70 }}ms">
                             <span class="lat-timeline__dot" aria-hidden="true"></span>
                             <b>{{ $hito['year'] ?? '' }}</b>
                             <p>{{ $hito['text_' . $locale] ?? $hito['text_es'] ?? '' }}</p>
@@ -514,7 +514,7 @@
 
             <div class="lat-mvv-gold">
                 @foreach ($mvvItems as $item)
-                    <div class="lat-mvv-gold-card">
+                    <div class="lat-mvv-gold-card lat-reveal" style="transition-delay:{{ min($loop->index, 5) * 70 }}ms">
                         <div class="lat-mvv-gold-card__ic">
                             @switch($item['icon'] ?? 'target')
                                 @case('eye')
@@ -703,28 +703,28 @@
                  real; "Pago seguro / Diversos métodos de pago" fuera (tabla "Lo
                  que NO se publica" del brief: no hay pasarela activa hoy). --}}
             <div class="lat-cta-final__features">
-                <div class="lat-cta-final__feature">
+                <div class="lat-cta-final__feature lat-reveal" style="transition-delay:0ms">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
                     <div>
                         <b>{{ $contactHours ?: $bl('cta_feat1_fallback', 'Escríbenos cuando quieras', 'Message us anytime', 'Escreva quando quiser') }}</b>
                         <span>{{ $bl('cta_feat1_label', 'Horario de atención', 'Support hours', 'Horário de atendimento') }}</span>
                     </div>
                 </div>
-                <div class="lat-cta-final__feature">
+                <div class="lat-cta-final__feature lat-reveal" style="transition-delay:70ms">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.7"/></svg>
                     <div>
                         <b>{{ $bl('cta_feat2_title', 'Viajes 100% personalizados', '100% personalized trips', 'Viagens 100% personalizadas') }}</b>
                         <span>{{ $bl('cta_feat2_desc', 'Hechos a tu medida', 'Made just for you', 'Feitas sob medida') }}</span>
                     </div>
                 </div>
-                <div class="lat-cta-final__feature">
+                <div class="lat-cta-final__feature lat-reveal" style="transition-delay:140ms">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     <div>
                         <b>{{ $bl('cta_feat3_title', 'Seguridad y confianza', 'Security and trust', 'Segurança e confiança') }}</b>
                         <span>{{ $bl('cta_feat3_desc', 'Tu tranquilidad es lo primero', 'Your peace of mind comes first', 'Sua tranquilidade em primeiro lugar') }}</span>
                     </div>
                 </div>
-                <div class="lat-cta-final__feature">
+                <div class="lat-cta-final__feature lat-reveal" style="transition-delay:210ms">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                     <div>
                         <b>{{ $bl('cta_feat4_title', 'Cancelación flexible', 'Flexible cancellation', 'Cancelamento flexível') }}</b>

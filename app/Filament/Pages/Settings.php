@@ -514,13 +514,18 @@ class Settings extends Page implements HasForms
                             ]),
 
                         // ── Hero — CTAs (botones) ──────────────────────────────
-                        // Mockup 2026-08: el hero pasa a tener un botón rojo
-                        // primario ("Reservar Ahora") y uno secundario ("Ver
-                        // Video"), ambos con texto editable por idioma. El botón
-                        // primario puede apuntar a una URL propia; vacío = el
-                        // blade cae al listado de tours.
+                        // Mockup 2026-08: el hero tiene TRES botones — rojo
+                        // primario ("Reservar Ahora"), outline secundario ("Ver
+                        // Tours") y el de video ("Ver Video"). Hallazgo CRO
+                        // 2026-08-15: home.blade.php YA leía
+                        // home_hero_cta_secondary_{es,en,pt,url} para el botón
+                        // "Ver Tours" (con default en código si faltaba), pero
+                        // este formulario nunca tuvo esos campos — la clienta no
+                        // podía cambiar ese botón ni un poco. Se agregan aquí con
+                        // la MISMA regla de URL que el primario (ruta relativa u
+                        // externa, nunca la URL completa de este mismo sitio).
                         \Filament\Forms\Components\Section::make('Hero — botones (CTAs)')
-                            ->description('Textos y enlace de los dos botones del hero: el rojo primario y el secundario "Ver Video".')
+                            ->description('Textos y enlace de los tres botones del hero: el rojo primario ("Reservar Ahora"), el secundario outline ("Ver Tours") y el de video ("Ver Video").')
                             ->collapsible()
                             ->columns(3)
                             ->schema([
@@ -533,44 +538,26 @@ class Settings extends Page implements HasForms
                                     // (http/https) y rechazaría de plano la ruta relativa
                                     // ("/tours") que es justo el formato correcto para un
                                     // destino dentro de este mismo sitio. La validación
-                                    // completa (formato + host propio) vive en el ->rule()
-                                    // de abajo.
+                                    // completa (formato + host propio) vive en la regla
+                                    // compartida relativeOrExternalUrlRule() de abajo.
                                     ->placeholder('/tours (o https://otra-web.com si el destino es externo)')
                                     ->helperText('Opcional. Si se deja vacía, el botón lleva al listado de tours. Si el destino es una página de ESTE mismo sitio, escribe solo la ruta relativa (ej. "/tours"), NO la URL completa con https://limaamericatours.com — eso saca al visitante de staging/local hacia el sitio de producción. Una URL completa solo es correcta cuando apunta a una web externa de verdad.')
-                                    ->rule(function () {
-                                        return function (string $attribute, $value, \Closure $fail) {
-                                            $value = trim((string) $value);
-                                            if ($value === '') {
-                                                return;
-                                            }
-
-                                            $host = parse_url($value, PHP_URL_HOST);
-                                            if (! $host) {
-                                                // Sin host: ruta relativa (ej. "/tours"). Debe
-                                                // empezar con "/" — cualquier otra cosa no es ni
-                                                // una ruta ni una URL válida.
-                                                if (! str_starts_with($value, '/')) {
-                                                    $fail('Escribe una ruta relativa que empiece con "/" (ej. "/tours") o una URL completa a una web externa (ej. "https://...").');
-                                                }
-
-                                                return;
-                                            }
-
-                                            if (! filter_var($value, FILTER_VALIDATE_URL)) {
-                                                $fail('Esa URL no es válida.');
-
-                                                return;
-                                            }
-
-                                            if (in_array(strtolower($host), self::selfOrLocalHosts(), true)) {
-                                                $fail("No pegues la URL completa de este mismo sitio ({$host}). Escribe solo la ruta relativa, por ejemplo \"/tours\". Una URL completa solo es válida si el destino es una web externa de verdad.");
-                                            }
-                                        };
-                                    })
+                                    ->rule(self::relativeOrExternalUrlRule())
                                     ->columnSpanFull(),
-                                TextInput::make('home_hero_cta_video_es')->label('Botón secundario — texto (ES)')->placeholder('Ver Video'),
-                                TextInput::make('home_hero_cta_video_en')->label('Botón secundario — texto (EN)')->placeholder('Watch Video'),
-                                TextInput::make('home_hero_cta_video_pt')->label('Botón secundario — texto (PT)')->placeholder('Ver Vídeo'),
+
+                                TextInput::make('home_hero_cta_secondary_es')->label('Botón secundario "Ver Tours" — texto (ES)')->placeholder('Ver Tours'),
+                                TextInput::make('home_hero_cta_secondary_en')->label('Botón secundario "Ver Tours" — texto (EN)')->placeholder('View Tours'),
+                                TextInput::make('home_hero_cta_secondary_pt')->label('Botón secundario "Ver Tours" — texto (PT)')->placeholder('Ver Tours'),
+                                TextInput::make('home_hero_cta_secondary_url')
+                                    ->label('Botón secundario "Ver Tours" — URL destino')
+                                    ->placeholder('/tours (o https://otra-web.com si el destino es externo)')
+                                    ->helperText('Opcional. Si se deja vacía, el botón lleva al listado de tours (igual que el primario). Mismas reglas que la URL del botón primario.')
+                                    ->rule(self::relativeOrExternalUrlRule())
+                                    ->columnSpanFull(),
+
+                                TextInput::make('home_hero_cta_video_es')->label('Botón "Ver Video" — texto (ES)')->placeholder('Ver Video'),
+                                TextInput::make('home_hero_cta_video_en')->label('Botón "Ver Video" — texto (EN)')->placeholder('Watch Video'),
+                                TextInput::make('home_hero_cta_video_pt')->label('Botón "Ver Video" — texto (PT)')->placeholder('Ver Vídeo'),
                             ]),
 
                         // ── Barra de estadísticas del hero (mockup) ────────────
@@ -1424,24 +1411,38 @@ class Settings extends Page implements HasForms
                             ->label('Activar traída de reseñas de Tripadvisor')
                             ->helperText('Requiere Tripadvisor API Key y Location ID configurados.'),
 
-                        \Filament\Forms\Components\Section::make('Tarjetas de reseñas (rating y nº)')
-                            ->description('Rating y número de reseñas mostrados en las tarjetas de Google/Tripadvisor de cada tour. Los enlaces "Ver en Google/Tripadvisor" se configuran en la pestaña "Redes sociales".')
+                        // 2026-08-15 — Los textos de ayuda de esta sección PROMETÍAN algo
+                        // que no ocurre: decían "se muestra en la tarjeta de Google /
+                        // Tripadvisor de la página de cada tour", y esa tarjeta no existe
+                        // hoy en tours/show.blade.php (el rating que sí se ve ahí sale de
+                        // `$tour->rating`). Hallazgo del recorrido campo por campo del
+                        // panel. Se corrige el TEXTO, no el comportamiento: decidir si se
+                        // construye esa tarjeta o si estas cuatro claves se retiran es
+                        // alcance, y lo decide Anyerson — pero mientras tanto el panel no
+                        // puede afirmarle a la clienta que un campo hace algo que no hace.
+                        //
+                        // Las cifras que SÍ se publican hoy son las de "Reseñas externas
+                        // verificadas" (`reviews_external_*`), que consume
+                        // HomeStatsResolver para la card de stats del hero.
+                        \Filament\Forms\Components\Section::make('Tarjetas de reseñas (rating y nº) — sin uso hoy')
+                            ->description('⚠️ Estos cuatro campos NO se publican en ninguna pantalla por ahora: la tarjeta de Google/Tripadvisor en la ficha de tour todavía no existe. Para que una cifra de reseñas se vea en el sitio, usá la sección "Reseñas externas verificadas".')
+                            ->collapsed()
                             ->collapsible()
                             ->schema([
                                 TextInput::make('reviews_google_rating')
                                     ->label('Google — Rating (ej. 4.9)')
-                                    ->helperText('Se muestra en la tarjeta de Google de la página de cada tour.'),
+                                    ->helperText('Guardado, pero sin efecto en el sitio por ahora.'),
                                 TextInput::make('reviews_google_count')
                                     ->label('Google — Nº de reseñas (ej. 123)')
                                     ->numeric()
-                                    ->helperText('Cantidad de reseñas mostrada junto al rating de Google.'),
+                                    ->helperText('Guardado, pero sin efecto en el sitio por ahora.'),
                                 TextInput::make('reviews_tripadvisor_rating')
                                     ->label('Tripadvisor — Rating (ej. 4.6)')
-                                    ->helperText('Se muestra en la tarjeta de Tripadvisor de la página de cada tour.'),
+                                    ->helperText('Guardado, pero sin efecto en el sitio por ahora.'),
                                 TextInput::make('reviews_tripadvisor_count')
                                     ->label('Tripadvisor — Nº de reseñas (ej. 8)')
                                     ->numeric()
-                                    ->helperText('Cantidad de reseñas mostrada junto al rating de Tripadvisor.'),
+                                    ->helperText('Guardado, pero sin efecto en el sitio por ahora.'),
                             ]),
                     ]),
                     Tabs\Tab::make('Recogida')->icon('heroicon-o-map')->schema([
@@ -1637,6 +1638,48 @@ class Settings extends Page implements HasForms
         }
 
         return array_unique(array_map('strtolower', $hosts));
+    }
+
+    /**
+     * Regla compartida por los campos "URL destino" de los botones del hero
+     * (primario y secundario): acepta ruta relativa ("/tours") o URL externa
+     * completa, pero rechaza una URL completa que apunte a este mismo sitio
+     * (ver selfOrLocalHosts()). Antes vivía duplicada solo en el CTA primario;
+     * extraída para que el secundario ("Ver Tours", 2026-08-15) tenga la MISMA
+     * validación sin copiar el closure entero.
+     */
+    private static function relativeOrExternalUrlRule(): \Closure
+    {
+        return function () {
+            return function (string $attribute, $value, \Closure $fail) {
+                $value = trim((string) $value);
+                if ($value === '') {
+                    return;
+                }
+
+                $host = parse_url($value, PHP_URL_HOST);
+                if (! $host) {
+                    // Sin host: ruta relativa (ej. "/tours"). Debe
+                    // empezar con "/" — cualquier otra cosa no es ni
+                    // una ruta ni una URL válida.
+                    if (! str_starts_with($value, '/')) {
+                        $fail('Escribe una ruta relativa que empiece con "/" (ej. "/tours") o una URL completa a una web externa (ej. "https://...").');
+                    }
+
+                    return;
+                }
+
+                if (! filter_var($value, FILTER_VALIDATE_URL)) {
+                    $fail('Esa URL no es válida.');
+
+                    return;
+                }
+
+                if (in_array(strtolower($host), self::selfOrLocalHosts(), true)) {
+                    $fail("No pegues la URL completa de este mismo sitio ({$host}). Escribe solo la ruta relativa, por ejemplo \"/tours\". Una URL completa solo es válida si el destino es una web externa de verdad.");
+                }
+            };
+        };
     }
 
     public function save(): void
