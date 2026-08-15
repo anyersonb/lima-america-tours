@@ -406,12 +406,30 @@
     // (mockup: foto + ícono + label). Catálogo cerrado de 4 SVG (no hay campo
     // de ícono en el modelo Category) — se asigna por SLUG, con un ícono
     // genérico de respaldo si el cliente crea una 5ª categoría con otro slug.
+    // Las claves son los SLUGS REALES de la tabla `categories` (cultural,
+    // aventura, gastronomia, otros). Estaban escritas como "tours-culturales",
+    // "tours-de-aventura" y "experiencias-culinarias" —el nombre visible
+    // convertido a slug, no el slug— así que NINGUNA coincidía y las cuatro
+    // categorías caían al ícono de respaldo: cuatro círculos con una cruz,
+    // todos iguales, en la tira pegada al hero (visto en staging el
+    // 2026-08-14). Se dejan los nombres viejos como alias por si en otro
+    // entorno el catálogo se cargó con esos slugs.
     $catStripIcons = [
+        'cultural' => '<path d="M4 21h16M5 21V9l7-5 7 5v12M9 21v-6h6v6"/>',
+        'aventura' => '<path d="m8 21 4-13 4 13M6 13h12M12 3l2 4h-4l2-4z"/>',
+        'gastronomia' => '<path d="M7 2v20M7 2a5 5 0 0 0-5 5v4h5M17 2v20M17 2a5 5 0 0 1 5 5v4a5 5 0 0 1-5 5"/>',
+        // "Otros" es una categoría real del catálogo, no un caso residual: le
+        // toca su propio ícono (brújula) en vez del genérico.
+        'otros' => '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2.1 5-5 2.1 2.1-5z"/>',
+
+        // Alias por los slugs que asumía la versión anterior.
         'tours-culturales' => '<path d="M4 21h16M5 21V9l7-5 7 5v12M9 21v-6h6v6"/>',
         'tours-de-aventura' => '<path d="m8 21 4-13 4 13M6 13h12M12 3l2 4h-4l2-4z"/>',
         'experiencias-culinarias' => '<path d="M7 2v20M7 2a5 5 0 0 0-5 5v4h5M17 2v20M17 2a5 5 0 0 1 5 5v4a5 5 0 0 1-5 5"/>',
     ];
-    $catStripIconDefault = '<circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/>';
+    // Respaldo para una categoría nueva que cree el cliente: un mapa, que dice
+    // "un destino más" sin fingir que sabemos de qué trata.
+    $catStripIconDefault = '<path d="m9 4-6 3v13l6-3 6 3 6-3V4l-6 3z"/><path d="M9 4v13M15 7v13"/>';
 
     // ── Galería "Descubre la belleza del Perú" — editable en Settings → Home,
     // fallback a fotos de destinos reales ya presentes en storage/app/public/tours

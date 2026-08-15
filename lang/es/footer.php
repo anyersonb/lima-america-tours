@@ -1,6 +1,11 @@
 <?php
 
 return [
+    // Título de la columna "Suscríbete" del footer (2026-08-14, footer de 5
+    // columnas). 'newsletter_eyebrow' quedó sin uso al desaparecer la banda de
+    // newsletter que había encima del footer; se conserva la clave por si vuelve
+    // a hacer falta en otra pantalla.
+    'newsletter_cta' => 'Suscríbete',
     'newsletter_eyebrow' => 'Suscríbete para recibir información actualizada, novedades y ofertas.',
     'newsletter_title' => 'Suscríbete a nuestro boletín para recibir noticias, ofertas y promociones especiales.',
     'newsletter_name' => 'Nombre',

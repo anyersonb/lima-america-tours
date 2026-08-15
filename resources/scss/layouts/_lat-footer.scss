@@ -15,44 +15,67 @@
 
     .lat-wrap { position: relative; z-index: 1; }
 
+    // 5 columnas (2026-08-14, referencia del cliente): marca · Enlaces ·
+    // Experiencias · Síguenos · Suscríbete. La primera es más ancha porque
+    // lleva el logo y el párrafo de marca; las otras cuatro reparten parejo.
+    // En la home la quinta no se pinta (el bloque de cierre ya trae el
+    // formulario) y el grid se reacomoda solo a cuatro.
     &__grid {
         display: grid;
-        grid-template-columns: 1.6fr 1fr 1.3fr 1fr;
-        gap: 40px;
-        padding-bottom: 46px;
+        grid-template-columns: 1.5fr repeat(4, 1fr);
+        gap: 44px 36px;
+        padding-bottom: 40px;
 
-        @media (max-width: 860px) { grid-template-columns: 1fr 1fr; }
-        @media (max-width: 520px) { grid-template-columns: 1fr; }
+        @media (max-width: 1100px) { grid-template-columns: 1.4fr 1fr 1fr; }
+        @media (max-width: 780px) { grid-template-columns: 1fr 1fr; }
+        @media (max-width: 520px) { grid-template-columns: 1fr; gap: 34px; }
     }
 
     &__logo { height: 48px; width: auto; margin-bottom: 18px; }
 
-    &__desc { color: #9a9186; max-width: 300px; font-size: .92rem; line-height: 1.6; }
+    &__desc { color: #9a9186; max-width: 320px; font-size: .92rem; line-height: 1.65; }
 
-    &__social {
-        display: flex;
-        gap: 12px;
-        margin-top: 20px;
-
-        a {
-            width: 38px; height: 38px; border-radius: 10px;
-            background: rgba(255, 255, 255, .06);
-            display: grid; place-items: center;
-            transition: background .2s, transform .2s;
-            color: #fff;
-        }
-        a:hover { background: $lat-red; transform: translateY(-3px); }
-        svg { width: 17px; height: 17px; }
+    // La columna de marca ocupa las dos primeras celdas cuando el grid baja a
+    // 3 o 2 columnas: su párrafo necesita más ancho que una lista de enlaces.
+    &__brand {
+        @media (max-width: 1100px) and (min-width: 781px) { grid-column: span 1; }
+        @media (max-width: 780px) { grid-column: 1 / -1; }
     }
 
-    h4 {
+    // Redes CON NOMBRE, en lista vertical (referencia). Antes eran cuatro
+    // cuadraditos con el ícono suelto en la columna de marca: se veían, pero
+    // no decían a dónde llevaban.
+    &__social {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        a {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            color: #9a9186;
+            font-size: .92rem;
+            transition: color .15s;
+        }
+        a:hover { color: #fff; }
+        a:hover svg { color: #ff1f2d; }
+        svg { width: 17px; height: 17px; color: #fff; flex: none; transition: color .15s; }
+    }
+
+    // Títulos de columna. Son <h3> por el gate de regresión SEO (con <h4>
+    // saltaban de H2 a H4 en TODAS las páginas, el footer es compartido); acá
+    // se les quita el tamaño de titular y se los deja como rótulo en versalita,
+    // que es lo que son visualmente.
+    h3 {
         font-family: $lat-font-sans;
         font-size: .78rem;
-        letter-spacing: .16em;
+        letter-spacing: .18em;
         text-transform: uppercase;
         color: #fff;
         margin-bottom: 20px;
         font-weight: 700;
+        line-height: 1.4;
     }
 
     &__links {
@@ -68,18 +91,119 @@
         a:hover { color: #ff1f2d; }
     }
 
+    // Enlaces con chevrón rojo delante ("Experiencias" de la referencia).
+    &__links--arrow a {
+        display: inline-flex;
+        align-items: flex-start;
+        gap: 9px;
+
+        svg { width: 13px; height: 13px; color: $lat-red; flex: none; margin-top: 4px; transition: transform .2s ease; }
+        &:hover svg { transform: translateX(3px); }
+    }
+
+    // Contacto en FILA (antes era una columna del grid; con cinco columnas no
+    // entra sin apretar el resto). Separado por una línea fina arriba, como el
+    // resto de las divisiones del footer.
+    &__contact-row {
+        border-top: 1px solid rgba(255, 255, 255, .08);
+        padding: 22px 0 4px;
+    }
+
     &__contact {
         list-style: none;
         padding: 0;
         margin: 0;
         display: flex;
-        flex-direction: column;
-        gap: 12px;
+        flex-wrap: wrap;
+        // Centrada, igual que la fila de sellos que va justo debajo. Además de
+        // equilibrar las dos filas, saca el teléfono de la esquina inferior
+        // izquierda, que es donde aparca el FAB de WhatsApp: alineada a la
+        // izquierda, el botón flotante tapaba el número (medido en 1440).
+        justify-content: center;
+        gap: 12px 38px;
 
         li { display: flex; align-items: flex-start; gap: 10px; font-size: .9rem; color: #9a9186; }
-        a { color: #9a9186; }
-        a:hover { color: $lat-red; }
+        a { color: #9a9186; transition: color .15s; }
+        // Mismo motivo que .lat-footer__links: el rojo de marca sobre el ink
+        // del footer da 3.4:1 y el hover empeoraría la lectura.
+        a:hover { color: #ff1f2d; }
         svg { width: 16px; height: 16px; color: $lat-red; flex: none; margin-top: 2px; }
+
+        @media (max-width: 520px) { flex-direction: column; gap: 12px; }
+    }
+
+    // ── Columna "Suscríbete" ────────────────────────────────────────────────
+    // Mismo formulario de siempre; lo que cambia es que ya no es una banda de
+    // dos columnas encima del footer sino una columna más.
+    &__news-sub {
+        color: #9a9186;
+        font-size: .88rem;
+        line-height: 1.6;
+        margin: -8px 0 16px;
+    }
+
+    &__news-flash {
+        border-radius: $lat-r-sm;
+        padding: 9px 13px;
+        font-size: .82rem;
+        margin-bottom: 12px;
+        color: #fff;
+
+        &--ok { background: rgba(18, 138, 75, .22); border: 1px solid rgba(18, 138, 75, .45); }
+        &--err { background: rgba(200, 31, 33, .22); border: 1px solid rgba(200, 31, 33, .45); }
+    }
+
+    &__news-field {
+        position: relative;
+        display: block;
+        margin-bottom: 12px;
+
+        svg {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px; height: 16px;
+            color: rgba(255, 255, 255, .55);
+            pointer-events: none;
+        }
+
+        input {
+            width: 100%;
+            border-radius: $lat-r-pill;
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .22);
+            color: #fff;
+            font-family: $lat-font-sans;
+            font-size: .88rem;
+            padding: 12px 16px 12px 42px;
+
+            &::placeholder { color: rgba(255, 255, 255, .5); }
+            &:focus { outline: 2px solid #fff; outline-offset: 1px; border-color: rgba(255, 255, 255, .55); }
+        }
+    }
+
+    &__news-btn {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        border-radius: $lat-r-pill;
+        background: $lat-red;   // blanco sobre este rojo: 5.79:1
+        color: #fff;
+        font-family: $lat-font-sans;
+        font-weight: 600;
+        font-size: .88rem;
+        padding: 12px 18px;
+        cursor: pointer;
+        border: 0;
+        transition: background .2s ease, transform .18s ease;
+
+        svg { width: 15px; height: 15px; }
+
+        &:hover { background: $lat-red-deep; transform: translateY(-2px); }
+        &:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
     }
 
     &__seals {
@@ -137,16 +261,11 @@
         a:hover { color: #fff; }
     }
 
-    // Newsletter band (fila superior sobre el footer)
-    &__newsletter {
-        padding-bottom: 46px;
-        display: grid;
-        gap: 30px;
-        grid-template-columns: 1fr 1fr;
-        align-items: center;
-
-        @media (max-width: 860px) { grid-template-columns: 1fr; }
-    }
+    // La banda de newsletter de dos columnas que iba ENCIMA del footer se
+    // retiró el 2026-08-14: hoy es la quinta columna del grid (ver
+    // `&__news-*` más arriba). La clase `.lat-footer__newsletter` se conserva
+    // sobre esa columna porque el script del FAB de WhatsApp la usa como
+    // selector para apartarse de sus campos.
 }
 
 .lat-payment {

@@ -1,6 +1,8 @@
 <?php
 
 return [
+    // Título de la columna "Suscríbete" del footer (2026-08-14).
+    'newsletter_cta' => 'Inscreva-se',
     'newsletter_eyebrow' => 'Inscreva-se para receber informações atualizadas, novidades e ofertas.',
     'newsletter_title' => 'Assine nossa newsletter para receber notícias, ofertas e promoções especiais.',
     'newsletter_name' => 'Nome',

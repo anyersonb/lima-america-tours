@@ -79,69 +79,36 @@
 <footer class="lat-footer" role="contentinfo"
         style="background-image:linear-gradient(rgba(16,13,11,.9), rgba(16,13,11,.96)), url('{{ $footBg }}');">
 
-    {{-- Newsletter --}}
-    @unless ($hideFooterNewsletter)
-    <div class="lat-wrap">
-        <section aria-labelledby="newsletter-title" class="lat-footer__newsletter">
-            <div>
-                <p style="color:rgba(255,255,255,.75); font-size:.85rem;">{{ __('footer.newsletter_eyebrow') }}</p>
-                <h2 id="newsletter-title" style="color:#fff; font-family:'Raleway',sans-serif; font-weight:800; font-size:clamp(1.4rem,3vw,2rem); line-height:1.3; margin-top:10px;">
-                    {{ __('footer.newsletter_title') }}
-                </h2>
-            </div>
+    {{-- ══════════════════════════════════════════════════════════════════
+         Footer de 5 columnas (2026-08-14, referencia que aprobó el cliente):
+         marca · Enlaces · Experiencias · Síguenos · Suscríbete, y abajo la
+         barra con copyright a la izquierda y legales a la derecha.
 
-            <div>
-                @if (session('newsletter_success'))
-                    <p class="mb-3 rounded-2xl bg-emerald-500/20 border border-emerald-300/40 text-white text-sm px-4 py-3" role="status">{{ session('newsletter_success') }}</p>
-                @elseif ($errors->has('email') || $errors->has('name'))
-                    <p class="mb-3 rounded-2xl bg-red-500/20 border border-red-300/40 text-white text-sm px-4 py-3" role="alert">{{ $errors->first('email') ?: $errors->first('name') }}</p>
-                @endif
-                <form action="{{ route('newsletter.subscribe') }}" method="post" id="form-newsletter" class="space-y-3">
-                    @csrf
-                    <input type="text" name="website" tabindex="-1" autocomplete="off"
-                           style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
-                    <div class="grid gap-3 sm:grid-cols-2">
-                        <label class="block">
-                            <span class="sr-only">{{ __('footer.newsletter_name') }}</span>
-                            <input type="text" name="name" required placeholder="{{ __('footer.newsletter_name') }}"
-                                   class="w-full rounded-pill bg-white/10 border border-white/25 text-white placeholder-white/50 px-5 py-3.5 text-sm focus:border-[--red] focus:ring-1 focus:outline-none"
-                                   style="--red:#cb101e;">
-                        </label>
-                        <label class="block">
-                            <span class="sr-only">{{ __('footer.newsletter_email') }}</span>
-                            <input type="email" name="email" required placeholder="{{ __('footer.newsletter_email') }}"
-                                   class="w-full rounded-pill bg-white/10 border border-white/25 text-white placeholder-white/50 px-5 py-3.5 text-sm focus:border-[--red] focus:ring-1 focus:outline-none"
-                                   style="--red:#cb101e;">
-                        </label>
-                    </div>
-                    @include('partials.recaptcha', ['recaptchaAction' => 'newsletter', 'recaptchaFormId' => 'form-newsletter'])
-                    {{-- Sobre fondo oscuro del footer, el botón ink quedaría invisible;
-                         se usa la variante blanca (ink por defecto, rojo solo en hover). --}}
-                    <button type="submit" class="lat-btn lat-btn--white" style="width:100%;">
-                        {{ __('footer.newsletter_submit') }}
-                    </button>
-                </form>
-            </div>
-        </section>
-    </div>
-    @endunless
-
-    {{-- Columnas principales --}}
+         Qué cambia respecto del anterior:
+         - El newsletter deja de ser una BANDA de dos columnas grandes encima
+           del footer y pasa a ser una columna más, como en la referencia. Sigue
+           siendo el mismo endpoint, el mismo honeypot y el mismo reCAPTCHA;
+           pide solo el correo porque `name` es nullable en
+           NewsletterController::subscribe(). Conserva la clase
+           `.lat-footer__newsletter`, que NO es decorativa: el script del FAB de
+           WhatsApp (layouts/app.blade.php) la usa para apartarse de estos
+           campos.
+         - Las redes salen de la columna de marca y pasan a "Síguenos" con el
+           nombre al lado del ícono: cuatro cuadraditos sueltos no dicen a
+           dónde llevan, y la referencia los lista con nombre.
+         - Los datos de contacto suben a la columna de marca (la referencia no
+           tiene contacto en el footer, pero acá sí existe y es información
+           útil que no se va a tirar por seguir una maqueta ajena).
+         ══════════════════════════════════════════════════════════════════ --}}
     <div class="lat-wrap">
         <div class="lat-footer__grid">
-            <section aria-labelledby="footer-brand">
+            <section aria-labelledby="footer-brand" class="lat-footer__brand">
                 <a href="{{ route('home', ['locale' => $locale]) }}" aria-label="Lima América Tours — {{ __('nav.home') }}">
                     <img src="{{ asset('assets/logos/logo-america-white.webp') }}" alt="Lima América Tours" class="lat-footer__logo">
                 </a>
                 <p id="footer-brand" class="lat-footer__desc">
                     {{ \App\Models\Setting::get('footer_about_' . $locale) ?: __('footer.brand_description') }}
                 </p>
-                <div class="lat-footer__social">
-                    @if ($u = $norm($sFb))<a href="{{ $u }}" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.7-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.2c-1.2 0-1.6.8-1.6 1.5V12h2.7l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg></a>@endif
-                    @if ($u = $norm($sIg))<a href="{{ $u }}" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor" stroke="none"/></svg></a>@endif
-                    @if ($u = $norm($sTk))<a href="{{ $u }}" target="_blank" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 3c.3 2.2 1.6 3.7 3.8 3.9v2.4c-1.3.1-2.5-.3-3.8-1v5.6c0 3.4-2.6 5.6-5.6 5.1-2.6-.4-4-2.1-4-4.6 0-2.9 2.6-4.9 5.6-4.3v2.5c-.4-.1-.9-.2-1.3-.1-1 .1-1.7.8-1.7 1.9 0 1.1.8 1.9 1.9 1.9 1.2 0 2-.9 2-2.1V3H16z"/></svg></a>@endif
-                    @if ($u = $norm($sYt))<a href="{{ $u }}" target="_blank" rel="noopener" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 12s0-3.2-.4-4.7c-.2-.8-.9-1.5-1.7-1.7C19.4 5.2 12 5.2 12 5.2s-7.4 0-8.9.4c-.8.2-1.5.9-1.7 1.7C1 8.8 1 12 1 12s0 3.2.4 4.7c.2.8.9 1.5 1.7 1.7 1.5.4 8.9.4 8.9.4s7.4 0 8.9-.4c.8-.2 1.5-.9 1.7-1.7C23 15.2 23 12 23 12zM9.8 15.3V8.7l5.7 3.3-5.7 3.3z"/></svg></a>@endif
-                </div>
             </section>
 
             {{-- Los tres títulos de columna de este footer eran <h4> y producían un
@@ -175,9 +142,98 @@
                 </div>
             </nav>
 
-            <section aria-labelledby="footer-contact">
-                <h3 id="footer-contact">{{ __('footer.locate_us') }}</h3>
-                <address class="lat-footer__contact" style="font-style:normal;">
+            <section aria-labelledby="footer-tours">
+                <h3 id="footer-tours">{{ __('footer.popular_tours') }}</h3>
+                {{-- Con chevrón rojo delante de cada enlace, como la columna
+                     "Experiencias" de la referencia. El ícono es decorativo
+                     (aria-hidden): quien navegue con lector de pantalla oye el
+                     título del tour, no una flecha por línea. --}}
+                <div class="lat-footer__links lat-footer__links--arrow">
+                    @forelse ($popularTours as $pt)
+                        <a href="{{ route('tours.show', ['locale' => $locale, 'slug' => $pt->slug]) }}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                            <span>{{ $pt->title }}</span>
+                        </a>
+                    @empty
+                        <a href="{{ route('tours.index', ['locale' => $locale]) }}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                            <span>{{ __('nav.tours') }}</span>
+                        </a>
+                    @endforelse
+                    <a href="{{ route('tours.index', ['locale' => $locale]) }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                        <span>{{ __('nav.all_tours') }}</span>
+                    </a>
+                </div>
+            </section>
+
+            {{-- "Síguenos": redes CON NOMBRE (referencia). La sección entera
+                 desaparece si el cliente no cargó ninguna red — un título de
+                 columna sobre el vacío se lee como una pantalla a medio
+                 terminar. --}}
+            @php
+                $redes = array_filter([
+                    ['url' => $norm($sFb), 'nombre' => 'Facebook',  'icono' => '<path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.7-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.2c-1.2 0-1.6.8-1.6 1.5V12h2.7l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/>'],
+                    ['url' => $norm($sIg), 'nombre' => 'Instagram', 'icono' => '<path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.3 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.3-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.3-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4 1.3-.1 1.7-.1 4.8-.1zm0 5.3a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zm0 7.4a2.9 2.9 0 1 1 0-5.8 2.9 2.9 0 0 1 0 5.8zm5.7-7.6a1 1 0 1 1-2.1 0 1 1 0 0 1 2.1 0z"/>'],
+                    ['url' => $norm($sTk), 'nombre' => 'TikTok',    'icono' => '<path d="M16 3c.3 2.2 1.6 3.7 3.8 3.9v2.4c-1.3.1-2.5-.3-3.8-1v5.6c0 3.4-2.6 5.6-5.6 5.1-2.6-.4-4-2.1-4-4.6 0-2.9 2.6-4.9 5.6-4.3v2.5c-.4-.1-.9-.2-1.3-.1-1 .1-1.7.8-1.7 1.9 0 1.1.8 1.9 1.9 1.9 1.2 0 2-.9 2-2.1V3H16z"/>'],
+                    ['url' => $norm($sYt), 'nombre' => 'YouTube',   'icono' => '<path d="M23 12s0-3.2-.4-4.7c-.2-.8-.9-1.5-1.7-1.7C19.4 5.2 12 5.2 12 5.2s-7.4 0-8.9.4c-.8.2-1.5.9-1.7 1.7C1 8.8 1 12 1 12s0 3.2.4 4.7c.2.8.9 1.5 1.7 1.7 1.5.4 8.9.4 8.9.4s7.4 0 8.9-.4c.8-.2 1.5-.9 1.7-1.7C23 15.2 23 12 23 12zM9.8 15.3V8.7l5.7 3.3-5.7 3.3z"/>'],
+                ], fn ($r) => ! empty($r['url']));
+            @endphp
+            @if (! empty($redes))
+                <section aria-labelledby="footer-social">
+                    <h3 id="footer-social">{{ __('footer.follow_us') }}</h3>
+                    <div class="lat-footer__social">
+                        @foreach ($redes as $red)
+                            <a href="{{ $red['url'] }}" target="_blank" rel="noopener">
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{!! $red['icono'] !!}</svg>
+                                <span>{{ $red['nombre'] }}</span>
+                            </a>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+
+            {{-- Suscríbete: el mismo formulario de siempre (endpoint, honeypot y
+                 reCAPTCHA incluidos), ahora como columna. En la home NO se pinta:
+                 el bloque de cierre ya trae uno y no puede haber dos formularios
+                 del mismo canal en la misma pantalla. --}}
+            @unless ($hideFooterNewsletter)
+                <section aria-labelledby="newsletter-title" class="lat-footer__newsletter">
+                    <h3 id="newsletter-title">{{ __('footer.newsletter_cta') }}</h3>
+                    <p class="lat-footer__news-sub">{{ __('footer.newsletter_title') }}</p>
+
+                    @if (session('newsletter_success'))
+                        <p class="lat-footer__news-flash lat-footer__news-flash--ok" role="status">{{ session('newsletter_success') }}</p>
+                    @elseif ($errors->has('email') || $errors->has('name'))
+                        <p class="lat-footer__news-flash lat-footer__news-flash--err" role="alert">{{ $errors->first('email') ?: $errors->first('name') }}</p>
+                    @endif
+
+                    <form action="{{ route('newsletter.subscribe') }}" method="post" id="form-newsletter">
+                        @csrf
+                        <input type="text" name="website" tabindex="-1" autocomplete="off"
+                               style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+                        <label class="lat-footer__news-field">
+                            <span class="sr-only">{{ __('footer.newsletter_email') }}</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+                            <input type="email" name="email" required placeholder="{{ __('footer.newsletter_email') }}">
+                        </label>
+                        @include('partials.recaptcha', ['recaptchaAction' => 'newsletter', 'recaptchaFormId' => 'form-newsletter'])
+                        <button type="submit" class="lat-footer__news-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/></svg>
+                            {{ __('footer.newsletter_submit') }}
+                        </button>
+                    </form>
+                </section>
+            @endunless
+        </div>
+
+        {{-- Contacto: fila propia bajo las columnas. Antes era una de las cuatro
+             columnas; con cinco no entra sin apretar todo, y como es información
+             de una sola línea (teléfono · correo · horario) se lee mejor en
+             horizontal que en pila. --}}
+        <section aria-labelledby="footer-contact" class="lat-footer__contact-row">
+            <h3 id="footer-contact" class="sr-only">{{ __('footer.locate_us') }}</h3>
+            <address class="lat-footer__contact" style="font-style:normal;">
                     @if ($contactAddress)
                     <li>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
@@ -201,20 +257,7 @@
                     </li>
                     @endif
                 </address>
-            </section>
-
-            <section aria-labelledby="footer-tours">
-                <h3 id="footer-tours">{{ __('footer.popular_tours') }}</h3>
-                <div class="lat-footer__links">
-                    @forelse ($popularTours as $pt)
-                        <a href="{{ route('tours.show', ['locale' => $locale, 'slug' => $pt->slug]) }}">{{ $pt->title }}</a>
-                    @empty
-                        <a href="{{ route('tours.index', ['locale' => $locale]) }}">{{ __('nav.tours') }}</a>
-                    @endforelse
-                    <a href="{{ route('tours.index', ['locale' => $locale]) }}">{{ __('nav.all_tours') }}</a>
-                </div>
-            </section>
-        </div>
+        </section>
 
         {{-- Sellos de confianza. "Pago 100% Seguro" se quitó 2026-08-12: el
              alcance v1 no tiene pasarela de pago activa (ver
