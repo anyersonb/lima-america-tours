@@ -223,22 +223,15 @@
 
 .lat-hero__brand {
     display: block;
-    font-family: $lat-font-serif;
-    // 500, no 800 (2026-08-14). Playfair Display es una serif de alto
-    // contraste: a peso 800 los trazos gruesos se cierran y el titular se ve
-    // apelmazado, que es lo contrario del aire editorial de las referencias.
-    // El tamaño grande ya aporta toda la presencia que antes se buscaba con
-    // el peso.
-    font-weight: 500;
+    font-family: $lat-font-serif;   // = Raleway, la de titulares de producción
+    // 800: el mismo peso alto con el que producción pinta su H1 (mide 900 en
+    // el WordPress). En una sans, un titular de 70px a peso medio se ve
+    // desinflado — al revés de lo que pasaba con la serif que se probó y se
+    // revirtió el 2026-08-14.
+    font-weight: 800;
     line-height: 1.04;
-    // Tamaño recalibrado para Playfair: 15vw estaba medido con Hedvig, que es
-    // un display mucho más ancho. Playfair a 15vw en móvil parte "América" a
-    // mitad de palabra. 12.5vw mantiene las 2-3 líneas a sangre del prototipo
-    // sin hardcodear saltos (el título sigue siendo editable en Settings).
-    font-size: clamp(2.5rem, 12.5vw, 4.4rem);
-    // Las serif de alto contraste piden tracking negativo en tamaños grandes;
-    // con el default se ven "sueltas" a 70px.
-    letter-spacing: -.015em;
+    font-size: clamp(2.6rem, 15vw, 4.6rem);
+    letter-spacing: -.01em;
     color: #fff;
 
     em { font-style: normal; color: inherit; }
@@ -261,13 +254,17 @@
 .lat-hero__tagline {
     display: block;
     font-family: $lat-font-serif;
-    font-style: italic;
-    font-weight: 400;
+    // SIN itálica desde que se volvió a Raleway (2026-08-14): la cursiva era
+    // el recurso de las referencias, que están hechas con una serif editorial.
+    // En una sans geométrica la cursiva es apenas una oblicua y, peor, el
+    // <link> de Google Fonts no trae la cara itálica de Raleway — el navegador
+    // la habría INCLINADO por su cuenta (oblicua sintética), que es el defecto
+    // que se ve como "letra torcida". La jerarquía la dan el peso y el color.
+    font-weight: 600;
     color: #f6efe6;
-    font-size: clamp(1.55rem, 7.5vw, 2.4rem);
-    line-height: 1.24;
-    letter-spacing: -.01em;
-    margin: 6px 0 0;
+    font-size: clamp(1.5rem, 7vw, 2.15rem);
+    line-height: 1.28;
+    margin: 10px 0 0;
 }
 
 .lat-hero__desc {
@@ -916,11 +913,9 @@
 
     h2 {
         font-family: $lat-font-serif;
-        // 500 con Playfair (ver .lat-hero__brand): 800 en una serif de alto
-        // contraste apelmaza los titulares.
-        font-weight: 500;
+        font-weight: 800;
         color: #16305b;
-        font-size: clamp(1.9rem, 3.4vw, 2.7rem);
+        font-size: clamp(1.95rem, 3.6vw, 2.75rem);
         line-height: 1.14;
         letter-spacing: -.01em;
         margin: 18px 0 14px;
@@ -1140,7 +1135,7 @@
 
     &__body { padding: 20px; color: #fff; width: 100%; }
 
-    &__name { font-family: $lat-font-serif; font-size: 1.35rem; font-weight: 500; line-height: 1.15; }
+    &__name { font-family: $lat-font-serif; font-size: 1.32rem; font-weight: 700; line-height: 1.18; }
 
     &__sub {
         font-size: .84rem; color: #e9e1d7; margin-top: 5px;
@@ -1275,16 +1270,17 @@
 
     h2 {
         font-family: $lat-font-serif;
-        font-weight: 500;
-        font-size: clamp(2rem, 4vw, 3.1rem);
-        line-height: 1.12;
+        font-weight: 800;
+        font-size: clamp(1.95rem, 3.8vw, 2.9rem);
+        line-height: 1.14;
         letter-spacing: -.01em;
         color: #fff;
         margin: 18px 0 16px;
 
-        // Última palabra en itálica cuando el Setting la marca con <em>
-        // (referencia 3: "empieza aquí").
-        em { font-style: italic; font-weight: 400; color: #f6efe6; }
+        // La segunda mitad del titular, en peso normal y color crema en vez de
+        // la itálica de las referencias: sin la cara itálica de Raleway cargada
+        // el navegador la inclinaría por su cuenta (oblicua sintética).
+        em { font-style: normal; font-weight: 400; color: #f2e9de; }
     }
 
     p {
@@ -1467,9 +1463,9 @@
 
     h2 {
         font-family: $lat-font-serif;
-        font-weight: 500;
+        font-weight: 800;
         color: $lat-ink;
-        font-size: clamp(1.75rem, 3vw, 2.4rem);
+        font-size: clamp(1.75rem, 3vw, 2.35rem);
         line-height: 1.15;
         letter-spacing: -.01em;
         margin: 12px 0 0;
@@ -1600,7 +1596,7 @@
 
     &__body { padding: 24px 22px; color: #fff; }
 
-    &__body b { display: block; font-family: $lat-font-serif; font-size: 1.55rem; font-weight: 500; margin-bottom: 4px; }
+    &__body b { display: block; font-family: $lat-font-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
     &__body span { font-size: .86rem; color: #e9e1d7; }
 }
 
@@ -1640,16 +1636,14 @@
 
     &__intro h2 {
         font-family: $lat-font-serif;
-        font-weight: 500;
-        font-size: clamp(1.9rem, 3.4vw, 2.6rem);
-        line-height: 1.16;
+        font-weight: 800;
+        font-size: clamp(1.85rem, 3.4vw, 2.5rem);
+        line-height: 1.18;
         letter-spacing: -.01em;
         color: #fff;
         margin: 16px 0 12px;
 
-        // La segunda mitad del titular en itálica, como las referencias. Lo
-        // marca el Blade con <em> dentro del Setting; sin <em> no pasa nada.
-        em { font-style: italic; font-weight: 400; color: #f6efe6; }
+        em { font-style: normal; font-weight: 400; color: #f2e9de; }
     }
 
     &__intro p {

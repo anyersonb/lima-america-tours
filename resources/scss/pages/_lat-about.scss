@@ -207,19 +207,19 @@
 .lat-cta-final {
     position: relative;
     isolation: isolate;
-    padding: 70px 0;
+    padding: 88px 0;
     text-align: center;
     color: #fff;
-    // Franja CTA en degradado ink neutro (antes rojo a sangre completa);
-    // el rojo queda solo en el hover del botón blanco.
-    background: linear-gradient(120deg, $lat-ink 0%, $lat-ink-soft 100%);
+    // La FOTO y su velo los pinta el `style` inline de about.blade.php (foto
+    // de producción, ver la nota larga allí). Acá queda el color de respaldo:
+    // si el archivo faltara en el servidor, la franja sigue siendo legible en
+    // vez de quedar en blanco con texto blanco encima.
+    background-color: $lat-ink;
+    background-size: cover;
+    background-position: center;
     overflow: hidden;
 
-    &::after {
-        content: "";
-        position: absolute; inset: 0; z-index: -1;
-        background: radial-gradient(circle at 85% 20%, rgba(255, 255, 255, .12), transparent 55%);
-    }
+    @media (max-width: 640px) { padding: 64px 0; }
 
     h2 {
         font-family: $lat-font-serif;

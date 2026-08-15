@@ -648,8 +648,35 @@
 
     {{-- ============================================================
          CTA FINAL — "Empecemos a planear"
+
+         Fondo fotográfico desde 2026-08-14 (pedido del jefe): antes era un
+         degradado ink plano. La foto es la Plaza Mayor de Lima al atardecer,
+         **traída del WordPress de producción** (wp-content/uploads/2024/02/,
+         1600×900), o sea material del propio cliente y no de un banco.
+
+         Por qué esta y no otra: se revisaron las nueve imágenes apaisadas
+         (ratio ≥ 1.7) que tiene la biblioteca de producción, MIRÁNDOLAS una por
+         una. La de Huacachina al atardecer era la más parecida a la referencia
+         que aprobó el cliente, pero trae una marca de agua de "CuscoPeru.com"
+         incrustada: publicarla sería poner el logo de un tercero en el sitio.
+         La panorámica de Miraflores tiene el cielo demasiado claro para texto
+         blanco. Esta es apaisada, cálida, sin marca de agua, y es Lima — que es
+         la marca. Tampoco repite ninguna de las otras dos fotos grandes del
+         sitio (Machu Picchu en el hero, Barranco en el cierre de la home).
+
+         Se sirve por ResponsiveImage (WebP a 1600) igual que el resto de fondos
+         del sitio: el JPG original pesa 448 KB.
          ============================================================ --}}
-    <section class="lat-cta-final" aria-labelledby="about-cta-title">
+    @php
+        $aboutCtaBg = \App\Support\ResponsiveImage::make(
+            public_path('assets/banners/plaza-mayor-lima-atardecer.jpg'),
+            asset('assets/banners/plaza-mayor-lima-atardecer.jpg'),
+            [1600],
+            '100vw'
+        )['src'];
+    @endphp
+    <section class="lat-cta-final" aria-labelledby="about-cta-title"
+             style="background-image:linear-gradient(rgba(14,11,10,.78), rgba(14,11,10,.9)), url('{{ $aboutCtaBg }}');">
         <div class="lat-wrap">
             <span class="lat-eyebrow is-center" style="color:#ffd7d9">
                 {{ $L('Empecemos a planear', "Let's start planning", 'Vamos começar a planejar') }}

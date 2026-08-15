@@ -151,32 +151,20 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    {{-- DOS familias, ni una más (cada familia de más es descarga y
-         render-blocking en el LCP):
+    {{-- LAS FUENTES DE PRODUCCIÓN. Verificadas el 2026-08-14 midiendo
+         limaamericatours.com en el navegador (no leyendo el kit): el cuerpo sale
+         en Open Sans y h1/h2/h3 en Raleway, con pesos 900/900/700. Ninguna serif.
 
-         - Playfair Display en titulares. Reemplaza a Raleway el 2026-08-14, por
-           las referencias que aprobó el cliente: las tres traen titulares de
-           serif editorial con una parte en itálica, y ese es el rasgo que
-           separa el sitio del "template" de sans bold en todas las secciones.
-           Los titulares de la home van en 500, NO en 800: una serif de alto
-           contraste engorda mucho al subir de peso y ahí se pierde el aire
-           editorial. Se pide igual el 700 porque el resto del sitio (nosotros,
-           contacto, blog, checkout, ficha) tiene decenas de reglas con
-           `font-weight: 800` sobre titulares serif: sin una cara bold real el
-           navegador las SINTETIZA (faux bold) y se ven sucias. Con el 700
-           cargado, un 800 declarado cae en 700 real. Esas reglas se irán
-           bajando a 600 al repasar cada pantalla.
-         - Open Sans en cuerpo, UI y cifras (antes las cifras eran Raleway; al
-           salir Raleway del sitio, los precios pasan a Open Sans 700 — ver
-           $font-price en abstracts/_variables.scss).
+         Ese mismo día se probó Playfair Display en titulares, tomado de unas
+         referencias del cliente, y se revirtió por instrucción del jefe: mientras
+         el WordPress siga publicado, el visitante que salte de una URL a otra
+         tiene que ver la misma marca. Si se cambia la tipografía, se cambia
+         primero en producción.
 
-         Nota de continuidad: el 2026-08-01 se alineó la tipografía con el
-         WordPress de producción (Raleway/Open Sans) para no tener dos marcas
-         según qué URL abriera el visitante. Ese motivo sigue vigente y hay que
-         resolverlo del otro lado: cuando este sitio reemplace a producción, el
-         punto queda saldado; si conviven, hay que llevar Playfair al tema de
-         WordPress. Está anotado en docs/rebrand/ESTADO.md. --}}
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
+         Dos familias, ni una más: cada una es descarga render-blocking antes del
+         LCP. Los pesos de Raleway llegan hasta 900 porque los titulares del
+         sitio usan 800-900, y sin la cara real el navegador la sintetiza. --}}
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Raleway:wght@400;500;600;700;800;900&display=swap">
 
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">

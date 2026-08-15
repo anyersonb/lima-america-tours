@@ -1,6 +1,6 @@
 # Estado del rebrand "anti-IA" y del lote de mockups
 
-Actualizado: 2026-08-14 · Rama `feat/mockups-ago-2026` · Publicado en staging: **75b00eb**
+Actualizado: 2026-08-15 · Rama `feat/mockups-ago-2026` · Publicado en staging: **ver `.deployed-commit` del servidor**
 
 Este archivo existe para que el siguiente que abra el proyecto (o yo mismo dentro
 de un mes) no tenga que reconstruir de memoria en qué quedó todo.
@@ -15,32 +15,40 @@ de serif con una parte en itálica, footer de cinco columnas).
 Qué hacía exactamente que la home se leyera como plantilla, y qué se hizo con cada
 cosa:
 
-### 1. Todos los titulares eran sans bold → serif editorial
+### 1. Tipografía: las de PRODUCCIÓN, y se verificaron
 
-`Playfair Display` en titulares (500, no 800: una serif de alto contraste se apelmaza
-al engordar) y `Open Sans` en todo lo demás. **Raleway sale del sitio**; las cifras
-que la usaban (`$font-price`) pasan a Open Sans 700.
+Durante este lote se probó `Playfair Display` en titulares, tomándolo de las
+referencias. **Se revirtió el mismo día, por instrucción del jefe**: mientras el
+WordPress siga publicado, el visitante que salte de una URL a otra tiene que ver la
+misma marca.
 
-Hay que tocar TRES lugares o el cambio queda a medias: `tailwind.config.js` (de ahí
-salen `body` y `h1..h6`), `abstracts/_variables.scss` y el `<link>` de Google Fonts
-del layout. Se pide también el peso 700 de Playfair porque el resto del sitio tiene
-decenas de reglas con `font-weight: 800` sobre serif: sin una cara bold real el
-navegador las sintetiza y se ven sucias. **Pendiente**: bajar esas reglas a 600 al
-repasar nosotros / contacto / blog / checkout / ficha.
+Las de producción se midieron EN EL NAVEGADOR sobre limaamericatours.com (no leyendo
+el kit de Elementor ni suponiendo): el `<body>` y 71 elementos de texto salen en
+**Open Sans**; `h1`, `h2` y `h3` en **Raleway**, pesos 900/900/700. Elementor carga
+además `poppins.css`, pero Poppins solo aparece en 4 elementos sueltos de un widget:
+no es tipografía de marca. Ninguna serif.
 
-**Ojo con la decisión que esto revierte**: el 2026-08-01 se puso Raleway justamente
-para igualar al WordPress de producción y no tener dos marcas según qué URL abriera
-el visitante. Ese riesgo sigue vivo mientras los dos sitios convivan; la salida es
-llevar Playfair al tema de WordPress cuando este sitio reemplace al viejo, no volver
-a Raleway acá.
+Así que el sitio nuevo queda en Raleway (titulares, 800) + Open Sans (cuerpo), que
+es donde ya estaba desde el 2026-08-01. Si algún día se cambia la tipografía, **se
+cambia primero en producción**.
 
-### 2. La serif estaba aplicada también a los rótulos chicos
+Al tocar esto hay que tocar TRES lugares o el cambio queda a medias:
+`tailwind.config.js` (de ahí salen `body` y `h1..h6`), `abstracts/_variables.scss` y
+el `<link>` de Google Fonts del layout.
 
-Playfair vive ahora en H1/H2/H3 y en los nombres de tarjeta grandes. Los rótulos de
-16px (garantías, "por qué elegirnos", inicial del avatar) vuelven a sans: aplicar la
-serif a todo es lo que hacía que "todo pareciera titular".
+Lo que SÍ quedó del experimento, porque no depende de la familia:
 
-### 3. Tres filas de iconitos en cajas rojas casi idénticas
+- Los rótulos chicos (garantías, "por qué elegirnos", inicial del avatar) usan la
+  sans de cuerpo en vez de la de titulares. Aplicar la tipografía de titular también
+  a los rótulos de 16px era parte de lo que hacía que "todo pareciera titular".
+- La segunda línea del titular del hero ya no es roja sino crema, lo que sacó de
+  encima la deuda de contraste del rojo sobre foto (ver §7).
+- **Sin itálicas**: eran el recurso de las referencias, que están hechas con una
+  serif editorial. En Raleway la cursiva es apenas una oblicua y, peor, el `<link>`
+  no trae la cara itálica: el navegador la habría inclinado por su cuenta (oblicua
+  sintética). La jerarquía la dan el peso y el color.
+
+### 2. Tres filas de iconitos en cajas rojas casi idénticas
 
 Garantías, "¿por qué elegirnos?" y los beneficios del newsletter resolvían igual: un
 círculo o cuadro rojo relleno con un ícono adentro, repetido 4-5 veces. Ahora cada
@@ -52,13 +60,13 @@ newsletter el ícono **también es un `<span>`**, así que la regla `span { colo
 $lat-muted }` de la bajada se lo llevaba puesto. Los iconos se pintaban en gris
 (medido: `rgb(111,106,99)`), no en rojo. Se arregló con `b + span`.
 
-### 4. La barrita roja del eyebrow, seis veces en la misma página
+### 3. La barrita roja del eyebrow, seis veces en la misma página
 
 `.lat-eyebrow` ya no dibuja las líneas de 26px a los lados: versalita, tracking
 abierto y color, como la prensa de viajes. Se limpiaron las reglas muertas que
 pintaban esos pseudo-elementos en blog, galería y tours.
 
-### 5. Seis encabezados centrados idénticos, uno tras otro
+### 4. Seis encabezados centrados idénticos, uno tras otro
 
 "Explora por categoría" pasa a encabezado a la izquierda con enlace a la derecha
 (reutiliza `.lat-sec-head-row`, que ya existía para testimonios). El ritmo queda
@@ -67,7 +75,7 @@ alternado: centrado → izquierda → centrado → izquierda → centrado.
 El `style="padding:70px 24px"` inline repetido en cinco secciones se reemplazó por
 `.lat-sec` / `.lat-sec--follow`.
 
-### 6. La banda roja plana del CTA — el peor delator
+### 5. La banda roja plana del CTA — el peor delator
 
 Era una masa de rojo de ~380 px de alto y, pegado abajo, otro bloque oscuro con su
 propia foto: dos superficies para el mismo momento de la visita. Ahora hay **un solo
@@ -85,7 +93,7 @@ El rojo queda en el botón, donde funciona como señal.
   misma imagen. Ahora es Barranco (1920×1080, del catálogo real), con guard por si el
   archivo no está en el servidor.
 
-### 7. Contraste: medido, no supuesto
+### 6. Contraste: medido, no supuesto
 
 Se ocultó el contenido del bloque de cierre, se capturó el fondo (foto + velo) y se
 muestreó el píxel más claro de cada mitad con la fórmula WCAG:
@@ -103,18 +111,40 @@ el mínimo es 3:1 (WCAG 1.4.11) y 3.40 cumple.
 El velo del cierre subió a `.74 → .93` por lo mismo, y el del hero a `.68` arriba: la
 panorámica tiene el cielo claro justo donde cae la primera línea del titular.
 
-### 8. Lo que NO se tocó, a propósito
+### 7. Lo que NO se tocó, a propósito
 
 - **El copy**: los textos son del cliente y varios están blindados por tests
   (`HomeHeroH1KeywordTest` exige Lima/América/Tours/Perú dentro del H1;
   `HeroTaglineYearsCoherenceTest`, que el subtítulo no invente una antigüedad). El
   titular del hero sigue siendo el nombre de marca; lo que cambió es el tratamiento:
-  la segunda línea pasó de rojo bold a itálica clara, como en la referencia 2.
+  la segunda línea pasó de roja a crema y de 700 a 600.
 - Con eso desaparece de raíz el **rojo sobre foto del hero**, que arrastraba una deuda
   de contraste a recalcular cada vez que cambiara la foto — y la foto ahora la cambia
   la clienta sola, desde el slider administrable.
 
-Verificado en 390 / 768 / 1024 / 1440 sin scroll horizontal, y **510 tests en verde**.
+Verificado en 390 / 768 / 1024 / 1440 sin scroll horizontal, y **512 tests en verde**.
+
+### 8. El banner de "Déjanos ser tu guía" (Nosotros), con foto de producción
+
+Ese CTA era un degradado ink plano. Ahora lleva de fondo la **Plaza Mayor de Lima al
+atardecer**, traída del WordPress de producción (`wp-content/uploads/2024/02/`,
+1600×900) — material del propio cliente, no de un banco de imágenes.
+
+Se revisaron MIRÁNDOLAS las nueve imágenes apaisadas (ratio ≥ 1.7) de la biblioteca
+de producción. Dos descartes que conviene no repetir:
+
+- **Huacachina al atardecer** era la más parecida a la referencia que le gustó al
+  cliente, pero trae una marca de agua de "CuscoPeru.com" incrustada: publicarla es
+  poner el logo de un tercero en el sitio.
+- La panorámica de **Miraflores** tiene el cielo demasiado claro para texto blanco.
+
+Contraste medido sobre el render (contenido oculto, muestreo del píxel más claro del
+fondo): peor caso `rgb(65,56,48)` → titular blanco **11.46:1**, párrafo 8.89:1,
+eyebrow 8.71:1, bajadas 6.91:1. Todo sobre AA.
+
+Se sirve por `ResponsiveImage` en WebP a 1600 (el JPG original pesa 448 KB). Hoy es
+un asset de repositorio, no un Setting: si el cliente quiere poder cambiarlo desde el
+panel, hay que agregar la clave.
 
 ## Lote 2026-08-13 — hero: antigüedad, slider, badge, y el motivo del CTA
 

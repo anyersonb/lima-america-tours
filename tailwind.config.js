@@ -18,13 +18,14 @@ export default {
             // Mantener en sincronía con $font-sans / $font-display / $font-price
             // y con el <link> de Google Fonts de layouts/app.blade.php.
             //
-            // 2026-08-14: titulares en Playfair Display (serif editorial de las
-            // referencias que aprobó el cliente) y Raleway fuera del sitio; las
-            // cifras que la usaban pasan a Open Sans en peso 700.
+            // Las familias son las de PRODUCCIÓN, medidas en el navegador sobre
+            // limaamericatours.com el 2026-08-14: Raleway en titulares (h1/h2 en
+            // peso 900) y Open Sans en cuerpo. Ninguna serif. Ver el bloque de
+            // TIPOGRAFÍA en abstracts/_variables.scss antes de cambiarlas.
             fontFamily: {
                 sans: ['"Open Sans"', ...defaultTheme.fontFamily.sans],
-                display: ['"Playfair Display"', 'Georgia', ...defaultTheme.fontFamily.serif],
-                price: ['"Open Sans"', ...defaultTheme.fontFamily.sans],
+                display: ['"Raleway"', ...defaultTheme.fontFamily.sans],
+                price: ['"Raleway"', ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 // "teal" — remapeado a neutros oscuros ("ink") de Lima América.

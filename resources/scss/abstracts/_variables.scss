@@ -13,24 +13,26 @@ $cream-200: #e9e3da;  // = $lat-line (antes cream cálido #ece6e2)
 $state-error: #c81f21;
 $state-success: #145212;
 
-// TIPOGRAFÍA — 2026-08-14, referencias aprobadas por el cliente.
-// Las tres capturas que mandó traen titulares en SERIF editorial (con una
-// parte en itálica) sobre cuerpo sans. Ese contraste es lo que hace que un
-// sitio se lea como diseñado: sans bold en TODOS los titulares es justamente
-// el acabado genérico del que se quería salir.
+// TIPOGRAFÍA — LAS DE PRODUCCIÓN. No se cambian sin verificar el sitio real.
 //
-// Historia previa, para que nadie lo revierta sin el contexto: el 2026-08-01 se
-// puso Raleway en titulares para igualar al WordPress de producción (tema Hello
-// Elementor) y no tener dos marcas según la URL. Ese riesgo sigue existiendo
-// mientras los dos sitios convivan — la salida es llevar Playfair al tema de
-// WordPress, no volver a Raleway acá. Anotado en docs/rebrand/ESTADO.md.
+// Verificado el 2026-08-14 midiendo limaamericatours.com en el navegador (no
+// leyendo el kit ni suponiendo): el <body> y 71 elementos de texto salen en
+// **Open Sans**; h1, h2 y h3 salen en **Raleway** (pesos 900/900/700).
+// Elementor carga raleway.css, opensans.css y poppins.css — Poppins solo lo usan
+// 4 elementos sueltos de un widget, no es tipografía de marca. Ninguna serif.
 //
-// Dos familias, ni una más (cada una es descarga render-blocking antes del
-// LCP). Raleway sale del sitio: las cifras que la usaban pasan a Open Sans 700
-// — una serif de alto contraste en un precio se lee como cita, no como número.
+// Ese mismo día se había probado Playfair Display en titulares, tomándolo de
+// unas referencias del cliente. Se revirtió por instrucción directa del jefe:
+// mientras el WordPress siga en pie, el visitante que salte de una URL a otra
+// tiene que ver la MISMA marca. Si algún día se decide cambiar la tipografía,
+// se cambia primero en producción y después acá, no al revés.
+//
+// Al tocar esto hay que tocar TRES lugares o el cambio queda a medias:
+// este archivo, `tailwind.config.js` (de ahí salen `body` y `h1..h6`) y el
+// <link> de Google Fonts en layouts/app.blade.php.
 $font-sans: 'Open Sans', system-ui, sans-serif;          // Cuerpo, UI y botones
-$font-display: 'Playfair Display', Georgia, 'Times New Roman', serif; // Titulares
-$font-price: $font-sans;                                 // Precios y cifras (peso 700)
+$font-display: 'Raleway', system-ui, sans-serif;         // Titulares (h1/h2 en 800-900)
+$font-price: 'Raleway', system-ui, sans-serif;           // Precios y cifras
 
 // Breakpoints (mobile-first, mirror Tailwind)
 $bp-sm: 640px;
@@ -95,7 +97,10 @@ $lat-r-pill: 999px;
 // Se repunta a la MISMA familia que $font-display: el nombre vuelve a ser
 // cierto y las ~18 reglas de _lat-home.scss/_lat-tour.scss que ya usaban
 // $lat-font-serif quedan arregladas de una sola vez, sin tocar cada selector.
-$lat-font-serif: $font-display; // = 'Playfair Display', Georgia, serif — Titulares
+// El nombre "serif" es historia del diseño anterior (Hedvig Letters Serif) y ya
+// no describe lo que apunta: es la tipografía de TITULARES, que en producción es
+// Raleway. Se conserva el nombre para no reescribir las ~18 reglas que lo usan.
+$lat-font-serif: $font-display; // = 'Raleway' — Titulares
 $lat-font-sans:  $font-sans; // = 'Open Sans' — Cuerpo (era Roboto; producción usa Open Sans)
 
 $lat-wrap: 1480px; // ancho máximo del contenedor
