@@ -102,6 +102,35 @@ afirmación, en la misma sección, resuelta de dos maneras opuestas. O las dos s
 sostienen o ninguna. Con el año real de inicio de operaciones se resuelven las dos de
 una vez.
 
+## Verificación post-deploy — staging en `34e2ef5` (2026-08-18, 22:17)
+
+Medido otra vez con el puente CDP después de publicar y purgar cachés. Los tres
+arreglos están vivos:
+
+| Comprobación | Resultado |
+|---|---|
+| No queda ningún "24/7" en la ficha | ✅ |
+| El sello muestra el horario real | ✅ "Atención al cliente / Lun – Vie: 9:00 a.m. – 7:00 p.m." |
+| No queda "Pago 100% seguro" | ✅ |
+| Copy honesto en su lugar | ✅ "Sin cobro ahora: confirmamos tu reserva por WhatsApp o correo" |
+| Rating sin respaldo oculto | ✅ 0 elementos `.lat-stars__rate` en la página |
+| Las 3 tarjetas de relacionados, sin rating | ✅ |
+| Caja de reserva y galería intactas | ✅ 10 miniaturas, sticky OK |
+| Consola y red | ✅ 0 errores, 31 requests, ningún ≥400, sin mixed content |
+| Ficha a 390 px | ✅ sin overflow horizontal, barra fija visible |
+| `/nosotros` tras purgar cachés | ✅ 200, sin errores de consola, equipo con sus 4 tarjetas |
+
+Falso defecto descartado en el camino: una primera medición del equipo devolvió 0
+tarjetas. Era el selector (`.lat-guide` no existe; es `.lat-team-grid`), no la página.
+
+## Pendientes de contenido que aparecieron al medir
+
+- **Los 4 miembros del equipo no tienen foto**: las 4 tarjetas caen al placeholder de
+  inicial (`.lat-team-card__initial`). La columna `guides.photo` existe y está vacía.
+- **Conviene correr el auditor de datos ajenos** después de este deploy, que es la vía
+  por la que ya se colaron tres veces datos de Lima View:
+  `sudo -u limaa3133 /usr/local/lsws/lsphp82/bin/php artisan data:audit-foreign < /dev/null`
+
 ## Archivos de este inventario
 
 - `01-nosotros-y-menu.md` — Nosotros (hero rediseñado) y menú móvil. ~37 h.
