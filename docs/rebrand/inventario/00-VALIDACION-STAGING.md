@@ -72,6 +72,36 @@ Los cuatro están confirmados en el entorno publicado, no solo en el código:
 | "Pago 100% seguro" | `tours/show.blade.php:537-540` | El alcance v1 no tiene pasarela activa (claves de prueba) |
 | `4.8` con `(0 reseñas)`, en ficha y en 3 relacionados | `tours/show.blade.php:269-277` y tarjetas de relacionados | Cifra sembrada uniforme en los 24 tours, sin respaldo |
 
+## Qué se corrigió después de validar (commit `1515d6b`)
+
+Tres de los cuatro defectos quedaron arreglados, con test que se probó al revés
+(revirtiendo la vista, 4 de los 6 casos se ponen en rojo). Suite completa: **518 en
+verde**.
+
+| Defecto | Qué quedó | Dónde |
+|---|---|---|
+| "Atención al cliente 24/7" | Sale de `Setting::contactHours()`, mismo patrón que ya usaba Nosotros. Sin horario cargado, texto neutro en vez de inventar uno | `tours/show.blade.php` |
+| "Pago 100% seguro" | Condicionado a que haya pasarela real. Sin ella: "Sin cobro ahora: confirmamos tu reserva por WhatsApp o correo" | `tours/show.blade.php` + `App\Support\OnlinePayment` |
+| `4.8 (0 reseñas)` | El bloque solo se pinta si hay reseñas que lo sostengan. Aplica también a las 3 tarjetas de relacionados | `tours/show.blade.php` |
+
+La expresión "¿hay pasarela?" estaba duplicada en `CartController`; se extrajo a
+`App\Support\OnlinePayment::available()` en vez de copiarla por tercera vez.
+`CheckoutController` se dejó igual a propósito: ahí hacen falta las dos banderas por
+separado para pintar cada botón.
+
+### El cuarto NO se tocó, y es decisión de Anyerson
+
+El "Más de 10 años mostrando lo mejor del Perú" sigue publicado, en el **H1**
+(`about.blade.php:220`) y en el **H2** del split (`about.blade.php:283`). Hay una
+decisión escrita en `about.blade.php:111-112` de que ese titular es copy de marca y no
+se toca.
+
+El problema es que esa decisión convive con otra que la contradice: el badge flotante
+que decía "10+ años" **sí** se oculta por falta de `company_started_year`. Es la misma
+afirmación, en la misma sección, resuelta de dos maneras opuestas. O las dos se
+sostienen o ninguna. Con el año real de inicio de operaciones se resuelven las dos de
+una vez.
+
 ## Archivos de este inventario
 
 - `01-nosotros-y-menu.md` — Nosotros (hero rediseñado) y menú móvil. ~37 h.
