@@ -30,23 +30,51 @@
         $hasFreeTours = false;
     }
 
-    // Menú completo (2026-08-03): Inicio, Nosotros, Tours, Servicios, Blog y
-    // Contacto siempre; Free Tours solo si $hasFreeTours (hoy no, 0 resultados).
+    // Ícono por ítem: SOLO se pinta en el drawer móvil (patrón pedido por el
+    // jefe, referencia limaviewtours.com — ver docs/rebrand/inventario/
+    // 01-nosotros-y-menu.md, Pantalla 2). El nav de escritorio ignora esta
+    // clave. Trazo Lucide 2px, mismo criterio que HeroIcons — pero estos 11
+    // son navegación fija de código (no editable desde el panel), así que
+    // viven aquí y no en App\Support\HeroIcons.
+    $navIcons = [
+        'home'      => '<path d="M3 9.5 12 3l9 6.5"/><path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/>',
+        'compass'   => '<circle cx="12" cy="12" r="9"/><path d="M15.8 8.2 13.6 13.6 8.2 15.8l2.2-5.4 5.4-2.2Z"/>',
+        'group'     => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>',
+        'briefcase' => '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M2 13h20"/>',
+        'doc'       => '<path d="M6 3h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M15 3v5h5"/><path d="M8 13h8"/><path d="M8 17h5"/>',
+        'star'      => '<path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',
+        'pin'       => '<path d="M12 21s7-6.5 7-11.5a7 7 0 1 0-14 0C5 14.5 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+        'ticket'    => '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M9 6v12"/>',
+        'cart'      => '<circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M2.5 3h2l2.4 12.4a1.8 1.8 0 0 0 1.8 1.6h8.6a1.8 1.8 0 0 0 1.8-1.4L21 8H6"/>',
+        'gift'      => '<rect x="3" y="8" width="18" height="4"/><path d="M12 8v13"/><path d="M19 21H5a1 1 0 0 1-1-1v-8h16v8a1 1 0 0 1-1 1Z"/><path d="M7.5 8a2.5 2.5 0 1 1 0-5C10 3 12 8 12 8"/><path d="M16.5 8a2.5 2.5 0 1 0 0-5C14 3 12 8 12 8"/>',
+        'login'     => '<path d="M13 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M9 17l5-5-5-5"/><path d="M14 12H3"/>',
+    ];
+
+    // Menú completo (2026-08-19): Inicio, Nosotros, Tours, Servicios, Blog y
+    // Contacto siempre; Free Tours solo si $hasFreeTours (hoy no, 0 resultados);
+    // + Mis reservas, Carrito, Reseñas e Ingresar agregados al final (decisión
+    // de menor riesgo: no reordena el nav de escritorio ya aprendido por el
+    // usuario — el jefe puede reordenar después si lo pide).
     // Esta lista alimenta el nav de escritorio Y el drawer de móvil: no hay que
-    // tocar dos sitios.
+    // tocar dos sitios. 'icon'/'subtitle' son SOLO para el drawer; el nav de
+    // escritorio (@foreach más abajo) los ignora.
     $navItems = [
-        ['label' => __('nav.home'),       'url' => route('home', ['locale' => $locale]),                          'active' => request()->routeIs('home')],
-        ['label' => __('nav.about'),      'url' => route('about', ['locale' => $locale]),                         'active' => request()->routeIs('about')],
-        ['label' => __('nav.tours'),      'url' => route('tours.index', ['locale' => $locale]),                   'active' => request()->routeIs('tours.index', 'tours.category', 'tours.show')],
+        ['label' => __('nav.home'),       'url' => route('home', ['locale' => $locale]),                          'active' => request()->routeIs('home'),                                              'icon' => 'home',      'subtitle' => __('nav.home_subtitle')],
+        ['label' => __('nav.about'),      'url' => route('about', ['locale' => $locale]),                         'active' => request()->routeIs('about'),                                             'icon' => 'group',     'subtitle' => __('nav.about_subtitle')],
+        ['label' => __('nav.tours'),      'url' => route('tours.index', ['locale' => $locale]),                   'active' => request()->routeIs('tours.index', 'tours.category', 'tours.show'),       'icon' => 'compass',   'subtitle' => __('nav.tours_regions')],
     ];
 
     if ($hasFreeTours) {
-        $navItems[] = ['label' => __('nav.free_tours'), 'url' => route('tours.results', ['locale' => $locale, 'q' => 'free']), 'active' => request()->routeIs('tours.results') && request('q') === 'free'];
+        $navItems[] = ['label' => __('nav.free_tours'), 'url' => route('tours.results', ['locale' => $locale, 'q' => 'free']), 'active' => request()->routeIs('tours.results') && request('q') === 'free', 'icon' => 'gift', 'subtitle' => __('nav.free_tours_subtitle')];
     }
 
-    $navItems[] = ['label' => __('nav.services'), 'url' => route('home', ['locale' => $locale]) . '#servicios', 'active' => false];
-    $navItems[] = ['label' => 'Blog',             'url' => route('blog.index', ['locale' => $locale]),         'active' => request()->routeIs('blog.index', 'blog.show')];
-    $navItems[] = ['label' => __('nav.contact'),  'url' => route('contact', ['locale' => $locale]),            'active' => request()->routeIs('contact')];
+    $navItems[] = ['label' => __('nav.services'),    'url' => route('home', ['locale' => $locale]) . '#servicios', 'active' => false,                                          'icon' => 'briefcase', 'subtitle' => __('nav.services_subtitle')];
+    $navItems[] = ['label' => __('nav.blog'),         'url' => route('blog.index', ['locale' => $locale]),          'active' => request()->routeIs('blog.index', 'blog.show'), 'icon' => 'doc',       'subtitle' => __('nav.blog_subtitle')];
+    $navItems[] = ['label' => __('nav.contact'),      'url' => route('contact', ['locale' => $locale]),             'active' => request()->routeIs('contact'),                 'icon' => 'pin',       'subtitle' => __('nav.contact_subtitle')];
+    $navItems[] = ['label' => __('nav.my_bookings'),  'url' => route('customer.account', ['locale' => $locale]),    'active' => request()->routeIs('customer.account'),        'icon' => 'ticket',    'subtitle' => __('nav.my_bookings_subtitle')];
+    $navItems[] = ['label' => __('nav.cart'),         'url' => route('cart.index', ['locale' => $locale]),          'active' => request()->routeIs('cart.index'),              'icon' => 'cart',      'subtitle' => __('nav.cart_subtitle')];
+    $navItems[] = ['label' => __('nav.reviews'),      'url' => route('reviews', ['locale' => $locale]),             'active' => request()->routeIs('reviews'),                 'icon' => 'star',      'subtitle' => __('nav.reviews_subtitle')];
+    $navItems[] = ['label' => __('nav.login'),        'url' => route('customer.login', ['locale' => $locale]),      'active' => request()->routeIs('customer.login'),          'icon' => 'login',     'subtitle' => __('nav.login_subtitle')];
 @endphp
 
 <div class="lat-topbar">
@@ -151,7 +179,16 @@
 
         <nav class="lat-drawer__nav" aria-label="{{ __('nav.main_navigation') }}">
             @foreach ($navItems as $item)
-                <a href="{{ $item['url'] }}" @click="open = false">{{ $item['label'] }}</a>
+                <a href="{{ $item['url'] }}" @click="open = false" @class(['is-active' => $item['active']])>
+                    <span class="lat-drawer__nav-ic" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{!! $navIcons[$item['icon']] ?? '' !!}</svg>
+                    </span>
+                    <span class="lat-drawer__nav-text">
+                        <span class="lat-drawer__nav-title">{{ $item['label'] }}</span>
+                        <span class="lat-drawer__nav-desc">{{ $item['subtitle'] }}</span>
+                    </span>
+                    <svg class="lat-drawer__nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                </a>
             @endforeach
         </nav>
 

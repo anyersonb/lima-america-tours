@@ -93,10 +93,18 @@ class FooterHidesEmptyLinksTest extends TestCase
 
         // "Servicios" es un ancla al bloque de garantías del home, no una ruta:
         // por eso su path es "/es" igual que Inicio.
+        //
+        // Los cuatro últimos se agregaron en el lote de agosto 2026, cuando el jefe
+        // pidió el patrón de menú de limaviewtours.com: sus rutas ya existían, lo que
+        // faltaba era ofrecerlas. Van al final a propósito, para no reordenar el nav
+        // de escritorio (docs/rebrand/inventario/01-nosotros-y-menu.md).
         $this->assertSame(
-            ['/es', '/es/nosotros', '/es/tours', '/es', '/es/blog', '/es/contacto'],
+            [
+                '/es', '/es/nosotros', '/es/tours', '/es', '/es/blog', '/es/contacto',
+                '/es/mi-cuenta', '/es/carrito', '/es/resenas', '/es/ingresar',
+            ],
             $this->paths($nav),
-            'El menú de cabecera no lista Inicio, Nosotros, Tours, Servicios, Blog y Contacto.'
+            'El menú de cabecera no lista los 10 ítems: Inicio, Nosotros, Tours, Servicios, Blog, Contacto, Mis reservas, Carrito, Reseñas e Ingresar.'
         );
     }
 

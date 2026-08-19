@@ -289,27 +289,87 @@ body.lat-drawer-open { overflow: hidden; }
         }
     }
 
+    // Patrón pedido por el jefe (referencia limaviewtours.com, circulado en
+    // verde 2026-08-18): círculo con ícono + título/subtítulo + chevron, filas
+    // separadas por una línea fina. Solo estructura/paleta cambian de marca —
+    // la referencia es de OTRO cliente, no se copia copy ni color (acá el
+    // acento sigue siendo $lat-red, no el ámbar de la referencia).
     &__nav {
         display: flex;
         flex-direction: column;
-        padding: 8px 14px;
-        gap: 2px;
+        padding: 4px 10px 8px;
 
         a {
-            display: flex;
+            display: grid;
+            grid-template-columns: 44px 1fr auto;
             align-items: center;
-            gap: 12px;
-            padding: 13px 12px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: .95rem;
-            color: $lat-ink-soft;
-            transition: background .15s, color .15s;
+            gap: 14px;
+            padding: 13px 8px;
+            border-bottom: 1px solid $lat-line;
+            transition: background .15s;
 
-            &:hover { background: $lat-surface-2; color: $lat-red; }
+            &:last-child { border-bottom: none; }
+            &:hover { background: $lat-surface-2; }
+            &:hover .lat-drawer__nav-title { color: $lat-red; }
 
-            svg { width: 20px; height: 20px; color: $lat-red; flex: none; }
+            // Ítem activo: mismo acento que el nav de escritorio (texto +
+            // ícono en rojo), sin duplicar la marca de "punto" que usa ahí —
+            // el chevron ya aporta suficiente dirección visual en el drawer.
+            &.is-active {
+                .lat-drawer__nav-title { color: $lat-red; }
+                .lat-drawer__nav-ic { border-color: $lat-red; }
+                .lat-drawer__nav-ic svg { color: $lat-red; }
+            }
         }
+    }
+
+    &__nav-ic {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: $lat-surface-2;
+        border: 1px solid transparent;
+        display: grid;
+        place-items: center;
+        flex: none;
+        transition: border-color .15s;
+
+        // Glifo oscuro en reposo (patrón de la referencia: el ícono dentro
+        // del círculo va oscuro, el acento de color lo lleva el chevron).
+        // Rojo solo en .is-active, arriba.
+        svg { width: 20px; height: 20px; color: $lat-ink-soft; }
+    }
+
+    &__nav-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    &__nav-title {
+        font-family: $lat-font-sans;
+        font-weight: 700;
+        font-size: .95rem;
+        color: $lat-ink-soft;
+        transition: color .15s;
+    }
+
+    &__nav-desc {
+        font-family: $lat-font-sans;
+        font-weight: 400;
+        font-size: .8rem;
+        color: $lat-muted;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__nav-chevron {
+        width: 18px;
+        height: 18px;
+        color: $lat-red;
+        flex: none;
     }
 
     &__foot {
