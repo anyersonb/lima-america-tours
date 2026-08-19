@@ -266,6 +266,13 @@
                     @if ($tour->badge_text)
                         <span class="lat-detail-badge {{ $badgeClass($tour->badge_type) }}">{{ $tour->badge_text }}</span>
                     @endif
+                    {{-- El rating por tour solo se pinta si hay reseñas que lo
+                         sostengan. La columna `rating` viene sembrada en 4.8 para los
+                         24 tours y `reviews_count` en 0: publicar "4.8 (0 reseñas)" es
+                         una cifra sin respaldo, igual que inventarla
+                         (docs/rebrand/inventario/00-VALIDACION-STAGING.md). Cuando el
+                         cliente cargue reseñas reales, el bloque aparece solo. --}}
+                    @if ((int) $tour->reviews_count > 0 && (float) $tour->rating > 0)
                     <span class="lat-stars">
                         <span class="lat-stars__s">
                             @for ($i = 0; $i < 5; $i++)
@@ -275,6 +282,7 @@
                         <span class="lat-stars__rate">{{ number_format((float) $tour->rating, 1) }}</span>
                         <span class="lat-stars__cnt">({{ $tour->reviews_count }} {{ $L('reseñas', 'reviews', 'avaliações') }})</span>
                     </span>
+                    @endif
                     <span class="lat-badge-free">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
                         {{ $L('Cancelación gratuita', 'Free cancellation', 'Cancelamento gratuito') }}
@@ -534,9 +542,19 @@
                             </div>
                         @endif
                         <button type="submit" class="lat-btn lat-btn--red" style="width:100%">{{ $L('Reservar ahora', 'Book now', 'Reservar agora') }}</button>
+                        {{-- "Pago 100% seguro" solo si de verdad hay una pasarela que
+                             pueda cobrar. Hoy las llaves de Culqi y PayPal son de
+                             prueba, así que la reserva se confirma por WhatsApp/correo
+                             y no hay cobro inmediato: prometer un pago seguro que no
+                             existe es peor que no prometer nada. La bandera la calcula
+                             App\Support\OnlinePayment. --}}
                         <div class="lat-book-secure">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-                            {{ $L('Pago 100% seguro', '100% secure payment', 'Pagamento 100% seguro') }}
+                            @if ($onlinePayment)
+                                {{ $L('Pago 100% seguro', '100% secure payment', 'Pagamento 100% seguro') }}
+                            @else
+                                {{ $L('Sin cobro ahora: confirmamos tu reserva por WhatsApp o correo', 'No charge now: we confirm your booking by WhatsApp or email', 'Sem cobrança agora: confirmamos sua reserva por WhatsApp ou e-mail') }}
+                            @endif
                         </div>
                     </form>
                 </div>
@@ -550,11 +568,13 @@
                                 <div>
                                     <h4 class="clamp-2">{{ $rel->title }}</h4>
                                     <div class="lat-mprice">{{ \App\Support\Money::format($rel->price, \App\Support\Money::site()) }}</div>
+                                    @if ((int) $rel->reviews_count > 0 && (float) $rel->rating > 0)
                                     <span class="lat-stars">
                                         <span class="lat-stars__s"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6L12 2z"/></svg></span>
                                         <span class="lat-stars__rate">{{ number_format((float) $rel->rating, 1) }}</span>
                                         <span class="lat-stars__cnt">({{ $rel->reviews_count }})</span>
                                     </span>
+                                    @endif
                                 </div>
                             </a>
                         @endforeach
@@ -583,7 +603,7 @@
             </div>
             <div class="lat-gt">
                 <div class="lat-gt__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></div>
-                <div><b>{{ $L('Atención al cliente 24/7', '24/7 customer support', 'Atendimento ao cliente 24/7') }}</b><span>{{ $L('Estamos para ayudarte', "We're here to help", 'Estamos aqui para ajudar') }}</span></div>
+                <div><b>{{ $L('Atención al cliente', 'Customer support', 'Atendimento ao cliente') }}</b><span>{{ $contactHours ?? $L('Estamos para ayudarte', "We're here to help", 'Estamos aqui para ajudar') }}</span></div>
             </div>
         </div>
     </div>

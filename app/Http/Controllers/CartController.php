@@ -82,10 +82,7 @@ class CartController extends Controller
         // quede solo con el flujo de reservar y confirmar por WhatsApp/correo.
         // Se decide acá y no en la vista: un botón de pago sin credenciales
         // detrás lleva al cliente hasta el último clic para fallar ahí.
-        $paypal = app(\App\Services\PayPalService::class);
-        $onlinePayment = app(\App\Services\PaymentService::class)->isConfigured()
-            || ($paypal->isConfigured()
-                && in_array(\App\Support\Money::site(), \App\Services\PayPalService::SUPPORTED_CURRENCIES, true));
+        $onlinePayment = \App\Support\OnlinePayment::available();
 
         return view('checkout', compact(
             'items',

@@ -82,6 +82,16 @@ class TourController extends Controller
             'seoDescription' => $seoDescription,
             'seoImage' => $seoImage,
             'seoKeywords' => $seoKeywords,
+
+            // Sin pasarela activa la caja de reserva no puede prometer "Pago 100%
+            // seguro": hoy la reserva se confirma por WhatsApp/correo y no hay
+            // cobro inmediato (docs/rebrand/inventario/00-VALIDACION-STAGING.md).
+            'onlinePayment' => \App\Support\OnlinePayment::available(),
+
+            // Horario publicado por el cliente, que reemplaza el "Atención al
+            // cliente 24/7" de la franja de garantías. Puede venir null: la
+            // vista oculta el sello entero antes que inventar un horario.
+            'contactHours' => \App\Models\Setting::contactHours($locale),
         ]);
     }
 
