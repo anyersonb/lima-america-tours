@@ -177,4 +177,25 @@ class BlogPost extends Model
 
         return asset('assets/banners/banner-hero.jpg');
     }
+
+    /**
+     * Author avatar for the byline row. Unlike `cover_url`, this has no
+     * generic-banner fallback: there's no honest stand-in for "a photo of
+     * this specific person", so an empty/missing file returns null and the
+     * byline component is expected to hide the avatar entirely rather than
+     * show a stock silhouette (same "no invented placeholder" rule already
+     * applied to rating and price elsewhere in this project). Checks the
+     * disk, not just the column, for the same reason `cover_url` does: a DB
+     * copied without its uploads shouldn't render a broken image.
+     */
+    public function getAuthorPhotoUrlAttribute(): ?string
+    {
+        $path = $this->attributes['author_photo'] ?? null;
+
+        if ($path && Storage::disk('public')->exists($path)) {
+            return ImagePath::url($path);
+        }
+
+        return null;
+    }
 }

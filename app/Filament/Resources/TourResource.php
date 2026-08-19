@@ -58,10 +58,19 @@ class TourResource extends Resource
                                     ->disabled(fn (string $operation): bool => $operation === 'edit')
                                     ->dehydrated(fn (string $operation): bool => $operation === 'create')
                                     ->maxLength(255),
-                                Forms\Components\Grid::make(3)->schema([
+                                Forms\Components\Grid::make(4)->schema([
                                     Forms\Components\TextInput::make('duration')->label('Duración')->placeholder('Full Day'),
                                     Forms\Components\TextInput::make('language')->label('Idiomas')->default('Español / Inglés'),
                                     Forms\Components\TextInput::make('group_type')->label('Tipo de grupo')->default('Grupal'),
+                                    // Ficha de tour, barra de 5 datos (docs/rebrand/inventario/02-tour-y-blog.md
+                                    // §1.B #7): no existía columna alguna para "Dificultad". Nullable y sin
+                                    // default: un tour sin dato oculta el ítem en vez de publicar un valor
+                                    // inventado.
+                                    Forms\Components\TextInput::make('difficulty')
+                                        ->label('Dificultad')
+                                        ->placeholder('Moderada')
+                                        ->maxLength(60)
+                                        ->helperText('Ej. Fácil, Moderada, Difícil. Vacío = no se muestra el ítem "Dificultad".'),
                                 ]),
                                 Forms\Components\Grid::make(4)->schema([
                                     Forms\Components\TextInput::make('departure_time')->label('Hora salida')->placeholder('05:00 AM'),
@@ -75,6 +84,17 @@ class TourResource extends Resource
                                         ->label('Anticipación para reservar (horas)')
                                         ->helperText('Horas mínimas de anticipación con las que el cliente debe reservar. Déjalo vacío si no aplica.'),
                                 ]),
+                                // Botón "Ver video" del hero de la ficha (docs/rebrand/inventario/02-tour-y-blog.md
+                                // §1.B #6): mismo patrón que home_hero_video_url, reutilizando
+                                // App\Support\VideoEmbed::normalize() en vez de duplicar la lógica de
+                                // normalización. Acepta cualquier URL "de compartir"; sin URL o sin match
+                                // conocido, Tour::video_embed_url resuelve null y el botón debe ocultarse.
+                                Forms\Components\TextInput::make('video_url')
+                                    ->label('URL del video')
+                                    ->url()
+                                    ->maxLength(500)
+                                    ->placeholder('https://www.youtube.com/watch?v=...')
+                                    ->helperText('Pega el enlace para compartir (YouTube, youtu.be, Shorts o Vimeo). Se convierte automáticamente al formato que sí se puede incrustar. Vacío = sin botón "Ver video".'),
                                 Forms\Components\Section::make('Precios y oferta')
                                     ->description('Configura el precio y, opcionalmente, activa una oferta especial.')
                                     ->icon('heroicon-o-tag')
@@ -342,6 +362,20 @@ class TourResource extends Resource
                                     ->saveUploadedFileUsing(ImageOptimizer::saver('tours/gallery', 1920))
                                     ->helperText('Cada imagen se optimiza a WebP (máx. 1920px de ancho). Tamaño máximo por archivo: 4 MB.')
                                     ->label('Galería'),
+                                // Caja "Mapa del recorrido" (docs/rebrand/inventario/02-tour-y-blog.md
+                                // §1.B #11): v1 honesta es una imagen estática subida por el cliente (p.ej.
+                                // captura de Google Maps con la ruta dibujada) — no hay coordenadas por
+                                // parada en el modelo, así que un mapa interactivo real es alcance de otra
+                                // tarea. Nullable: sin imagen, la caja no debe pintarse.
+                                Forms\Components\FileUpload::make('route_map_image')
+                                    ->image()
+                                    ->disk('public')
+                                    ->directory('tours/route-map')
+                                    ->imageEditor()
+                                    ->maxSize(4096)
+                                    ->saveUploadedFileUsing(ImageOptimizer::saver('tours/route-map', 1600, deletePrevious: true))
+                                    ->helperText('Imagen estática del recorrido (ej. captura de Google Maps con la ruta dibujada). No es un mapa interactivo. Se optimiza a WebP (máx. 1600px de ancho).')
+                                    ->label('Mapa del recorrido'),
                             ]),
 
                         Tabs\Tab::make('SEO')

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\ImagePath;
+use App\Support\VideoEmbed;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -132,6 +133,19 @@ class Tour extends Model
     public function getCoverUrlAttribute(): string
     {
         return ImagePath::url($this->cover_image) ?? asset('assets/banners/banner-hero.jpg');
+    }
+
+    /**
+     * `video_url` stores whatever "share" link the client pastes (YouTube
+     * watch/short/shorts, Vimeo). This exposes the embeddable form ready for
+     * an <iframe>, via the same normalizer Home uses for its hero video, so
+     * the tour-detail view doesn't have to duplicate the regex chain or call
+     * VideoEmbed itself. Null when empty or unrecognized — the consumer
+     * should hide the "Ver video" button rather than render a broken embed.
+     */
+    public function getVideoEmbedUrlAttribute(): ?string
+    {
+        return VideoEmbed::normalize($this->video_url);
     }
 
     public function getGalleryUrlsAttribute(): array

@@ -99,6 +99,20 @@ class BlogPostResource extends Resource
                                     ->saveUploadedFileUsing(\App\Support\ImageOptimizer::saver('blog/covers', 1600, deletePrevious: true))
                                     ->helperText('Se optimiza automáticamente a WebP (máx. 1600px de ancho).')
                                     ->label('Imagen de portada'),
+                                // Avatar de la línea de firma (docs/rebrand/inventario/02-tour-y-blog.md
+                                // §2.B #9): campo simple en blog_posts, sin FK a Guide (esa unificación
+                                // queda para otra tarea). Nullable: sin foto, la firma se muestra sin
+                                // avatar en vez de un silueta genérica.
+                                Forms\Components\FileUpload::make('author_photo')
+                                    ->image()
+                                    ->disk('public')
+                                    ->directory('blog/authors')
+                                    ->imageEditor()
+                                    ->nullable()
+                                    ->maxSize(2048)
+                                    ->saveUploadedFileUsing(\App\Support\ImageOptimizer::saver('blog/authors', 400, deletePrevious: true))
+                                    ->helperText('Avatar del autor en la línea de firma. Se optimiza a WebP (máx. 400px). Vacío = la firma se muestra sin foto.')
+                                    ->label('Foto del autor'),
                             ]),
 
                         // ── Post data ─────────────────────────────────────
@@ -119,6 +133,13 @@ class BlogPostResource extends Resource
                                     ->maxLength(255)
                                     ->label('Nombre del autor')
                                     ->helperText('Vacío = se usa el nombre del sitio (Configuración → General) como firma.'),
+                                // Rol bajo el nombre en la línea de firma (docs/rebrand/inventario/02-tour-y-blog.md
+                                // §2.B #9), ej. "Guía Local". Sin FK a Guide: campo de texto simple.
+                                Forms\Components\TextInput::make('author_role')
+                                    ->maxLength(255)
+                                    ->label('Rol del autor')
+                                    ->placeholder('Guía Local')
+                                    ->helperText('Se muestra bajo el nombre del autor. Vacío = no se muestra ningún rol.'),
                                 Forms\Components\TextInput::make('reading_minutes')
                                     ->numeric()
                                     ->minValue(1)
