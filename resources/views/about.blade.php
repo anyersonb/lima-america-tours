@@ -152,6 +152,56 @@
     // final (docs/rebrand/LOTE-MOCKUPS-AGO-2026.md, tabla "Lo que NO se publica").
     $contactHours = \App\Models\Setting::contactHours($locale);
 
+    // ── Rediseño del hero (mockup `23.53.39.jpeg`, franja oscura de arriba:
+    // hero + barra de stats + franja de garantías) ────────────────────────
+
+    // ¿Hay pasarela real cobrando? Mismo helper que ya usa tours/show.blade.php
+    // para no prometer "Reserva 100% Segura" mientras las llaves sean de
+    // prueba (docs/rebrand/inventario/00-VALIDACION-STAGING.md).
+    $onlinePaymentAvailable = \App\Support\OnlinePayment::available();
+
+    // 4 micro-features 2×2 del hero. Repeater con fallback (mismo patrón que
+    // $whyTravelChecks arriba): si el panel carga `blocks.hero_features`, se
+    // usa; si no, el contenido real ya vetted en la card "¿Por qué viajar…"
+    // de más abajo (mismos conceptos, sin duplicar copy inventado del mockup
+    // de Lima View). Catálogo cerrado de íconos (App\Support\HeroIcons).
+    $defaultHeroFeatures = [
+        ['icon' => 'guide', 'title' => $L('Guías Expertos', 'Expert Guides', 'Guias Especializados'), 'sub' => $L('Locales certificados', 'Certified locals', 'Locais certificados')],
+        ['icon' => 'clock', 'title' => $L('Experiencias', 'Experiences', 'Experiências'), 'sub' => $L('100% auténticas', '100% authentic', '100% autênticas')],
+        ['icon' => 'group', 'title' => $L('Grupos Reducidos', 'Small Groups', 'Grupos Reduzidos'), 'sub' => $L('Atención personalizada', 'Personalized attention', 'Atendimento personalizado')],
+        ['icon' => 'shield', 'title' => $L('Seguridad Total', 'Total Safety', 'Segurança Total'), 'sub' => $L('Viaja con confianza', 'Travel with confidence', 'Viaje com confiança')],
+    ];
+    $heroFeatures = collect(is_array($b['hero_features'] ?? null) ? $b['hero_features'] : [])
+        ->map(fn ($item) => [
+            'icon'  => (is_string($item['icon'] ?? null) && \App\Support\HeroIcons::exists($item['icon'])) ? $item['icon'] : 'guide',
+            'title' => trim((string) ($item['title_' . $locale] ?? ($item['title_es'] ?? ''))),
+            'sub'   => trim((string) ($item['sub_' . $locale] ?? ($item['sub_es'] ?? ''))),
+        ])
+        ->filter(fn ($item) => $item['title'] !== '')
+        ->values()
+        ->all();
+    if (empty($heroFeatures)) {
+        $heroFeatures = $defaultHeroFeatures;
+    }
+
+    // Botón "Ver Video" del hero de Nosotros — MISMO mecanismo que el de Home
+    // (App\Support\VideoEmbed, ya existente, evita duplicar la normalización
+    // de URL) pero con su propia clave de Setting y su propio id de modal
+    // (dos modales con "heroVideoModal" en la misma página rompen
+    // getElementById). Sin URL cargada hoy: el botón no se pinta.
+    $aboutHeroVideoUrl = \App\Support\VideoEmbed::normalize(\App\Models\Setting::get('about_hero_video_url'));
+    $aboutHeroVideoLabel = $bl('hero_video_label', 'Ver Video', 'Watch Video', 'Ver Vídeo');
+
+    // Tira de avatares de viajeros reales — guard de dato: 0 de 13 testimonios
+    // activos tienen avatar cargado hoy (verificado en BD), así que esta
+    // consulta siempre llega vacía y la tira queda oculta hasta que existan
+    // fotos reales con permiso de uso (docs/rebrand/inventario/01-nosotros-y-menu.md, punto 6/8).
+    $testimonialsWithAvatar = \App\Models\Testimonial::active()
+        ->whereNotNull('avatar')->where('avatar', '!=', '')
+        ->orderByDesc('created_at')
+        ->limit(5)
+        ->get();
+
     // ── Collage del hero — 6 fotos REALES del cliente (nunca la que trae
     // marca de agua de cuscoperu.com, ver ESTADO.md §6). Curadas de
     // docs/rebrand/CONTENIDO-REAL-PRODUCCION.md §6.1 ("Las mejores 20"), ya
@@ -216,6 +266,15 @@
                 <nav class="lat-about-hero__crumb" aria-label="Breadcrumb">
                     <a href="{{ route('home', ['locale' => $locale]) }}">{{ __('ui.home') }}</a> &middot; <b>{{ __('nav.about') }}</b>
                 </nav>
+
+                {{-- Badge de marca (mockup, patrón de Lima View — copy propio de
+                     Lima América Tours). Estático, no editable, igual que el logo
+                     del header: es identidad de marca, no copy de campaña. --}}
+                <span class="lat-hero-badge">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    {{ $L('Lima América Tours', 'Lima América Tours', 'Lima América Tours') }}
+                </span>
+
                 <span class="lat-eyebrow lat-eyebrow--on-dark">{{ $bl('hero_eyebrow', 'Nuestra historia', 'Our story', 'Nossa história') }}</span>
                 <h1>{{ $bl('hero_title', 'Más de 10 años mostrando lo mejor del Perú', 'More than 10 years showcasing the best of Peru', 'Mais de 10 anos mostrando o melhor do Peru') }}</h1>
                 <p class="lat-about-hero__sub">
@@ -225,17 +284,105 @@
                         'Na Lima América Tours compartilhamos nossa paixão pelo Peru por meio de experiências autênticas, memoráveis e cheias de cultura. Você não é um turista, é nosso convidado.'
                     ) }}
                 </p>
+
+                {{-- 4 micro-features 2×2 (mockup). Repeater con fallback,
+                     $heroFeatures resuelto arriba. --}}
+                <div class="lat-hero-features">
+                    @foreach ($heroFeatures as $feat)
+                        <div class="lat-hero-features__item">
+                            <span class="lat-hero-features__ic">{!! \App\Support\HeroIcons::svg($feat['icon']) !!}</span>
+                            <div>
+                                <b>{{ $feat['title'] }}</b>
+                                <span>{{ $feat['sub'] }}</span>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="lat-about-hero__actions">
+                    <a href="{{ route('tours.index', ['locale' => $locale]) }}" class="lat-btn lat-btn--red">{{ $L('Explorar Tours', 'Explore Tours', 'Explorar Tours') }}</a>
+                    @if ($aboutHeroVideoUrl !== null)
+                        <button type="button" class="lat-btn lat-btn--outline-white" id="aboutHeroVideoBtn"
+                                aria-haspopup="dialog" aria-controls="aboutHeroVideoModal">
+                            <span class="lat-hero__play-ic" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                            </span>
+                            {{ $aboutHeroVideoLabel }}
+                        </button>
+                    @endif
+                </div>
+
+                {{-- Tira de avatares + rating — SOLO si hay testimonios con foto
+                     real cargada (hoy 0 de 13: la sección queda oculta por dato,
+                     no por comentario en el HTML). --}}
+                @if ($testimonialsWithAvatar->isNotEmpty())
+                    <div class="lat-avatar-strip">
+                        <span class="lat-avatar-strip__stack">
+                            @foreach ($testimonialsWithAvatar as $t)
+                                <img src="{{ $t->avatar }}" alt="" loading="lazy" width="36" height="36">
+                            @endforeach
+                        </span>
+                        <span class="lat-avatar-strip__text">
+                            {{-- El mockup dice "Miles de viajeros". No hay tal cifra en
+                                 ninguna tabla. Hoy este bloque no se pinta (0 de 13
+                                 testimonios tienen avatar), pero en cuanto el cliente
+                                 suba UNA foto se publicaría el "miles": un default que
+                                 espera para mentir sigue siendo un defecto. Va el
+                                 agregado real, que es el mismo que ya usa la barra de
+                                 stats de abajo. --}}
+                            {{ $aboutOverallStats['count'] > 0
+                                ? $L(
+                                    $aboutOverallStats['rating'].' de valoración en '.$aboutOverallStats['count'].' opiniones de viajeros',
+                                    $aboutOverallStats['rating'].' rating from '.$aboutOverallStats['count'].' traveler reviews',
+                                    $aboutOverallStats['rating'].' de avaliação em '.$aboutOverallStats['count'].' opiniões de viajantes'
+                                  )
+                                : $L('Viajeros que ya vivieron la experiencia Lima América', 'Travelers who already lived the Lima América experience', 'Viajantes que já viveram a experiência Lima América') }}
+                            <span class="lat-stars"><span class="lat-stars__s">@for ($i = 0; $i < 5; $i++)<svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6L12 2z"/></svg>@endfor</span></span>
+                        </span>
+                    </div>
+                @endif
             </div>
 
-            <div class="lat-hero-collage" role="list" aria-label="{{ $L('Fotos de nuestros viajes', 'Photos from our trips', 'Fotos das nossas viagens') }}">
-                @foreach ($heroCollageUrls as $photo)
-                    <div class="lat-hero-collage__item" role="listitem">
-                        <img src="{{ $photo['url'] }}" alt="{{ $photo['alt'] }}" loading="{{ $loop->first ? 'eager' : 'lazy' }}" width="700" height="500">
-                    </div>
-                @endforeach
+            {{-- Collage de 4 fotos (mockup: 1 grande + 3 en fila) — de las 6 ya
+                 curadas. La foto grande (slot #3, `caption-1.jpg`, 700×500) es
+                 la ÚNICA de las 6 con ancho intrínseco suficiente para el
+                 recuadro ancho de arriba: medido en el navegador a 1440, el
+                 slot #0 (467×622, retrato) rendía a 665px de ancho — se veía
+                 borroso (`__images()`, ratio 0.7). Las otras 3 (622-660px de
+                 ancho) sobran para el recuadro angosto de abajo. --}}
+            <div class="lat-hero-collage" aria-label="{{ $L('Fotos de nuestros viajes', 'Photos from our trips', 'Fotos das nossas viagens') }}">
+                <div class="lat-hero-collage__main">
+                    <img src="{{ $heroCollageUrls[3]['url'] }}" alt="{{ $heroCollageUrls[3]['alt'] }}" loading="eager" width="700" height="500">
+                </div>
+                <div class="lat-hero-collage__row">
+                    @foreach ($heroCollageUrls->only([0, 1, 2]) as $photo)
+                        <div class="lat-hero-collage__item">
+                            <img src="{{ $photo['url'] }}" alt="{{ $photo['alt'] }}" loading="lazy" width="260" height="260">
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
     </section>
+
+    {{-- Modal "Ver video" del hero de Nosotros — mismo mecanismo que Home
+         (home.blade.php:878-890, 1394-1456), id propio para no chocar con
+         #heroVideoModal si ambas páginas comparten alguna vez el mismo DOM
+         (no es el caso hoy, pero un id fijo duplicado es un bug esperando
+         pasar). Solo existe en el DOM si hay URL válida cargada. --}}
+    @if ($aboutHeroVideoUrl !== null)
+        <div class="lat-video-modal" id="aboutHeroVideoModal" role="dialog" aria-modal="true"
+             aria-label="{{ $aboutHeroVideoLabel }}" hidden>
+            <div class="lat-video-modal__backdrop" data-video-close></div>
+            <div class="lat-video-modal__panel">
+                <button type="button" class="lat-video-modal__close" data-video-close
+                        aria-label="{{ $L('Cerrar video', 'Close video', 'Fechar vídeo') }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+                <div class="lat-video-modal__frame" data-video-frame></div>
+            </div>
+        </div>
+    @endif
 
     {{-- ── Barra de stats compacta encimada al borde del hero (mockup 02) —
          reutiliza el MISMO $aboutStatsVisible que la banda "Miles de
@@ -244,7 +391,7 @@
          solo dos vistas distintas de la misma resolución. ── --}}
     @if ($aboutStatsBand['enabled'] && $aboutStatsVisible->isNotEmpty())
         <div class="lat-wrap lat-about-hero__stats-wrap">
-            <div class="lat-hero-stats" style="--lat-stats-n:{{ $aboutStatsVisible->count() }}">
+            <div class="lat-hero-stats lat-hero-stats--dark" style="--lat-stats-n:{{ $aboutStatsVisible->count() }}">
                 @foreach ($aboutStatsVisible as $slot)
                     <div class="lat-htc">
                         <span class="lat-htc__ic">{!! \App\Support\HeroIcons::svg($slot['icon']) !!}</span>
@@ -255,6 +402,55 @@
             </div>
         </div>
     @endif
+
+    {{-- ============================================================
+         FRANJA ROJA DE GARANTÍAS (mockup) — reskin de .lat-guarantee/.lat-gt
+         (mismo componente de Home y tours/show.blade.php), fondo rojo sólido
+         vía el modificador .lat-guarantee--red. "Atención 24/7" → horario
+         real (Setting::contactHours, ya calculado en $contactHours arriba);
+         "Reserva 100% Segura" bifurca su copy con OnlinePayment::available(),
+         igual que la ficha de tour (docs/rebrand/LOTE-MOCKUPS-AGO-2026.md,
+         tabla "Lo que NO se publica"). "Mejor Precio Garantizado" se
+         conserva: ya está publicado hoy en Home y en la ficha de tour, no es
+         una promesa nueva de esta página.
+         ============================================================ --}}
+    <div class="lat-guarantee lat-guarantee--red">
+        <div class="lat-wrap lat-guarantee__grid">
+            <div class="lat-gt">
+                <div class="lat-gt__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
+                <div>
+                    @if ($onlinePaymentAvailable)
+                        <b>{{ $bl('guarantee_secure_title', 'Reserva 100% Segura', '100% Secure Booking', 'Reserva 100% Segura') }}</b>
+                        <span>{{ $bl('guarantee_secure_sub', 'Tus datos protegidos', 'Your data protected', 'Seus dados protegidos') }}</span>
+                    @else
+                        <b>{{ $bl('guarantee_secure_title_alt', 'Reserva sin cobro inmediato', 'Booking, no charge yet', 'Reserva sem cobrança imediata') }}</b>
+                        <span>{{ $bl('guarantee_secure_sub_alt', 'Confirmamos por WhatsApp o correo', 'Confirmed by WhatsApp or email', 'Confirmamos por WhatsApp ou e-mail') }}</span>
+                    @endif
+                </div>
+            </div>
+            <div class="lat-gt">
+                <div class="lat-gt__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+                <div>
+                    <b>{{ $bl('guarantee_flex_title', 'Cancelación Flexible', 'Flexible Cancellation', 'Cancelamento Flexível') }}</b>
+                    <span>{{ $bl('guarantee_flex_sub', 'Sin cargos ocultos', 'No hidden fees', 'Sem taxas ocultas') }}</span>
+                </div>
+            </div>
+            <div class="lat-gt">
+                <div class="lat-gt__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
+                <div>
+                    <b>{{ $bl('guarantee_price_title', 'Mejor Precio Garantizado', 'Best Price Guaranteed', 'Melhor Preço Garantido') }}</b>
+                    <span>{{ $bl('guarantee_price_sub', 'Calidad al mejor precio', 'Quality at the best price', 'Qualidade ao melhor preço') }}</span>
+                </div>
+            </div>
+            <div class="lat-gt">
+                <div class="lat-gt__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></div>
+                <div>
+                    <b>{{ $L('Atención al cliente', 'Customer support', 'Atendimento ao cliente') }}</b>
+                    <span>{{ $contactHours ?: $bl('guarantee_support_fallback', 'Estamos para ayudarte', "We're here to help", 'Estamos aqui para ajudar') }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{-- ============================================================
          SPLIT — imagen + "10 años mostrando lo mejor del Perú"
@@ -796,3 +992,71 @@
 })();
 </script>
 @endpush
+
+@if ($aboutHeroVideoUrl !== null)
+@push('scripts')
+<script>
+(function () {
+    // Mismo mecanismo que el modal "Ver video" de Home
+    // (home.blade.php:1394-1456), con ids propios (#aboutHeroVideoBtn /
+    // #aboutHeroVideoModal) para no colisionar con los de Home.
+    var btn = document.getElementById('aboutHeroVideoBtn');
+    var modal = document.getElementById('aboutHeroVideoModal');
+    if (!btn || !modal) return;
+
+    var frame = modal.querySelector('[data-video-frame]');
+    var closers = modal.querySelectorAll('[data-video-close]');
+    var videoUrl = @json($aboutHeroVideoUrl);
+    var videoTitle = @json($aboutHeroVideoLabel);
+    var lastFocused = null;
+
+    function focusableEls() {
+        return Array.prototype.slice
+            .call(modal.querySelectorAll('button, [href], iframe, [tabindex]:not([tabindex="-1"])'))
+            .filter(function (el) { return el.offsetParent !== null; });
+    }
+
+    function onKeydown(e) {
+        if (e.key === 'Escape' || e.key === 'Esc') { close(); return; }
+        if (e.key !== 'Tab') return;
+        var els = focusableEls();
+        if (!els.length) return;
+        var first = els[0], last = els[els.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+
+    function open() {
+        lastFocused = document.activeElement;
+
+        var iframe = document.createElement('iframe');
+        iframe.src = videoUrl;
+        iframe.title = videoTitle;
+        iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+        iframe.allowFullscreen = true;
+        iframe.setAttribute('frameborder', '0');
+        frame.innerHTML = '';
+        frame.appendChild(iframe);
+
+        modal.hidden = false;
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', onKeydown);
+
+        var els = focusableEls();
+        (els[0] || modal).focus();
+    }
+
+    function close() {
+        modal.hidden = true;
+        document.body.style.overflow = '';
+        frame.innerHTML = '';
+        document.removeEventListener('keydown', onKeydown);
+        if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+    }
+
+    btn.addEventListener('click', open);
+    closers.forEach(function (el) { el.addEventListener('click', close); });
+})();
+</script>
+@endpush
+@endif
