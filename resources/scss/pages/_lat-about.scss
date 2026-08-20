@@ -346,7 +346,13 @@
 // ── Badge de marca (mockup, patrón de Lima View) — pill estática, no
 // editable, igual criterio que el logo del header. ────────────────────────
 .lat-hero-badge {
-    display: inline-flex;
+    // `flex` + `fit-content`, NO `inline-flex`: siendo inline, el eyebrow que va
+    // debajo (que es otro <span>) se le pegaba en la MISMA línea a 4px de
+    // distancia, y el `margin-bottom` de acá no hacía nada. Se veían dos rótulos
+    // peleando por el mismo renglón. Medido a 1440: badge en x=24 y=283 (177px de
+    // ancho), eyebrow en x=205 y=296.
+    display: flex;
+    width: fit-content;
     align-items: center;
     gap: 8px;
     border: 1px solid rgba($lat-red, .55);
