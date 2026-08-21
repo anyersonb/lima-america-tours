@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Support\ImagePath;
+use App\Support\VideoEmbed;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -22,6 +24,7 @@ class BlogPost extends Model
         'is_published' => 'boolean',
         'published_at' => 'datetime',
         'tags' => 'array',
+        'features' => 'array',
     ];
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -81,6 +84,22 @@ class BlogPost extends Model
                 $q->whereNull('published_at')
                     ->orWhere('published_at', '<=', now());
             });
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Relations
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Optional real author (docs/rebrand/inventario/spec-03-blog.md §5.1,
+     * §9). Reuses the `Guide` model already built for "Nosotros" instead of
+     * a second author-with-photo system. See the `signature_*` accessors
+     * below for the precedence rule against the loose author_name/
+     * author_role/author_photo columns.
+     */
+    public function guide(): BelongsTo
+    {
+        return $this->belongsTo(Guide::class);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -197,5 +216,165 @@ class BlogPost extends Model
         }
 
         return null;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Signature (byline) — guide_id vs. loose author_* precedence
+    // ──────────────────────────────────────────────────────────────────────────
+    //
+    // Four sources can describe the byline today: `guide_id` (FK to a real
+    // `Guide` with photo/rol/bio) and the three loose columns `author_name`,
+    // `author_role`, `author_photo` (added 2026-08-19 as a stopgap before
+    // any post had a real author). The rule, decided here and documented so
+    // it never competes silently again (same class of bug already hit with
+    // phone/photo/address duplicated between Lima View and Lima América):
+    //
+    //   guide_id set + the Guide still exists  → the Guide wins completely
+    //   for name/role/photo/verified-badge. The loose columns are ignored,
+    //   not merged field-by-field (no "guide's photo but the loose role"
+    //   Frankenstein state).
+    //
+    //   guide_id empty (or the linked Guide was deleted, which nullOnDelete
+    //   already turns back into an empty guide_id) → fall back to the loose
+    //   author_name/author_role/author_photo_url accessors exactly as they
+    //   worked before this migration.
+    //
+    // These are exposed under NEW accessor names (`signature_*`), not by
+    // overriding `getAuthorNameAttribute()`/`getAuthorRoleAttribute()`
+    // in place. Reason: Filament's edit form pre-fills from
+    // `$record->attributesToArray()`, which runs through accessors too — if
+    // `author_name` resolved the Guide's name, opening "Editar" on a post
+    // with a guide assigned would show the guide's name sitting inside the
+    // "Nombre del autor" text field, and saving would silently copy it into
+    // the raw column, poisoning the fallback data it's supposed to preserve.
+    // Keeping the raw accessors untouched (still admin-editable, still the
+    // fallback) and adding a distinct read-only "resolved for display" API
+    // sidesteps that. The public byline (view layer, built separately)
+    // should read `signature_name`/`signature_role`/`signature_photo_url`/
+    // `signature_is_verified` — never the raw `author_*` fields directly.
+
+    /**
+     * The Guide actually wins only while it still exists — `nullOnDelete()`
+     * on `guide_id` means a deleted guide already clears the FK, but this
+     * also guards against a stale relation being cached with no matching row.
+     */
+    private function resolvedGuide(): ?Guide
+    {
+        return $this->guide_id ? $this->guide : null;
+    }
+
+    public function getSignatureNameAttribute(): ?string
+    {
+        return $this->resolvedGuide()?->name ?? $this->author_name;
+    }
+
+    public function getSignatureRoleAttribute(): ?string
+    {
+        if ($guide = $this->resolvedGuide()) {
+            return $guide->role;
+        }
+
+        $raw = trim((string) ($this->attributes['author_role'] ?? ''));
+
+        return $raw !== '' ? $raw : null;
+    }
+
+    public function getSignaturePhotoUrlAttribute(): ?string
+    {
+        return $this->resolvedGuide()?->photo_url ?? $this->author_photo_url;
+    }
+
+    /**
+     * Verified checkmark next to the byline (spec-03-blog.md §5.1, and
+     * §2.B #10 of 02-tour-y-blog.md): derived from having a real linked
+     * `Guide` — staff is "verified" by definition — never a boolean column,
+     * and never true for the loose author_* fallback (anyone could type
+     * "Augusto" in a text box; only a linked Guide is a real team member).
+     */
+    public function getSignatureIsVerifiedAttribute(): bool
+    {
+        return $this->resolvedGuide() !== null;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Hero video (play button) and feature cards
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * `video_url` stores the pasted "share" link; this resolves it to the
+     * embeddable form for an <iframe>, same normalizer/pattern as
+     * `Tour::getVideoEmbedUrlAttribute()`. Null when empty or unrecognized —
+     * the consumer should hide the play button rather than render a broken
+     * embed.
+     */
+    public function getVideoEmbedUrlAttribute(): ?string
+    {
+        return VideoEmbed::normalize($this->video_url);
+    }
+
+    /**
+     * Resolves the up-to-4-row `features` JSON into the current locale,
+     * dropping any row without a title. Deliberately NOT "always return 4
+     * items" — the floating card on top of the hero has to look right with
+     * 0, 2, 3 or 4 blocks (spec-03-blog.md §2), so the view can just
+     * @foreach this and never guard a count itself.
+     */
+    public function getFeatureCardsAttribute(): array
+    {
+        $rows = is_array($this->features) ? $this->features : [];
+        $locale = app()->getLocale();
+        $cards = [];
+
+        foreach (array_slice($rows, 0, 4) as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $title = trim((string) ($row["title_{$locale}"] ?? $row['title_es'] ?? ''));
+            if ($title === '') {
+                continue;
+            }
+
+            $text = trim((string) ($row["text_{$locale}"] ?? $row['text_es'] ?? ''));
+            $icon = trim((string) ($row['icon'] ?? ''));
+
+            $cards[] = [
+                'icon' => $icon !== '' ? $icon : null,
+                'title' => $title,
+                'text' => $text !== '' ? $text : null,
+            ];
+        }
+
+        return $cards;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Pull quote
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Locale-aware quote text, falling back to Spanish like title/excerpt/
+     * body — but unlike those, returns null (not '') when there's really no
+     * quote in any locale, so the pull-quote component can hide itself
+     * instead of rendering an empty <blockquote>.
+     */
+    public function getQuoteTextAttribute(): ?string
+    {
+        $locale = app()->getLocale();
+        $value = trim((string) ($this->{"quote_text_{$locale}"} ?? $this->quote_text_es ?? ''));
+
+        return $value !== '' ? $value : null;
+    }
+
+    /**
+     * "— Augusto, Guía Local". Not locale-specific (same criterion already
+     * used for `author_role` on this table): a short name+role string, not
+     * prose that realistically changes per language.
+     */
+    public function getQuoteAttributionAttribute(): ?string
+    {
+        $raw = trim((string) ($this->attributes['quote_attribution'] ?? ''));
+
+        return $raw !== '' ? $raw : null;
     }
 }
