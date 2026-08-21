@@ -290,13 +290,19 @@
         }
     }
 
+    // Delta 1 (spec-01-nosotros.md §1.1/§8): el mockup no monta la barra de
+    // métricas sobre el hero — arranca borde a borde, 0px de gap y 0px de
+    // overlap. Medido con el puente CDP antes del fix: `margin-top: -34px`
+    // (desktop/laptop) y `-22px` (móvil) metían la barra 34px/22px dentro del
+    // borde inferior real del hero (`.lat-about-hero`, `getBoundingClientRect`).
+    // Sin margen negativo, el tope de `.lat-about-hero__stats-wrap` cae
+    // exactamente en ese borde: la barra pasa a ser la siguiente sección en
+    // flujo normal, no una card flotante.
     &__stats-wrap {
         padding: 0 24px;
-        margin-top: -34px;
+        margin-top: 0;
         position: relative;
         z-index: 2;
-
-        @media (max-width: 640px) { margin-top: -22px; }
     }
 }
 
@@ -369,13 +375,23 @@
     svg { width: 13px; height: 13px; color: $lat-red-tint; flex: none; }
 }
 
-// ── 4 micro-features 2×2 del hero (mockup) ──────────────────────────────
+// ── 4 micro-features: 3 arriba + 1 abajo (mockup, spec-01-nosotros.md §3.1)
+// El mockup agrupa 3 columnas en fila 1 y deja el 4º ítem solo en fila 2,
+// alineado a la primera columna — con `repeat(3, 1fr)` y 4 hijos, el
+// auto-placement de grid ya resuelve ese patrón sin `grid-column` extra.
+// Antes era `repeat(2, 1fr)` fijo (2×2 estricto): delta de estructura, no de
+// contenido, los 4 textos/íconos ya coincidían con el mockup.
+// El quiebre a 3 columnas usa el MISMO breakpoint donde el hero pasa a 2
+// columnas (980px, ver `.lat-about-hero__grid` arriba) — no uno nuevo: bajo
+// ese ancho la columna de texto ya ocupa el 100%, así que 2 columnas de
+// features siguen viéndose bien hasta colapsar a 1 en móvil.
 .lat-hero-features {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 18px 28px;
     margin: 26px 0 28px;
 
+    @media (min-width: 981px) { grid-template-columns: repeat(3, 1fr); }
     @media (max-width: 480px) { grid-template-columns: 1fr; gap: 14px; }
 }
 
@@ -457,7 +473,18 @@
         border-radius: $lat-r-lg;
         overflow: hidden;
         box-shadow: $lat-shadow-md;
-        aspect-ratio: 16 / 10;
+        // Delta 3 (spec-01-nosotros.md §2.3/§8): el mockup muestra la foto
+        // grande más panorámica (~2,4:1 a ojo, no barrida al píxel) que el
+        // 16:10 (1,6:1) que había. La imagen real (`caption-1.jpg`, slot #3)
+        // mide 700×500 intrínseco: a 2,4:1 el ancho renderizado máximo del
+        // contenedor (680px, ver `max-width` de `.lat-hero-collage`) pide
+        // 680×283 — sigue por DEBAJO del ancho intrínseco (700px) en los 4
+        // breakpoints probados (390/768/1024/1440, columnas ≤665px medidas
+        // en la spec), así que `__images()` no marca "blurry". Si el crop se
+        // sintiera muy apretado en el rostro de los viajeros, el candidato de
+        // repliegue es 2.2/1 (680×309), también dentro del margen del
+        // intrínseco.
+        aspect-ratio: 2.4 / 1;
 
         img { width: 100%; height: 100%; object-fit: cover; display: block; }
     }
