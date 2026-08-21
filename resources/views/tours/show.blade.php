@@ -99,6 +99,19 @@
     // MB_CASE_TITLE) rompía mayúsculas intencionales (siglas, marcas) en el
     // <title>/SEO de la ficha (ver docs/qa/panel-filament.md hallazgo #7).
     $titleDisplay = $tour->title;
+
+    // ── Datos del mockup de la ficha (docs/rebrand/inventario/spec-02-tour.md).
+    // Los tres son opcionales: sin URL de video no hay botón de play, sin
+    // imagen de mapa no hay caja de mapa, y sin reseñas reales del tour no
+    // hay reseña destacada. Ninguno se rellena con un placeholder.
+    $tourVideoUrl = \App\Support\VideoEmbed::normalize($tour->video_url);
+    $routeMapUrl = $tour->route_map_image ? \App\Support\ImagePath::url($tour->route_map_image) : null;
+    // La reseña destacada es una REAL del propio tour: la marcada como
+    // destacada si hay alguna, y si no, la primera del mismo listado que ya
+    // se imprime completo más abajo. No es un segundo query ni una cita
+    // inventada de ejemplo.
+    $tourReviewsList = $tourReviews ?? collect();
+    $featuredReview = $tourReviewsList->firstWhere('is_featured', true) ?: $tourReviewsList->first();
 @endphp
 
 @section('title', $titleDisplay . ' — ' . __('seo.site_name'))
@@ -156,6 +169,12 @@
                 <span class="lat-crumb__sep" aria-hidden="true">&middot;</span>
                 <a href="{{ route('tours.index', ['locale' => $locale]) }}">{{ __('nav.tours') }}</a>
                 <span class="lat-crumb__sep" aria-hidden="true">&middot;</span>
+                {{-- La categoría entra acá porque salió del hero: el mockup no
+                     tiene eyebrow sobre la foto, pero el dato no se tira. --}}
+                @if ($tour->category?->name)
+                    <a href="{{ route('tours.category', ['locale' => $locale, 'categoria' => $tour->category->slug]) }}">{{ $tour->category->name }}</a>
+                    <span class="lat-crumb__sep" aria-hidden="true">&middot;</span>
+                @endif
                 <b class="lat-crumb__current" title="{{ $titleDisplay }}">{{ $titleDisplay }}</b>
             </nav>
         </div>
@@ -177,44 +196,166 @@
                      riesgo de que las imágenes 2..N compitan por LCP con la
                      primera, y sigue siendo swipeable/con flechas/paginación.
                      ============================================================ --}}
-                <div class="lat-gal">
-                    <div class="lat-gal__main" id="galMain__wrap">
-                        <button type="button" class="lat-gal__main-btn" id="galMainBtn"
-                                aria-label="{{ $L('Ampliar foto', 'Enlarge photo', 'Ampliar foto') }}">
-                            <img id="galMain" src="{{ $galleryUrls[0] ?? $tour->cover_url }}" alt="{{ $titleDisplay }}" width="860" height="452" fetchpriority="high">
-                        </button>
+                {{-- ============================================================
+                     HERO COMPUESTO — mockup `WhatsApp Image 2026-08-17 at
+                     23.53.40.jpeg`, estructura en docs/rebrand/inventario/spec-02-tour.md §3.
 
-                        @if (count($galleryUrls) > 1)
-                            <button type="button" class="lat-gal__nav lat-gal__nav--prev" id="galPrev" aria-label="{{ $L('Foto anterior', 'Previous photo', 'Foto anterior') }}">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
-                            </button>
-                            <button type="button" class="lat-gal__nav lat-gal__nav--next" id="galNext" aria-label="{{ $L('Foto siguiente', 'Next photo', 'Próxima foto') }}">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                     No es una galería nueva: es el MISMO slider (flechas, swipe,
+                     lightbox, mismo JS) con tres capas encimadas —ribbon, título
+                     y botón de video— y la barra de 5 datos pegada al borde
+                     inferior de la foto, ya no como tarjeta blanca flotando
+                     debajo.
+
+                     El scrim oscuro no es un degradado genérico: es el mismo
+                     refuerzo ya verificado del hero del blog. El título mide
+                     ≈4,75:1 sobre la zona más clara de la foto del mockup (la
+                     fachada iluminada), que pasa el 3:1 de texto grande pero con
+                     margen angosto — y ese margen depende de la foto que cargue
+                     el cliente. Si se cambia la portada, hay que volver a medir.
+
+                     La paginación de puntos se oculta dentro del hero: el mockup
+                     no la tiene y competía por la franja inferior con el título y
+                     la barra. La tira de miniaturas, que ahora va debajo del hero
+                     completo, cumple la misma función y sigue siendo clicable.
+                     ============================================================ --}}
+                <div class="lat-tour-hero">
+                    <div class="lat-gal">
+                        <div class="lat-gal__main" id="galMain__wrap">
+                            <button type="button" class="lat-gal__main-btn" id="galMainBtn"
+                                    aria-label="{{ $L('Ampliar foto', 'Enlarge photo', 'Ampliar foto') }}">
+                                <img id="galMain" src="{{ $galleryUrls[0] ?? $tour->cover_url }}" alt="{{ $titleDisplay }}" width="860" height="452" fetchpriority="high">
                             </button>
 
-                            <div class="lat-gal__dots" id="galDots" aria-hidden="true">
-                                @foreach ($galleryUrls as $i => $img)
-                                    <button type="button" class="lat-gal__dot {{ $i === 0 ? 'is-active' : '' }}" data-index="{{ $i }}" aria-label="{{ $L('Foto', 'Photo', 'Foto') }} {{ $i + 1 }}"></button>
-                                @endforeach
+                            @if (count($galleryUrls) > 1)
+                                <button type="button" class="lat-gal__nav lat-gal__nav--prev" id="galPrev" aria-label="{{ $L('Foto anterior', 'Previous photo', 'Foto anterior') }}">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+                                </button>
+                                <button type="button" class="lat-gal__nav lat-gal__nav--next" id="galNext" aria-label="{{ $L('Foto siguiente', 'Next photo', 'Próxima foto') }}">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                                </button>
+
+                                <div class="lat-gal__dots" id="galDots" aria-hidden="true">
+                                    @foreach ($galleryUrls as $i => $img)
+                                        <button type="button" class="lat-gal__dot {{ $i === 0 ? 'is-active' : '' }}" data-index="{{ $i }}" aria-label="{{ $L('Foto', 'Photo', 'Foto') }} {{ $i + 1 }}"></button>
+                                    @endforeach
+                                </div>
+
+                            @endif
+
+                            {{-- Ribbon: el mismo badge del CMS (badge_text/badge_type)
+                                 que hasta ahora salía en línea junto al rating, con el
+                                 patrón de ribbon absoluto que ya usa la tarjeta del
+                                 listado. --}}
+                            @if ($tour->badge_text)
+                                <span class="lat-tour-hero__ribbon {{ $badgeClass($tour->badge_type) }}">{{ $tour->badge_text }}</span>
+                            @endif
+
+                            {{-- Botón "Ver video": se imprime solo si el tour tiene la
+                                 URL cargada en el CMS. Reutiliza el componente del
+                                 modal, no una tercera copia del script. --}}
+                            @if ($tourVideoUrl)
+                                <button type="button" class="lat-tour-hero__video" id="tourVideoBtn"
+                                        aria-haspopup="dialog" aria-controls="tourVideoModal">
+                                    <span class="lat-tour-hero__video-ic" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                                    </span>
+                                    {{ $L('Ver video', 'Watch video', 'Ver vídeo') }}
+                                </button>
+                            @endif
+
+                            {{-- Título y rating encimados sobre el scrim. El bloque no
+                                 recibe eventos (pointer-events:none) para no robarle
+                                 el clic de ampliar foto ni el swipe al visor; los
+                                 hijos interactivos los recuperan uno por uno. --}}
+                            <div class="lat-tour-hero__overlay">
+                                <h1 class="lat-detail-title">{{ $titleDisplay }}</h1>
+
+                                <div class="lat-detail-rate">
+                                    {{-- El rating por tour solo se pinta si hay reseñas que lo
+                                         sostengan. La columna `rating` viene sembrada en 4.8 para los
+                                         24 tours y `reviews_count` en 0: publicar "4.8 (0 reseñas)" es
+                                         una cifra sin respaldo, igual que inventarla
+                                         (docs/rebrand/inventario/00-VALIDACION-STAGING.md). Cuando el
+                                         cliente cargue reseñas reales, el bloque aparece solo. --}}
+                                    @if ((int) $tour->reviews_count > 0 && (float) $tour->rating > 0)
+                                        <span class="lat-stars">
+                                            <span class="lat-stars__s">
+                                                @for ($i = 0; $i < 5; $i++)
+                                                    <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6L12 2z"/></svg>
+                                                @endfor
+                                            </span>
+                                            <span class="lat-stars__rate">{{ number_format((float) $tour->rating, 1) }}</span>
+                                            <span class="lat-stars__cnt">({{ $tour->reviews_count }} {{ $L('reseñas', 'reviews', 'avaliações') }})</span>
+                                        </span>
+                                    @endif
+
+                                    @if ($tour->region?->name)
+                                        <span class="lat-tour-hero__place">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.5 7-11.5a7 7 0 1 0-14 0C5 14.5 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+                                            {{ $tour->region->name }}
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
-
-                            <button type="button" class="lat-gal__more" id="galMoreBtn">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                                {{ $L('Ver todas las fotos', 'View all photos', 'Ver todas as fotos') }}
-                            </button>
-                        @endif
+                        </div>
                     </div>
 
-                    @if (count($galleryUrls) > 1)
-                        <div class="lat-gal__thumbs">
-                            @foreach ($galleryUrls as $i => $img)
+                    {{-- Barra oscura de 5 datos, pegada al borde inferior de la foto:
+                         ya no es una tarjeta blanca con su propio radio flotando
+                         debajo. "Salidas" sale de la barra (el mockup no lo pide) y
+                         entra "Dificultad", más la cancelación, que hasta ahora vivía
+                         como pastilla verde suelta al lado del rating. El copy de la
+                         cancelación es el MISMO que el sitio ya publica en la franja
+                         de garantías y en la barra fija móvil — no es una promesa
+                         nueva. --}}
+                    <div class="lat-detail-info lat-detail-info--dark">
+                        @if ($tour->duration)
+                            <div class="lat-di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div><b>{{ $tour->duration }}</b><span>{{ $L('Duración', 'Duration', 'Duração') }}</span></div></div>
+                        @endif
+                        @if ($tour->group_type)
+                            {{-- Relabel del hallazgo #7 del acta de staging: el valor de
+                                 `group_type` es "Grupal / Privado", no un tamaño. --}}
+                            <div class="lat-di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.7"/></svg><div><b>{{ $tour->group_type }}</b><span>{{ $L('Opciones', 'Options', 'Opções') }}</span></div></div>
+                        @endif
+                        @if ($tour->language)
+                            <div class="lat-di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg><div><b>{{ $tour->language }}</b><span>{{ $L('Idiomas', 'Languages', 'Idiomas') }}</span></div></div>
+                        @endif
+                        @if ($tour->difficulty)
+                            <div class="lat-di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16M7 20V9l5-5 5 5v11"/></svg><div><b>{{ $tour->difficulty }}</b><span>{{ $L('Dificultad', 'Difficulty', 'Dificuldade') }}</span></div></div>
+                        @endif
+                        <div class="lat-di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><div><b>{{ __('ui.free_cancellation') }}</b><span>{{ __('ui.cancellation_24h') }}</span></div></div>
+                    </div>
+                </div>
+
+                {{-- Tira de miniaturas: sale de dentro de `.lat-gal` (iba pegada al
+                     visor) y pasa a ir DESPUÉS del hero completo, como en el mockup.
+                     El JS no cambia: sigue enganchando por `.lat-gal__thumb`. --}}
+                @if (count($galleryUrls) > 1)
+                    @php $thumbCap = 8; $thumbExtra = count($galleryUrls) - $thumbCap; @endphp
+                    <div class="lat-gal__thumbs">
+                        @foreach ($galleryUrls as $i => $img)
+                            @if ($i >= $thumbCap) @break @endif
+
+                            @if ($i === $thumbCap - 1 && $thumbExtra > 0)
+                                {{-- Última casilla "+N": el mockup la usa como puerta al
+                                     visor completo. Imprime el número real de fotos que
+                                     faltan, no un texto fijo. --}}
+                                <button type="button" class="lat-gal__thumb lat-gal__thumb--more" id="galMoreThumb"
+                                        aria-label="{{ $L('Ver las '.count($galleryUrls).' fotos', 'View all '.count($galleryUrls).' photos', 'Ver as '.count($galleryUrls).' fotos') }}">
+                                    <img src="{{ $img }}" alt="" loading="lazy" width="200" height="150">
+                                    <span class="lat-gal__thumb-more">
+                                        <b>+{{ $thumbExtra }}</b>
+                                        <span>{{ $L('Ver más fotos', 'More photos', 'Ver mais fotos') }}</span>
+                                    </span>
+                                </button>
+                            @else
                                 <button type="button" class="lat-gal__thumb {{ $i === 0 ? 'is-active' : '' }}" data-index="{{ $i }}" aria-label="{{ $L('Ver foto', 'View photo', 'Ver foto') }} {{ $i + 1 }}">
                                     <img src="{{ $img }}" alt="" loading="lazy" width="200" height="150">
                                 </button>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
+                            @endif
+                        @endforeach
+                    </div>
+                @endif
 
                 {{-- LIGHTBOX — overlay a pantalla completa; la imagen grande se
                      carga diferida (sin `src` hasta el primer clic, igual que
@@ -244,59 +385,140 @@
                     </div>
                 @endif
 
-                {{-- Barra de info --}}
-                <div class="lat-detail-info">
-                    @if ($tour->duration)
-                        <div class="lat-di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div><b>{{ $tour->duration }}</b><span>{{ $L('Duración', 'Duration', 'Duração') }}</span></div></div>
-                    @endif
-                    @if ($tour->group_type)
-                        <div class="lat-di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.7"/></svg><div><b>{{ $tour->group_type }}</b><span>{{ $L('Tamaño del grupo', 'Group size', 'Tamanho do grupo') }}</span></div></div>
-                    @endif
-                    @if ($tour->language)
-                        <div class="lat-di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg><div><b>{{ $tour->language }}</b><span>{{ $L('Idiomas', 'Languages', 'Idiomas') }}</span></div></div>
-                    @endif
-                    @if ($tour->departure_time || $tour->return_time)
-                        <div class="lat-di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><div><b>{{ $tour->departure_time }}@if($tour->departure_time && $tour->return_time) / @endif{{ $tour->return_time }}</b><span>{{ $L('Salidas', 'Departures', 'Saídas') }}</span></div></div>
-                    @endif
-                </div>
+                {{-- ============================================================
+                     FILA DE 3 CAJAS — "Lo más destacado" / mapa / reseña
+                     destacada (spec-02-tour.md §5). Va entre las miniaturas y el
+                     bloque de Descripción/Incluye, como en el mockup.
 
-                <div class="lat-detail-eyebrow">{{ $tour->category?->name ?? $L('Tour', 'Tour', 'Tour') }}</div>
-                <h1 class="lat-detail-title">{{ $titleDisplay }}</h1>
-                <div class="lat-detail-rate">
-                    @if ($tour->badge_text)
-                        <span class="lat-detail-badge {{ $badgeClass($tour->badge_type) }}">{{ $tour->badge_text }}</span>
-                    @endif
-                    {{-- El rating por tour solo se pinta si hay reseñas que lo
-                         sostengan. La columna `rating` viene sembrada en 4.8 para los
-                         24 tours y `reviews_count` en 0: publicar "4.8 (0 reseñas)" es
-                         una cifra sin respaldo, igual que inventarla
-                         (docs/rebrand/inventario/00-VALIDACION-STAGING.md). Cuando el
-                         cliente cargue reseñas reales, el bloque aparece solo. --}}
-                    @if ((int) $tour->reviews_count > 0 && (float) $tour->rating > 0)
-                    <span class="lat-stars">
-                        <span class="lat-stars__s">
-                            @for ($i = 0; $i < 5; $i++)
-                                <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6L12 2z"/></svg>
-                            @endfor
-                        </span>
-                        <span class="lat-stars__rate">{{ number_format((float) $tour->rating, 1) }}</span>
-                        <span class="lat-stars__cnt">({{ $tour->reviews_count }} {{ $L('reseñas', 'reviews', 'avaliações') }})</span>
-                    </span>
-                    @endif
-                    <span class="lat-badge-free">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
-                        {{ $L('Cancelación gratuita', 'Free cancellation', 'Cancelamento gratuito') }}
-                    </span>
-                    @if ($hasOffer)
-                        <span class="lat-badge-offer">
-                            {{ __('ui.special_offer') }}
-                            <span>-{{ $offerPct }}%</span>
-                        </span>
-                    @endif
+                     Ninguna de las tres inventa contenido: los destacados son los
+                     primeros pasos del itinerario que ya carga el CMS, el mapa es
+                     la imagen que sube el cliente (`tours.route_map_image`) y la
+                     reseña es una real del propio tour. Cada caja que no tenga
+                     dato no se imprime, y si no queda ninguna, la fila entera
+                     desaparece — no hay tarjetas vacías de relleno.
+                     ============================================================ --}}
+                @if ($itinerary->isNotEmpty() || $routeMapUrl || $featuredReview)
+                    <div class="lat-tour-boxes">
+                        @if ($itinerary->isNotEmpty())
+                            <div class="lat-tbox">
+                                <h2 class="lat-tbox__title">{{ $L('Lo más destacado', 'Highlights', 'Os destaques') }}</h2>
+                                <ul class="lat-tbox__list">
+                                    @foreach ($itinerary->take(4) as $step)
+                                        <li>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>
+                                            <span>{{ $step['title'] }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        @if ($routeMapUrl)
+                            <div class="lat-tbox lat-tbox--map">
+                                <button type="button" class="lat-tbox__map" id="mapBtn"
+                                        aria-haspopup="dialog" aria-controls="mapLightbox">
+                                    <img src="{{ $routeMapUrl }}" alt="{{ $L('Mapa del recorrido de ', 'Route map of ', 'Mapa do percurso de ') }}{{ $titleDisplay }}" loading="lazy" width="420" height="240">
+                                    <span class="lat-tbox__map-cta">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                        {{ $L('Ver mapa del recorrido', 'View route map', 'Ver mapa do percurso') }}
+                                    </span>
+                                </button>
+                            </div>
+                        @endif
+
+                        @if ($featuredReview)
+                            <div class="lat-tbox lat-tbox--quote">
+                                <span class="lat-tbox__mark" aria-hidden="true">&ldquo;</span>
+                                <p class="lat-tbox__quote">{{ $featuredReview->quote }}</p>
+                                <div class="lat-tbox__author">
+                                    @if ($featuredReview->avatar)
+                                        <img src="{{ $featuredReview->avatar }}" alt="" loading="lazy" width="40" height="40">
+                                    @endif
+                                    <div>
+                                        <b>{{ $featuredReview->name }}</b>
+                                        @if ($featuredReview->country)
+                                            <span>{{ $featuredReview->country }}</span>
+                                        @endif
+                                    </div>
+                                    @if ((float) $featuredReview->rating > 0)
+                                        <span class="lat-stars">
+                                            <span class="lat-stars__s">
+                                                @for ($i = 0; $i < 5; $i++)
+                                                    <svg viewBox="0 0 24 24" class="{{ $i < round((float) $featuredReview->rating) ? '' : 'is-empty' }}"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6L12 2z"/></svg>
+                                                @endfor
+                                            </span>
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+                {{-- ============================================================
+                     DESCRIPCIÓN + INCLUYE — siempre visibles, a dos columnas.
+
+                     Decisión de Anyerson (2026-08-21), que era la que la spec
+                     dejaba abierta: estos dos salen del sistema de tabs y quedan
+                     siempre a la vista, como en el mockup, y los otros tres
+                     paneles (Itinerario, Qué llevar, Información importante) bajan
+                     al acordeón de más abajo. No se pierde contenido: los 24 tours
+                     publicados tienen itinerario —hasta 3.569 caracteres— y el
+                     mockup simplemente no lo maquetó.
+                     ============================================================ --}}
+                <div class="lat-tour-cols">
+                    <section class="lat-tour-col" aria-labelledby="tour-desc-title">
+                        <h2 class="lat-tour-col__title" id="tour-desc-title">{{ $L('Descripción', 'Description', 'Descrição') }}</h2>
+
+                        @if ($tour->description)
+                            @foreach (explode("\n", $tour->description) as $para)
+                                @continue(trim($para) === '')
+                                <p>{{ $para }}</p>
+                            @endforeach
+                        @endif
+
+                        <div class="lat-detail-highlights">
+                            <span class="lat-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>{{ $L('Guía profesional', 'Professional guide', 'Guia profissional') }}</span>
+                            <span class="lat-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>{{ $L('Experiencia auténtica', 'Authentic experience', 'Experiência autêntica') }}</span>
+                            <span class="lat-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>{{ $L('Asistencia personalizada', 'Personalized support', 'Atendimento personalizado') }}</span>
+                        </div>
+                    </section>
+
+                    <section class="lat-tour-col" aria-labelledby="tour-incl-title">
+                        <h2 class="lat-tour-col__title" id="tour-incl-title">{{ $L('Incluye', 'Includes', 'Inclui') }}</h2>
+
+                        <ul class="lat-tour-col__list">
+                            @foreach ($includes as $item)
+                                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>{{ $item }}</span></li>
+                            @endforeach
+                        </ul>
+
+                        @if ($excludes->isNotEmpty())
+                            <p class="lat-tour-col__subtitle">{{ $L('No incluye', "Doesn't include", 'Não inclui') }}</p>
+                            <ul class="lat-tour-col__list lat-tour-col__list--no">
+                                @foreach ($excludes as $item)
+                                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span>{{ $item }}</span></li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </section>
                 </div>
 
                 {{-- ============================================================
-                     TABS (≥1024px) / ACORDEÓN (<1024px) — B3. MISMO marcado
+                     ACORDEÓN de Itinerario / Qué llevar / Información
+                     importante — en TODOS los anchos.
+
+                     Antes esto era un sistema de 5 tabs (tabs ≥1024px,
+                     acordeón por debajo). Descripción e Incluye salieron de
+                     acá y ahora están siempre visibles a dos columnas, como
+                     pide el mockup; los tres paneles que el mockup no maquetó
+                     se quedan acá, plegados, porque su contenido existe en las
+                     24 fichas publicadas y no se tira.
+
+                     El marcado no cambió: los mismos `.lat-tab-item` con
+                     role="tab"/aria-expanded y el mismo JS, que ahora ve el
+                     modificador --accordion y trata cada clic como acordeón
+                     independiente sin mirar el ancho. MISMO marcado
                      para ambos: cada `.lat-tab-item` empareja un botón con su
                      panel (nunca se duplica el contenido de ningún panel). En
                      desktop, CSS (`display:contents` + `order` en
@@ -307,37 +529,16 @@
                      archivo) decide, según el ancho actual, si un clic actúa
                      como "tab exclusivo" o como "acordeón independiente".
                      ============================================================ --}}
-                <div class="lat-tabs-wrap" id="tabsWrap">
+                <div class="lat-tabs-wrap lat-tabs-wrap--accordion" id="tabsWrap">
                     <h2 class="lat-tabs-wrap__mobile-heading">{{ $L('Detalles completos', 'Full details', 'Detalhes completos') }}</h2>
 
-                    <div class="lat-tab-item" data-tab="about">
-                        <button type="button" class="lat-tab is-active" data-tab="about" role="tab"
-                                id="tabbtn-about" aria-controls="panel-about" aria-selected="true" aria-expanded="true">
-                            <span class="lat-tab__label">{{ $L('Acerca del Tour', 'About the Tour', 'Sobre o Tour') }}</span>
-                            <svg class="lat-tab__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-                        </button>
-                        <div class="lat-tab-panel is-active" data-tab="about" id="panel-about" role="tabpanel" aria-labelledby="tabbtn-about">
-                            @if ($tour->description)
-                                @foreach (explode("\n", $tour->description) as $para)
-                                    @continue(trim($para) === '')
-                                    <p>{{ $para }}</p>
-                                @endforeach
-                            @endif
-                            <div class="lat-detail-highlights">
-                                <span class="lat-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>{{ $L('Guía profesional', 'Professional guide', 'Guia profissional') }}</span>
-                                <span class="lat-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>{{ $L('Experiencia auténtica', 'Authentic experience', 'Experiência autêntica') }}</span>
-                                <span class="lat-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>{{ $L('Asistencia personalizada', 'Personalized support', 'Atendimento personalizado') }}</span>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="lat-tab-item" data-tab="itin">
-                        <button type="button" class="lat-tab" data-tab="itin" role="tab"
-                                id="tabbtn-itin" aria-controls="panel-itin" aria-selected="false" aria-expanded="false">
+                        <button type="button" class="lat-tab is-active" data-tab="itin" role="tab"
+                                id="tabbtn-itin" aria-controls="panel-itin" aria-selected="true" aria-expanded="true">
                             <span class="lat-tab__label">{{ $L('Itinerario', 'Itinerary', 'Itinerário') }}</span>
                             <svg class="lat-tab__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                         </button>
-                        <div class="lat-tab-panel" data-tab="itin" id="panel-itin" role="tabpanel" aria-labelledby="tabbtn-itin">
+                        <div class="lat-tab-panel is-active" data-tab="itin" id="panel-itin" role="tabpanel" aria-labelledby="tabbtn-itin">
                             @forelse ($itinerary as $i => $step)
                                 @php $stepImgUrl = $step['image'] !== '' ? \App\Support\ImagePath::url($step['image']) : null; @endphp
                                 <div class="lat-itin-step {{ $stepImgUrl ? 'has-image' : '' }}">
@@ -358,33 +559,6 @@
                             @empty
                                 <p>{{ $L('El itinerario detallado de este tour estará disponible próximamente.', "This tour's detailed itinerary will be available soon.", 'O itinerário detalhado deste tour estará disponível em breve.') }}</p>
                             @endforelse
-                        </div>
-                    </div>
-
-                    <div class="lat-tab-item" data-tab="incl">
-                        <button type="button" class="lat-tab" data-tab="incl" role="tab"
-                                id="tabbtn-incl" aria-controls="panel-incl" aria-selected="false" aria-expanded="false">
-                            <span class="lat-tab__label">{{ $L('Qué incluye', "What's included", 'O que inclui') }}</span>
-                            <svg class="lat-tab__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-                        </button>
-                        <div class="lat-tab-panel" data-tab="incl" id="panel-incl" role="tabpanel" aria-labelledby="tabbtn-incl">
-                            @if ($excludes->isNotEmpty())
-                                <p class="lat-tab-panel__subtitle">{{ $L('Incluye', 'Includes', 'Inclui') }}</p>
-                            @endif
-                            <ul>
-                                @foreach ($includes as $item)
-                                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>{{ $item }}</span></li>
-                                @endforeach
-                            </ul>
-
-                            @if ($excludes->isNotEmpty())
-                                <p class="lat-tab-panel__subtitle">{{ $L('No incluye', "Doesn't include", 'Não inclui') }}</p>
-                                <ul class="lat-tab-panel__excludes">
-                                    @foreach ($excludes as $item)
-                                        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span>{{ $item }}</span></li>
-                                    @endforeach
-                                </ul>
-                            @endif
                         </div>
                     </div>
 
@@ -473,6 +647,31 @@
                                 </article>
                             @endforeach
                         </div>
+                    </div>
+                @endif
+
+                {{-- ── Caja "¿Tienes dudas?" (spec-02-tour.md §6): último bloque de
+                     la columna principal, no de la franja de garantías. El número
+                     sale de Setting::whatsappNumber(), el mismo que ya usa Contacto
+                     y el botón flotante — si no hay número cargado, la caja no se
+                     imprime en lugar de dejar un botón que no lleva a ninguna
+                     parte. ── --}}
+                @php $tourWhatsapp = \App\Models\Setting::whatsappNumber(); @endphp
+                @if ($tourWhatsapp)
+                    <div class="lat-tour-help">
+                        <div class="lat-tour-help__left">
+                            <span class="lat-tour-help__ic" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.7"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>
+                            </span>
+                            <div>
+                                <b>{{ $L('¿Tienes dudas?', 'Any questions?', 'Tem dúvidas?') }}</b>
+                                <span>{{ $L('Escríbenos por WhatsApp, estamos listos para ayudarte.', 'Message us on WhatsApp, we are ready to help.', 'Escreva pelo WhatsApp, estamos prontos para ajudar.') }}</span>
+                            </div>
+                        </div>
+                        <a class="lat-btn lat-btn--wa" href="https://wa.me/{{ $tourWhatsapp }}" target="_blank" rel="noopener">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.6.2-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.4-1.5-.9-.8-1.5-1.8-1.6-2.1-.2-.3 0-.4.1-.6l.5-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.2-.6-1.5-.9-2-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3s1 2.7 1.2 2.9c.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3zM12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2z"/></svg>
+                            {{ $L('Contactar por WhatsApp', 'Contact on WhatsApp', 'Falar no WhatsApp') }}
+                        </a>
                     </div>
                 @endif
             </div>
@@ -637,6 +836,29 @@
         </div>
     </div>
 
+    {{-- Modal del video del hero: componente compartido, no una copia del
+         script. Si el tour no tiene video_url, el componente no imprime nada. --}}
+    <x-video-modal id="tourVideoModal" :url="$tourVideoUrl"
+                   :label="$L('Ver video del tour', 'Watch tour video', 'Ver vídeo do tour')" />
+
+    {{-- Visor del mapa del recorrido. Reutiliza el mismo componente visual
+         del lightbox de la galería (mismas clases, mismo aspecto) con ids
+         propios: son dos diálogos distintos en la misma página y compartir
+         id rompería getElementById. La imagen del mapa ya está cargada en la
+         caja, así que acá no hay carga diferida que administrar. --}}
+    @if ($routeMapUrl)
+        <div class="lat-lightbox" id="mapLightbox" role="dialog" aria-modal="true"
+             aria-label="{{ $L('Mapa del recorrido', 'Route map', 'Mapa do percurso') }}" hidden>
+            <div class="lat-lightbox__backdrop" data-map-close></div>
+            <button type="button" class="lat-lightbox__close" data-map-close aria-label="{{ $L('Cerrar', 'Close', 'Fechar') }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+            <div class="lat-lightbox__stage">
+                <img src="{{ $routeMapUrl }}" alt="{{ $L('Mapa del recorrido de ', 'Route map of ', 'Mapa do percurso de ') }}{{ $titleDisplay }}" loading="lazy" decoding="async">
+            </div>
+        </div>
+    @endif
+
 </div>
 @endsection
 
@@ -651,6 +873,11 @@
     // que cambia es cómo se interpreta un clic. `mq` decide en cada click
     // cuál de los dos modos aplica — nunca se lee un valor cacheado viejo.
     var mqDesktop = window.matchMedia('(min-width: 1024px)');
+    // Con el modificador --accordion (los 3 paneles que quedaron: itinerario,
+    // qué llevar e información importante) el ancho deja de importar: siempre
+    // es acordeón independiente, en desktop también. Es la decisión de
+    // Anyerson del 2026-08-21 sobre el mockup de la ficha.
+    var forceAccordion = !!root.querySelector('.lat-tabs-wrap--accordion');
     var tabButtons = Array.prototype.slice.call(root.querySelectorAll('.lat-tab'));
     var tabPanels = Array.prototype.slice.call(root.querySelectorAll('.lat-tab-panel'));
 
@@ -670,7 +897,7 @@
             var name = btn.getAttribute('data-tab');
             var panel = panelFor(name);
 
-            if (mqDesktop.matches) {
+            if (mqDesktop.matches && !forceAccordion) {
                 // Tabs exclusivos: solo el clicado queda activo.
                 tabButtons.forEach(function (b) { setTabState(b, panelFor(b.getAttribute('data-tab')), b === btn); });
             } else {
@@ -686,6 +913,7 @@
     // activo solo el primero que ya estaba abierto — nunca los deja todos
     // ocultos ni todos visibles a la vez.
     mqDesktop.addEventListener('change', function (e) {
+        if (forceAccordion) return; // en modo acordeón fijo no hay nada que normalizar
         if (!e.matches) return; // mobile→desktop es el único caso que necesita normalizar
         var activeButtons = tabButtons.filter(function (b) { return b.classList.contains('is-active'); });
         var keep = activeButtons[0] || tabButtons[0];
@@ -810,6 +1038,11 @@
         var galMoreBtn = document.getElementById('galMoreBtn');
         if (galMoreBtn) galMoreBtn.addEventListener('click', function () { lbOpen(0); });
 
+        // Última miniatura "+N" (reemplazó a la pastilla sobre la foto): abre el
+        // visor en la primera foto que la tira no alcanza a mostrar, no en la 1.
+        var galMoreThumb = document.getElementById('galMoreThumb');
+        if (galMoreThumb) galMoreThumb.addEventListener('click', function () { lbOpen(Math.min(7, galUrls.length - 1)); });
+
         if (lbPrevBtn) lbPrevBtn.addEventListener('click', function () { lbShow(lbIndex - 1); });
         if (lbNextBtn) lbNextBtn.addEventListener('click', function () { lbShow(lbIndex + 1); });
         lbClosers.forEach(function (el) { el.addEventListener('click', lbClose); });
@@ -888,6 +1121,42 @@
         }
 
         validateDate();
+    }
+
+    // ── MAPA DEL RECORRIDO — visor propio ────────────────────────────────
+    // Mismo comportamiento que el lightbox de la galería (Escape cierra, el
+    // scroll del fondo se bloquea, el foco vuelve al botón que lo abrió) pero
+    // con sus propios ids: dos diálogos en la misma página no pueden compartir
+    // id ni handlers. No hay carga diferida acá porque la imagen del mapa ya
+    // está visible en su caja.
+    var mapBtn = document.getElementById('mapBtn');
+    var mapBox = document.getElementById('mapLightbox');
+    if (mapBtn && mapBox) {
+        var mapClosers = mapBox.querySelectorAll('[data-map-close]');
+        var mapLastFocused = null;
+
+        var mapKeydown = function (e) {
+            if (e.key === 'Escape' || e.key === 'Esc') mapClose();
+        };
+
+        var mapOpen = function () {
+            mapLastFocused = document.activeElement;
+            mapBox.hidden = false;
+            document.body.style.overflow = 'hidden';
+            document.addEventListener('keydown', mapKeydown);
+            var closeBtn = mapBox.querySelector('.lat-lightbox__close');
+            (closeBtn || mapBox).focus();
+        };
+
+        function mapClose() {
+            mapBox.hidden = true;
+            document.body.style.overflow = '';
+            document.removeEventListener('keydown', mapKeydown);
+            if (mapLastFocused && typeof mapLastFocused.focus === 'function') mapLastFocused.focus();
+        }
+
+        mapBtn.addEventListener('click', mapOpen);
+        Array.prototype.forEach.call(mapClosers, function (el) { el.addEventListener('click', mapClose); });
     }
 })();
 </script>

@@ -819,3 +819,527 @@
 body:has(.lat-sticky-book) footer {
     @media (max-width: 1023.98px) { padding-bottom: 118px; }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FICHA DE TOUR — mockup de agosto 2026
+// Estructura medida en `docs/rebrand/inventario/spec-02-tour.md`. El grid
+// mayor NO se toca (§2): todo esto vive dentro de la columna principal.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Hero compuesto: foto + capas + barra oscura pegada al borde ──────────
+// El radio y el recorte viven en este contenedor, no en la foto: así la foto
+// arriba y la barra oscura abajo forman UNA pieza, sin la franja de fondo que
+// dejaba la tarjeta blanca flotando debajo de la galería.
+.lat-tour-hero {
+    position: relative;
+    margin-top: 24px;
+    border-radius: $lat-r-md;
+    overflow: hidden;
+    box-shadow: $lat-shadow-md;
+
+    .lat-gal { gap: 0; }
+
+    .lat-gal__main {
+        border-radius: 0;
+
+        // Scrim del título: NO es el degradado genérico. Es el mismo refuerzo
+        // ya verificado en el hero del blog, porque el título encimado mide
+        // ≈4,75:1 sobre la zona más clara de la foto del mockup — pasa el 3:1
+        // de texto grande, pero el margen depende de la foto. Si el cliente
+        // cambia la portada, hay que volver a medir sobre la foto nueva.
+        &::after {
+            content: "";
+            position: absolute;
+            inset: auto 0 0 0;
+            height: 64%;
+            background: linear-gradient(to top,
+                rgba(10, 8, 7, .88) 0%,
+                rgba(10, 8, 7, .62) 34%,
+                rgba(10, 8, 7, .16) 72%,
+                rgba(10, 8, 7, 0) 100%);
+            pointer-events: none;
+            z-index: 2;
+        }
+    }
+
+    // La paginación de puntos competía con el título por la franja inferior y
+    // el mockup no la tiene: la tira de miniaturas de abajo cumple esa función.
+    .lat-gal__dots { display: none; }
+
+}
+
+.lat-tour-hero__ribbon {
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    z-index: 4;
+    display: inline-flex;
+    align-items: center;
+    background: $lat-red;              // blanco sobre $lat-red ≈ 5.9:1
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 6px 13px;
+    border-radius: $lat-r-pill;
+    box-shadow: $lat-shadow-sm;
+}
+
+.lat-tour-hero__overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3;
+    padding: 26px 28px 20px;
+
+    // El bloque no recibe eventos para no robarle al visor el clic de ampliar
+    // ni el swipe; los hijos interactivos los recuperan uno a uno.
+    pointer-events: none;
+    a, button { pointer-events: auto; }
+
+    .lat-detail-title {
+        color: #fff;
+        margin: 0 0 10px;
+        font-size: clamp(1.5rem, 2.9vw, 2.3rem);
+        // Ancho topado para que un título largo no llegue hasta el botón de
+        // video de la esquina derecha.
+        max-width: min(700px, 68%);
+        text-shadow: 0 2px 20px rgba(0, 0, 0, .5);
+    }
+
+    .lat-detail-rate {
+        margin: 0;
+        gap: 14px;
+        color: #fff;
+    }
+
+    .lat-stars__rate { color: #fff; }
+    .lat-stars__cnt { color: rgba(255, 255, 255, .82); }   // ≈11:1 sobre el scrim
+
+    @media (max-width: $bp-sm) {
+        padding: 16px 16px 14px;
+
+        .lat-detail-title { max-width: 100%; }
+    }
+}
+
+.lat-tour-hero__place {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: rgba(255, 255, 255, .9);
+    font-size: .86rem;
+
+    svg { width: 15px; height: 15px; flex: none; }
+}
+
+.lat-tour-hero__video {
+    position: absolute;
+    right: 16px;
+    bottom: 22px;
+    z-index: 4;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    background: $lat-surface;
+    color: $lat-ink;
+    border: none;
+    cursor: pointer;
+    font-family: $lat-font-sans;
+    font-weight: 700;
+    font-size: .84rem;
+    padding: 8px 16px 8px 8px;
+    border-radius: $lat-r-pill;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, .32);
+    transition: transform .2s ease, background .2s ease;
+
+    &-ic {
+        width: 28px; height: 28px;
+        border-radius: 50%;
+        background: $lat-red;
+        color: #fff;
+        display: grid; place-items: center;
+        flex: none;
+
+        svg { width: 14px; height: 14px; margin-left: 2px; }
+    }
+
+    &:hover { transform: translateY(-2px); }
+    &:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+    @media (max-width: $bp-sm) {
+        right: 10px;
+        bottom: auto;
+        top: 62px;                     // debajo del botón de "ver las N fotos"
+        font-size: .78rem;
+        padding: 6px 13px 6px 6px;
+
+        &-ic { width: 24px; height: 24px; }
+    }
+}
+
+// Barra de 5 datos: banda oscura pegada a la foto, no tarjeta blanca aparte.
+.lat-detail-info--dark {
+    background: $lat-ink;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    margin: 0;
+    padding: 16px 26px;
+    gap: 14px 28px;
+
+    .lat-di svg { color: rgba(255, 255, 255, .75); }
+    .lat-di b { color: #fff; font-size: .95rem; }        // 15.9:1 sobre $lat-ink
+    .lat-di span { color: rgba(255, 255, 255, .62); }    // ≈7.6:1 sobre $lat-ink
+
+    @media (min-width: 900px) {
+        justify-content: space-between;
+
+        .lat-di + .lat-di {
+            padding-left: 28px;
+            border-left: 1px solid rgba(255, 255, 255, .16);
+        }
+    }
+
+    // A 390px los 5 datos apilados dejaban una banda oscura de 233px (medido);
+    // en dos columnas baja a la mitad sin achicar el texto.
+    @media (max-width: $bp-sm) {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px 16px;
+        padding: 14px 16px;
+    }
+}
+
+// La tira de miniaturas ahora es hermana del hero, no hija de .lat-gal, y va
+// en UNA fila como en el mockup: con las 4 columnas x 3 filas de antes
+// medía 546px de alto a 1440px, más que media foto del hero.
+.lat-gal__thumbs {
+    margin-top: 12px;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 10px;
+
+    // En móvil 8 casillas de ~40px no se distinguen: pasan a 4 por fila.
+    @media (max-width: 640px) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+// Casilla "+N Ver más fotos": la puerta al visor completo.
+.lat-gal__thumb--more {
+    position: relative;
+
+    img { filter: brightness(.45); }
+}
+
+.lat-gal__thumb-more {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    gap: 2px;
+    text-align: center;
+    color: #fff;                       // sobre la foto oscurecida al 45%
+    pointer-events: none;
+
+    b { font-family: $lat-font-serif; font-weight: 800; font-size: 1.05rem; line-height: 1; }
+    span { font-size: .66rem; line-height: 1.2; opacity: .92; }
+
+    @media (max-width: 640px) { b { font-size: .95rem; } span { display: none; } }
+}
+
+// ── Fila de 3 cajas: destacados / mapa / reseña ──────────────────────────
+.lat-tour-boxes {
+    display: grid;
+    gap: 18px;
+    margin-top: 22px;
+    align-items: stretch;
+    grid-template-columns: 1fr;
+
+    // Sidebar ya apilado (<980px): la columna principal ocupa todo el ancho.
+    @media (min-width: 640px) and (max-width: 979.98px) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    // Con el sidebar al lado, 3 columnas recién entran desde 1220px:
+    // a 1024 daban 171px por caja (medido), con el mapa ilegible.
+    @media (min-width: 1220px) {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.lat-tbox {
+    background: $lat-surface;
+    border: 1px solid $lat-line;
+    border-radius: $lat-r-md;
+    box-shadow: $lat-shadow-sm;
+    padding: 20px 22px;
+    min-width: 0;
+
+    &__title {
+        font-family: $lat-font-serif;
+        font-weight: 800;
+        font-size: 1.02rem;
+        color: $lat-ink;
+        margin: 0 0 14px;
+    }
+
+    &__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 10px;
+
+        li {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            color: $lat-ink-soft;
+            font-size: .9rem;
+            line-height: 1.45;
+        }
+
+        svg { width: 18px; height: 18px; color: $lat-red; flex: none; margin-top: 1px; }
+    }
+
+    // Mapa: la caja es la propia imagen, con el CTA encimado.
+    &--map { padding: 0; overflow: hidden; }
+
+    &__map {
+        display: block;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        background: none;
+        cursor: zoom-in;
+        position: relative;
+
+        img {
+            width: 100%;
+            height: 100%;
+            min-height: 190px;
+            object-fit: cover;
+            display: block;
+        }
+
+        &-cta {
+            position: absolute;
+            left: 50%;
+            bottom: 14px;
+            transform: translateX(-50%);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            background: rgba($lat-ink, .86);          // blanco sobre esto ≈13:1
+            color: #fff;
+            font-size: .8rem;
+            font-weight: 600;
+            padding: 8px 15px;
+            border-radius: $lat-r-pill;
+            backdrop-filter: blur(4px);
+
+            svg { width: 15px; height: 15px; flex: none; }
+        }
+
+        &:hover &-cta { background: $lat-ink; }
+        &:focus-visible { outline: 2px solid $lat-red; outline-offset: -2px; }
+    }
+
+    // Reseña destacada
+    &--quote {
+        background: $lat-red-tint;
+        border-color: rgba($lat-red, .18);
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__mark {
+        font-family: $lat-font-serif;
+        font-weight: 800;
+        font-size: 2.6rem;
+        line-height: .5;
+        color: $lat-red;
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    &__quote {
+        color: $lat-ink;                 // 17:1 sobre $lat-red-tint
+        font-size: .95rem;
+        line-height: 1.6;
+        margin: 0 0 16px;
+    }
+
+    &__author {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: auto;
+
+        img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: none; }
+        b { display: block; font-size: .9rem; color: $lat-ink; }
+        span { font-size: .8rem; color: $lat-muted; }     // ≈4.98:1 sobre el tinte
+        .lat-stars { margin-left: auto; }
+    }
+}
+
+// ── Descripción + Incluye, siempre visibles a dos columnas ───────────────
+.lat-tour-cols {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 26px;
+    align-items: start;
+    margin-top: 30px;
+
+    // Dos columnas solo cuando la columna de lectura queda por encima de
+    // ~340px: con el sidebar apilado desde 820px de ventana, y con el
+    // sidebar al lado recién desde 1160px.
+    @media (min-width: 820px) and (max-width: 979.98px) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 30px;
+    }
+
+    @media (min-width: 1160px) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 34px;
+    }
+}
+
+.lat-tour-col {
+    min-width: 0;
+
+    &__title {
+        font-family: $lat-font-serif;
+        font-weight: 800;
+        font-size: 1.24rem;
+        color: $lat-ink;
+        margin: 0 0 14px;
+    }
+
+    p {
+        color: $lat-ink-soft;
+        line-height: 1.7;
+        font-size: .98rem;
+        margin: 0 0 14px;
+    }
+
+    &__subtitle {
+        font-family: $lat-font-sans;
+        font-weight: 700;
+        font-size: .82rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: $lat-muted;
+        margin: 22px 0 12px;
+        padding-top: 18px;
+        border-top: 1px solid $lat-line;
+    }
+
+    &__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 11px;
+
+        li {
+            display: flex;
+            gap: 11px;
+            align-items: flex-start;
+            color: $lat-ink-soft;
+            font-size: .95rem;
+            line-height: 1.5;
+        }
+
+        svg { width: 18px; height: 18px; color: #128a4b; flex: none; margin-top: 2px; }
+
+        &--no svg { color: $lat-red; }
+    }
+}
+
+// ── El bloque de 3 paneles queda como acordeón en TODOS los anchos ───────
+// Decisión de Anyerson (2026-08-21): Descripción e Incluye salen del sistema
+// de tabs y quedan siempre visibles arriba; Itinerario, Qué llevar e
+// Información importante se quedan plegados acá. Se reusa el mismo marcado y
+// el mismo JS accesible que ya existía (role=tab/aria-expanded, foco visible),
+// solo se desactivan las reglas que en desktop lo convertían en barra de tabs.
+.lat-tabs-wrap--accordion {
+    margin-top: 34px;
+    border-top: 1px solid $lat-line;
+    padding-top: 22px;
+
+    @media (min-width: $bp-lg) { display: block; }
+
+    .lat-tabs-wrap__mobile-heading {
+        @media (min-width: $bp-lg) { display: block; }
+    }
+
+    .lat-tab-item {
+        @media (min-width: $bp-lg) { display: block; }
+    }
+
+    .lat-tab {
+        @media (min-width: $bp-lg) {
+            width: 100%;
+            padding: 16px 2px;
+            margin-right: 0;
+            border-bottom: 1px solid $lat-line;
+            font-weight: 700;
+            color: $lat-ink;
+
+            &.is-active { color: $lat-red; border-color: $lat-line; }
+        }
+    }
+
+    // El chevron vuelve a tener sentido: acá sí se expande y se colapsa.
+    .lat-tab__chev {
+        @media (min-width: $bp-lg) { display: block; }
+    }
+
+    .lat-tab-panel {
+        @media (min-width: $bp-lg) {
+            padding: 4px 2px 22px;
+            border-top: 0;
+            margin-top: 0;
+        }
+    }
+}
+
+// ── Caja "¿Tienes dudas?" — último bloque de la columna principal ────────
+.lat-tour-help {
+    margin-top: 30px;
+    background: $lat-surface-2;
+    border: 1px solid $lat-line;
+    border-radius: $lat-r-md;
+    padding: 20px 22px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 18px;
+
+    @media (max-width: $bp-sm) { grid-template-columns: 1fr; }
+
+    &__left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+
+        b { display: block; font-family: $lat-font-serif; font-weight: 800; color: $lat-ink; font-size: 1.02rem; }
+        span { display: block; color: $lat-muted; font-size: .88rem; line-height: 1.45; }
+    }
+
+    &__ic {
+        width: 44px; height: 44px;
+        border-radius: 50%;
+        background: $lat-red-tint;
+        color: $lat-red;
+        display: grid; place-items: center;
+        flex: none;
+
+        svg { width: 22px; height: 22px; }
+    }
+}
