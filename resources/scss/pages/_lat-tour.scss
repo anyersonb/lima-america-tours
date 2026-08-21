@@ -1059,12 +1059,18 @@ body:has(.lat-sticky-book) footer {
     // Sidebar ya apilado (<980px): la columna principal ocupa todo el ancho.
     @media (min-width: 640px) and (max-width: 979.98px) {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        &[data-count="1"] { grid-template-columns: minmax(0, 1fr); }
     }
 
     // Con el sidebar al lado, 3 columnas recién entran desde 1220px:
     // a 1024 daban 171px por caja (medido), con el mapa ilegible.
+    // Las columnas salen del data-count del Blade: una caja sola en una
+    // grilla de 3 columnas deja dos tercios vacíos (visto en staging).
     @media (min-width: 1220px) {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+
+        &[data-count="1"] { grid-template-columns: minmax(0, 1fr); }
+        &[data-count="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 }
 

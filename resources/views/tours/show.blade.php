@@ -397,8 +397,15 @@
                      dato no se imprime, y si no queda ninguna, la fila entera
                      desaparece — no hay tarjetas vacías de relleno.
                      ============================================================ --}}
-                @if ($itinerary->isNotEmpty() || $routeMapUrl || $featuredReview)
-                    <div class="lat-tour-boxes">
+                @php
+                    // Cuántas cajas hay REALMENTE: de esto salen las columnas del
+                    // grid. Medido en staging: con una sola caja cargada (este tour
+                    // no tiene mapa ni reseñas) la grilla de 3 columnas la dejaba
+                    // sola con dos tercios vacíos.
+                    $boxCount = ($itinerary->isNotEmpty() ? 1 : 0) + ($routeMapUrl ? 1 : 0) + ($featuredReview ? 1 : 0);
+                @endphp
+                @if ($boxCount > 0)
+                    <div class="lat-tour-boxes" data-count="{{ $boxCount }}">
                         @if ($itinerary->isNotEmpty())
                             <div class="lat-tbox">
                                 <h2 class="lat-tbox__title">{{ $L('Lo más destacado', 'Highlights', 'Os destaques') }}</h2>
