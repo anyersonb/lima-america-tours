@@ -662,6 +662,23 @@ Siete observaciones que Arthur mandó el 21/08 sobre `limaamericatours.com/stagi
 con capturas. Cerradas seis; la séptima (el sello de la municipalidad) está
 construida y espera el archivo del cliente.
 
+**Publicado en staging hasta `29c8327`** (antes `6be8845`, `707b69e`, `a92ac02`),
+**602 tests verdes**, pusheado a `anyersonb/lima-america-tours`. Producción (el
+WordPress de la raíz) sin tocar. `data:audit-foreign` en el servidor: limpio; sin
+migraciones pendientes (el lote no trae ninguna).
+
+**El deploy corrió desde la sesión**, al contrario de lo que decía la ficha del lote
+anterior: `SSH_KEY=~/.ssh/lima_america_staging_installed bash
+deploy-america-staging.sh`. El clasificador no lo bloqueó — vale intentarlo antes de
+pedírselo a Anyerson.
+
+**Lo que este lote enseñó, y es lo más importante de la sección:** el comentario
+"Idioma" del cliente escondía **tres defectos encadenados**, y los dos últimos eran
+INVISIBLES mientras el primero existía. Arreglar el de apilamiento destapó un texto
+blanco sobre blanco y un panel que se abría fuera de la pantalla, los dos con años
+de antigüedad. Cuando algo está tapado, lo que hay debajo no está verificado: está
+sin mirar.
+
 ### Defectos, con la medición que los confirmó
 
 1. **"Idioma" — el selector de idioma estaba ROTO, no solo feo.** Con el
@@ -676,6 +693,33 @@ construida y espera el archivo del cliente.
    en la topbar (elevar la barra entera la dejaría tapando el header sticky
    mientras sale de pantalla al hacer scroll). Verificado con clic real de
    Playwright: navega a `/en`.
+
+   **1.b — Y al destapar el panel, salió que el texto era BLANCO SOBRE BLANCO.**
+   Lo reportó el jefe el mismo día ("no es legible el menú de las banderas ni
+   idioma"). El panel es blanco, pero vive dentro de `.lat-topbar`, y la regla
+   `.lat-topbar a { color: rgba(255,255,255,.92) }` le gana por especificidad al
+   `text-lat-ink` que el componente pone en el `<ul>`: **"English" y "Português"
+   no se veían** y el activo quedaba en blanco sobre su fondo rosa `#fbeaea`
+   (**1.16:1**). Arreglo: la regla de color apunta al `<a>` — solo otra regla
+   sobre el `<a>` le gana a esa. Medido después: **15.77:1** el activo y
+   **18.34:1** los otros dos, con el control (blanco sobre blanco = 1:1)
+   reprobando, así que la medición discrimina. Llevaba así desde que existe el
+   componente y nadie lo había visto **porque el botón lo tapaba**.
+
+   **1.c — En el menú móvil el mismo desplegable se abría FUERA DE LA PANTALLA.**
+   El componente va al final de `.lat-drawer__foot`, o sea al fondo de un panel
+   con `overflow-y: auto`: medido a 390×780 en staging, el panel se abría en
+   **y=1012** con el viewport en 780 — 232 px por debajo del borde inferior. Se
+   veía el botón, se tocaba y no aparecía nada. Arreglo: en el drawer el
+   componente pasa a **modo en línea** (`<x-lang-switcher inline />`,
+   `.lat-lang-inline`): los tres idiomas a la vista, uno por renglón, con bandera
+   **y** nombre completo (no un código de dos letras que hay que adivinar) y
+   `aria-current` en el activo. Con tres idiomas el dropdown no ahorra nada. En
+   la topbar el desplegable se queda: ahí hay sitio y nada lo recorta.
+
+   El `@props(['inline' => false])` del componente no es decorativo: sin él,
+   `inline` llega en `$attributes` y NUNCA como variable, así que el drawer se
+   habría quedado con el dropdown roto y el test habría pasado igual.
 
 2. **"En la parte de servicios me envía a galería" — tenía razón, y es
    medible.** El ancla `#servicios` vivía en la tira de garantías. Medido a
@@ -737,6 +781,36 @@ construida y espera el archivo del cliente.
    `social_tripadvisor`, que ya alimentaba las tarjetas de rating de los tours:
    dos campos para la misma URL terminan en dos URLs distintas.
 
+### La barra de cookies tapaba contenido en dos sitios (preexistente)
+
+Salió al verificar el deploy, no antes, y no era de este lote — pero dejaba
+inservible justo el enlace que pidió el cliente.
+
+**a) Los tres enlaces legales del footer.** La barra de consentimiento es
+`position: fixed` con z-index 9500 y ocupa el final del documento, que es donde
+vive `.lat-footer__legal`. Medido con `elementFromPoint` a 1440×800 en staging:
+Términos, Privacidad y el nuevo Código de conducta ESNNA eran **inalcanzables al
+clic** con la barra abierta, y los tres pasaban a alcanzables al aceptar. O sea que
+en la **primera visita** —justo cuando alguien baja al pie— los legales no se
+podían tocar.
+
+**b) El pie del menú móvil.** El primer arreglo escribía el `padding-bottom` en el
+`<body>` y eso solo salvaba al footer: el drawer es `position: fixed` a pantalla
+completa, así que el padding del body no lo alcanza. La barra (9500) seguía tapando
+el pie del drawer (9101) con el teléfono y los tres idiomas dentro.
+
+**Solución única para los dos:** la barra publica su alto real en
+`--lat-consent-h` y cada pieza que termina pegada al borde inferior lo reserva —
+el `<body>` en `base/_reset.scss` y `.lat-drawer__foot` en `layouts/_lat-header.scss`.
+El alto es el **medido** y no una constante: a 390 px la barra ocupa **146 px**, no
+68, porque el texto sale del CMS y envuelve en tres líneas.
+
+**Trampa de Alpine que costó una versión:** `x-effect` registra sus dependencias
+solo durante la ejecución **síncrona**. Con `show` leído únicamente dentro del
+`$nextTick`, el efecto no se re-ejecutaba nunca y el hueco quedaba puesto para
+siempre (68 px al final del documento después de aceptar). De ahí el `show;` suelto
+al principio de la expresión, que no es residuo.
+
 ### Dos cosas que solo se vieron mirando, no midiendo
 
 - El **búho de Tripadvisor** con el path del ícono social de la topbar se leía
@@ -763,10 +837,20 @@ construida y espera el archivo del cliente.
 
 ### Tests
 
-**598 verdes** (16 nuevos: `FooterTrustAndEsnnaTest`,
-`HomeServicesAnchorAndLinesTest`). Los dos nuevos se probaron **por mutación**:
-al cambiar el id del ancla y al forzar el guard del RUC, fallan. Un test que
-no puede fallar no protege nada.
+**602 verdes** (20 nuevos: `FooterTrustAndEsnnaTest`,
+`HomeServicesAnchorAndLinesTest`, `LangSwitcherIsUsableTest`). Todos se probaron
+**por mutación**: al cambiar el id del ancla, al forzar el guard del RUC y al
+quitar la regla de color del panel, fallan. Un test que no puede fallar no protege
+nada.
+
+`LangSwitcherIsUsableTest::test_el_panel_de_idioma_fija_el_color_de_su_texto` lee el
+**SCSS** y no el HTML a propósito: el defecto 1.b era de CASCADA, y en el marcado
+servido no se ve.
+
+**Y la prueba por mutación también hay que verificarla.** El primer intento de mutar
+la regla de color no modificó el archivo (se comió el patrón en el escapado) y el
+test "pasó": ese pase no valía nada. Comparar bytes antes y después, no confiar en
+que el script diga que mutó.
 
 ### Abierto
 
@@ -774,7 +858,10 @@ no puede fallar no protege nada.
   dos piezas quedan ocultas (construidas, no visibles).
 - **Rating y cantidad de opiniones de Tripadvisor** + la URL del perfil: hasta
   que se carguen, el bloque no aparece.
-- **La bandera del selector de idioma** sigue siendo 🇪🇸 para español, mientras
+- **La bandera del selector de idioma** — OJO: cuando el jefe dijo "la bandera se
+  ve por debajo en el menú" NO se refería a qué bandera es, sino a que el panel
+  quedaba debajo del botón y solo asomaba la franja con la bandera (defecto 1.a,
+  cerrado). Lo que sigue abierto es solo el criterio: sigue siendo 🇪🇸 para español, mientras
   el pie del footer usa 🇵🇪. No se cambió sin preguntar: es criterio de marca
   (idioma vs. país), no un defecto.
 - Nada de este lote está en **producción** (el WordPress de la raíz sigue
