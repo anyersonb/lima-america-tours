@@ -42,6 +42,21 @@
             this.show = false;
         }
     }"
+    {{-- La barra es `fixed` y tapaba los últimos ~68 px del documento, que es
+         donde está la barra de legales del footer: con la barra abierta,
+         Términos, Privacidad y Código de conducta ESNNA eran INALCANZABLES al
+         clic (medido con elementFromPoint en staging, 2026-08-24) justo en la
+         primera visita. Mientras se muestra, empuja el <body> por su alto
+         REAL — no una constante: el texto lo carga el CMS y en móvil ocupa
+         dos o tres líneas. Al aceptar o rechazar se limpia solo.
+         `$nextTick` es necesario porque en el momento del efecto la barra
+         todavía no tiene alto (x-show acaba de mostrarla). Y el `show;` suelto
+         del principio NO es residuo: Alpine registra las dependencias del
+         efecto solo durante su ejecución SÍNCRONA, así que leyendo `show`
+         únicamente dentro del $nextTick el efecto no se re-ejecutaba nunca y
+         el padding quedaba puesto para siempre — un hueco de 68 px al final
+         del documento después de aceptar. Medido en local antes y después. --}}
+    x-effect="show; $nextTick(() => { document.body.style.paddingBottom = show ? $el.offsetHeight + 'px' : '' })"
     x-show="show"
     x-cloak
     x-transition:enter="transition ease-out duration-300"
