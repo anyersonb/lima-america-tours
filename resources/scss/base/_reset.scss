@@ -12,6 +12,13 @@ html {
 }
 
 body {
+    // Espacio reservado para la barra de consentimiento de cookies, que es
+    // `position: fixed` abajo y tapaba el final del documento — con ella
+    // abierta, los tres enlaces legales del footer eran inalcanzables al clic
+    // (medido en staging, 2026-08-24). La variable la publica el propio
+    // componente de la barra según su alto real; sin barra vale 0px.
+    padding-bottom: var(--lat-consent-h, 0px);
+
     @apply font-sans text-teal-800 antialiased;
 }
 

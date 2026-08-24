@@ -374,7 +374,12 @@ body.lat-drawer-open { overflow: hidden; }
 
     &__foot {
         margin-top: auto;
-        padding: 18px 22px;
+        // El padding inferior suma el alto de la barra de cookies: el drawer es
+        // `fixed` a pantalla completa, así que el padding del <body> no lo
+        // alcanza y la barra (z-index 9500 contra el 9101 del drawer) tapaba
+        // este pie entero — teléfono y los tres idiomas incluidos. Medido en
+        // staging a 390x780 con elementFromPoint.
+        padding: 18px 22px calc(18px + var(--lat-consent-h, 0px));
         border-top: 1px solid $lat-line;
         background: $lat-surface-2;
         display: flex;

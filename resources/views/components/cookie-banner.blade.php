@@ -54,9 +54,16 @@
          del principio NO es residuo: Alpine registra las dependencias del
          efecto solo durante su ejecución SÍNCRONA, así que leyendo `show`
          únicamente dentro del $nextTick el efecto no se re-ejecutaba nunca y
-         el padding quedaba puesto para siempre — un hueco de 68 px al final
-         del documento después de aceptar. Medido en local antes y después. --}}
-    x-effect="show; $nextTick(() => { document.body.style.paddingBottom = show ? $el.offsetHeight + 'px' : '' })"
+         el hueco quedaba puesto para siempre — 68 px al final del documento
+         después de aceptar. Medido en local antes y después.
+
+         Publica una VARIABLE (--lat-consent-h) en vez de escribir el padding
+         del <body>: el menú móvil es `position: fixed` a pantalla completa y
+         el padding del body no lo alcanza, así que con aquello el pie del
+         drawer (teléfono + idiomas) seguía debajo de la barra. Ahora el body y
+         el pie del drawer leen el mismo dato — ver `_lat-header.scss`
+         (.lat-drawer__foot) y `_reset.scss` (body). --}}
+    x-effect="show; $nextTick(() => { document.documentElement.style.setProperty('--lat-consent-h', show ? $el.offsetHeight + 'px' : '0px') })"
     x-show="show"
     x-cloak
     x-transition:enter="transition ease-out duration-300"
