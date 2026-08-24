@@ -206,7 +206,7 @@
                 {{ $contactPhone }}
             </a>
             @endif
-            <x-lang-switcher />
+            <x-lang-switcher inline />
         </div>
     </div>
 </header>

@@ -1,3 +1,5 @@
+@props(['inline' => false])
+
 @php
     $current  = app()->getLocale();
     $supported = config('app.supported_locales', ['es', 'en', 'pt']);
@@ -8,6 +10,29 @@
     $labels = ['es' => 'Español', 'en' => 'English', 'pt' => 'Português'];
 @endphp
 
+{{-- MODO EN LÍNEA (`<x-lang-switcher inline />`, el menú móvil): los tres
+     idiomas a la vista, sin nada que desplegar.
+
+     Por qué no un dropdown acá: este componente vive al final de
+     `.lat-drawer__foot`, o sea en el fondo de un panel con `overflow-y: auto`.
+     Medido a 390×780 en staging, el panel se abría en y=1012 — 232 px por
+     DEBAJO del borde inferior de la pantalla. El visitante veía el botón, lo
+     tocaba y no pasaba nada visible. Con tres idiomas no hay nada que ahorrar
+     plegándolos: caben en una fila y se tocan de una. --}}
+@if ($inline ?? false)
+    <div class="lat-lang-inline" role="group" aria-label="{{ __('nav.language_label') }}">
+        @foreach ($supported as $loc)
+            <a href="{{ url('/' . $loc . ($path ? '/' . $path : '')) }}"
+               hreflang="{{ $loc }}"
+               rel="alternate"
+               @class(['is-active' => $loc === $current])
+               @if ($loc === $current) aria-current="true" @endif>
+                <span aria-hidden="true">{{ $flags[$loc] }}</span>
+                <span>{{ $labels[$loc] }}</span>
+            </a>
+        @endforeach
+    </div>
+@else
 <div class="relative" x-data="{ lang: false }" @click.outside="lang = false">
     <button type="button"
             class="flex items-center gap-2 border border-current/30 rounded-pill px-3 py-2 text-sm font-semibold"
@@ -55,3 +80,4 @@
         @endforeach
     </ul>
 </div>
+@endif

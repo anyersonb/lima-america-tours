@@ -380,6 +380,10 @@ body.lat-drawer-open { overflow: hidden; }
         display: flex;
         align-items: center;
         justify-content: space-between;
+        // Con los tres idiomas a la vista (ya no un dropdown, ver
+        // .lat-lang-inline) el grupo no cabe junto al teléfono a 390 px y baja
+        // a su propia fila.
+        flex-wrap: wrap;
         gap: 12px;
 
         a {
@@ -432,4 +436,56 @@ body.lat-drawer-open { overflow: hidden; }
 // (el drawer tiene z-index 9101 propio, que sí crea contexto).
 .lat-lang-menu {
     z-index: 9300;
+
+    // El panel es blanco, pero vive DENTRO de `.lat-topbar`, y la regla
+    // `.lat-topbar a { color: rgba(255,255,255,.92) }` gana por especificidad
+    // sobre el `text-lat-ink` que el componente pone en el <ul>: los enlaces
+    // salían BLANCOS SOBRE BLANCO. "English" y "Português" no se veían y el
+    // activo, con su fondo rosa, quedaba en blanco sobre #fbeaea (1.16:1).
+    //
+    // Llevaba así desde que existe el componente y nadie lo había visto porque
+    // el botón "Reservar Ahora" tapaba el panel (el defecto de apilamiento de
+    // arriba). Al destaparlo quedó a la vista: el jefe lo reportó el mismo día.
+    //
+    // Va con el selector anidado `a` a propósito, no en el <ul>: el color se
+    // hereda, y una regla que apunta al <a> es la única que le gana a otra
+    // regla que apunta al <a>. Medido sobre blanco: #171412 → 17.4:1.
+    a,
+    a:hover,
+    a:focus {
+        color: $lat-ink;
+    }
+}
+
+// ── Selector de idioma EN LÍNEA (menú móvil) ────────────────────────────
+// Reemplaza al dropdown dentro del drawer, que se abría 232 px por debajo del
+// borde inferior de la pantalla (medido a 390×780 en staging: el componente
+// vive al fondo de un panel con `overflow-y: auto`). Los tres idiomas van a la
+// vista, uno por renglón: el jefe reportó que "no es legible el menú de las
+// banderas ni idioma", así que se muestran bandera Y nombre completo, no un
+// código de dos letras que hay que adivinar.
+.lat-lang-inline {
+    display: grid;
+    gap: 6px;
+    width: 100%;
+
+    // El pie del drawer ya declara `a { display: flex }` con su color e
+    // interlineado; acá solo se le da la forma de píldora y el estado activo.
+    a {
+        justify-content: flex-start;
+        padding: 10px 14px;
+        border: 1px solid $lat-line-strong;
+        border-radius: $lat-r-pill;
+        background: #fff;
+        font-size: .85rem;
+        font-weight: 600;
+
+        &.is-active {
+            border-color: $lat-red;
+            background: $lat-red-tint;
+            font-weight: 700;
+        }
+
+        &:focus-visible { outline: 2px solid $lat-red; outline-offset: 2px; }
+    }
 }
