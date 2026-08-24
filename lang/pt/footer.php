@@ -12,6 +12,7 @@ return [
     'about_short' => 'Sobre nós',
     'terms' => 'Termos e condições',
     'privacy' => 'Política de privacidade',
+    'esnna' => 'Código de conduta ESNNA',
     'locate_us' => 'Nos encontre em',
     // 'address' e 'hours' removidos em 2026-08-11: um TERCEIRO endereço/
     // horário fixo, diferente do painel (Configurações → Contato) e dos
@@ -25,6 +26,13 @@ return [
     // aguardando chaves do cliente; a reserva se fecha por WhatsApp/e-mail).
     // Prometer "pagamento seguro" seria uma afirmação falsa — ver
     // docs/rebrand/LOTE-MOCKUPS-AGO-2026.md.
+    // ── Faixa de confiança (2026-08-21) — ver a nota em lang/es/footer.php ─
+    'trust_title' => 'Certificações e avaliações',
+    'tripadvisor_aria' => 'Avaliação :rating de 5 no Tripadvisor, :count avaliações. Abre o perfil em uma nova aba.',
+    'tripadvisor_reviews' => ':count avaliações',
+    'registry_seal_alt' => 'Agência de viagens e turismo registrada',
+    'esnna_seal_alt' => 'Compromisso contra a exploração sexual de crianças e adolescentes (ESNNA)',
+    'ruc_label' => 'RUC',
     'seal_best_price' => 'Melhores Preços Garantidos',
     'seal_responsible' => 'Viagens Responsáveis',
     'rights_reserved_by' => 'Todos os direitos reservados.',

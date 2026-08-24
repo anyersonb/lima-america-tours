@@ -52,4 +52,31 @@ return [
     'privacy_s5_exercise_email' => 'Para ejercer estos derechos, envíe una solicitud por escrito a nuestro correo electrónico.',
     'privacy_s5_exercise_email_and_address' => 'Para ejercer estos derechos, envíe una solicitud por escrito a nuestro correo electrónico o a nuestra dirección física (:address).',
     'privacy_s5_response_time' => 'Responderemos en un plazo máximo de 20 días hábiles.',
+
+    // ── ESNNA — Código de conducta ────────────────────────────────────────
+    // Pedido del jefe el 2026-08-21. Solo se citan normas verificables: la
+    // Ley N.° 28251 y la Ley N.° 29408 (Ley General de Turismo). Los canales
+    // de denuncia son los oficiales del Estado peruano (Línea 100 del MIMP y
+    // el 105 de la PNP). No se inventa ningún número de resolución.
+    'esnna_last_updated' => 'Última actualización: 24 de agosto de 2026',
+    'esnna_title' => 'Código de conducta contra la ESNNA',
+    'esnna_intro' => 'Lima América Tours rechaza de forma absoluta la explotación sexual de niñas, niños y adolescentes (ESNNA) en el ámbito del turismo, y asume el compromiso público de prevenirla y denunciarla.',
+
+    'esnna_s1_title' => 'Nuestro compromiso',
+    'esnna_s1_body' => 'Como agencia de viajes peruana asumimos que el turismo no puede ser una vía para el abuso. Nos comprometemos a no facilitar, promover, tolerar ni encubrir ninguna forma de explotación sexual de niñas, niños y adolescentes, ni por acción propia ni a través de terceros que trabajen con nosotros. Este compromiso alcanza a todo nuestro personal, a nuestros guías y a cada proveedor de transporte, alojamiento y actividades con el que operamos.',
+
+    'esnna_s2_title' => 'Qué es la ESNNA',
+    'esnna_s2_body' => 'La explotación sexual de niñas, niños y adolescentes es cualquier situación en la que una persona menor de 18 años es utilizada para actividades sexuales a cambio de dinero, bienes, favores o cualquier otra ventaja, para quien la explota o para un tercero. No es un trabajo, no es una elección y no deja de ser un delito porque haya un pago, un intermediario o el consentimiento aparente de la víctima o de su familia.',
+
+    'esnna_s3_title' => 'Qué hacemos en la práctica',
+    'esnna_s3_body' => 'Informamos y capacitamos a nuestro equipo para reconocer señales de riesgo; incluimos este compromiso en los acuerdos con nuestros proveedores; rechazamos cualquier solicitud de servicios que pueda tener como fin la explotación de menores, cancelando la reserva sin reembolso; y ponemos en conocimiento de las autoridades competentes cualquier hecho o indicio que detectemos, resguardando la identidad de la víctima y de quien informa.',
+
+    'esnna_s4_title' => 'Cómo denunciar',
+    'esnna_s4_intro' => 'Si conoces o sospechas un caso, la denuncia es gratuita, puede ser anónima y no necesita pruebas: basta la sospecha razonable.',
+    'esnna_s4_line100' => 'Línea 100 (Ministerio de la Mujer y Poblaciones Vulnerables): marca 100, gratuito, las 24 horas, desde cualquier teléfono del Perú.',
+    'esnna_s4_police' => 'Policía Nacional del Perú: marca 105 en caso de emergencia, o acude a la comisaría más cercana.',
+    'esnna_s4_us' => 'También puedes escribirnos a nosotros: si algo de lo que viste ocurrió durante uno de nuestros tours o con alguno de nuestros proveedores, queremos saberlo para actuar y denunciarlo.',
+
+    'esnna_s5_title' => 'Marco legal',
+    'esnna_s5_body' => 'En el Perú, la explotación sexual comercial de niñas, niños y adolescentes en el ámbito del turismo es un delito tipificado en el Código Penal a partir de la Ley N.° 28251. La Ley N.° 29408, Ley General de Turismo, obliga a los prestadores de servicios turísticos a colaborar en su prevención. Este código de conducta es nuestra aplicación de esas obligaciones y se revisa cada vez que la normativa cambia.',
 ];

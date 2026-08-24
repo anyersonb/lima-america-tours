@@ -129,6 +129,42 @@ class Setting extends Model
         return $value !== '' ? $value : null;
     }
 
+    /**
+     * Sello oficial que la agencia debe exhibir ("Agencia de viajes y turismo
+     * registrada"). Pedido del jefe el 2026-08-21: la Municipalidad de Lima
+     * les exige publicarlo. Es una IMAGEN QUE ENTREGA EL CLIENTE — acá no hay
+     * default y no se dibuja una versión propia a mano: un sello oficial
+     * redibujado por nosotros sería una falsificación, no un placeholder.
+     * Null = el footer no pinta nada.
+     */
+    public static function registrySealPath(): ?string
+    {
+        $value = trim((string) static::get('company_registry_seal', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
+    /** Enlace de verificación del sello (registro público). Opcional. */
+    public static function registrySealUrl(): ?string
+    {
+        $value = trim((string) static::get('company_registry_seal_url', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
+    /**
+     * Sello ESNNA (compromiso contra la explotación sexual de niñas, niños y
+     * adolescentes). Mismo criterio que el sello de registro: la imagen la
+     * entrega el cliente. La PÁGINA de /esnna no depende de esto — el texto
+     * del compromiso es nuestro y se publica igual, con sello o sin él.
+     */
+    public static function esnnaSealPath(): ?string
+    {
+        $value = trim((string) static::get('esnna_seal', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
     /** Razón social. Mismo criterio que companyRuc(): sin default inventado. */
     public static function companyLegalName(): ?string
     {

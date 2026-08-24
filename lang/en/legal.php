@@ -50,4 +50,27 @@ return [
     'privacy_s5_exercise_email' => 'To exercise these rights, send a written request to our email address.',
     'privacy_s5_exercise_email_and_address' => 'To exercise these rights, send a written request to our email address or physical address (:address).',
     'privacy_s5_response_time' => 'We will respond within a maximum of 20 business days.',
+
+    // ── ESNNA — code of conduct (see the note in lang/es/legal.php) ────────
+    'esnna_last_updated' => 'Last updated: August 24, 2026',
+    'esnna_title' => 'Code of conduct against ESNNA',
+    'esnna_intro' => 'Lima América Tours absolutely rejects the sexual exploitation of children and adolescents (ESNNA) in tourism, and publicly commits to preventing and reporting it.',
+
+    'esnna_s1_title' => 'Our commitment',
+    'esnna_s1_body' => 'As a Peruvian travel agency, we take it as given that tourism must never become a route to abuse. We commit to never facilitate, promote, tolerate or cover up any form of sexual exploitation of children and adolescents, neither directly nor through third parties working with us. This commitment binds our whole staff, our guides and every transport, lodging and activity provider we operate with.',
+
+    'esnna_s2_title' => 'What ESNNA is',
+    'esnna_s2_body' => 'The sexual exploitation of children and adolescents is any situation in which a person under 18 is used for sexual activity in exchange for money, goods, favours or any other advantage, whether for the exploiter or for a third party. It is not work, it is not a choice, and it does not stop being a crime because there was a payment, a middleman, or the apparent consent of the victim or their family.',
+
+    'esnna_s3_title' => 'What we do in practice',
+    'esnna_s3_body' => 'We brief and train our team to recognise warning signs; we include this commitment in the agreements with our providers; we refuse any request for services that could be aimed at exploiting minors, cancelling the booking with no refund; and we report to the competent authorities any fact or indication we detect, protecting the identity of the victim and of whoever reports it.',
+
+    'esnna_s4_title' => 'How to report',
+    'esnna_s4_intro' => 'If you know of or suspect a case, reporting is free, can be anonymous and needs no evidence: reasonable suspicion is enough.',
+    'esnna_s4_line100' => 'Línea 100 (Ministry of Women and Vulnerable Populations): dial 100, free, 24 hours a day, from any phone in Peru.',
+    'esnna_s4_police' => 'Peruvian National Police: dial 105 in an emergency, or go to the nearest police station.',
+    'esnna_s4_us' => 'You can also write to us: if what you saw happened during one of our tours or involved one of our providers, we want to know so we can act and report it.',
+
+    'esnna_s5_title' => 'Legal framework',
+    'esnna_s5_body' => 'In Peru, the commercial sexual exploitation of children and adolescents in tourism is a crime under the Penal Code following Law No. 28251. Law No. 29408, the General Tourism Law, requires tourism service providers to help prevent it. This code of conduct is how we apply those obligations, and it is reviewed whenever the regulations change.',
 ];

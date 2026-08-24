@@ -656,6 +656,130 @@ footer, así que aparecerá solo cuando haya algo detrás. Efecto hoy: 6 ítems.
     -Ecuador_.jpeg` es una foto de Ecuador en un catálogo peruano. Borrarlos o
     dejarlos sin asignar, a criterio del cliente.
 
+## Lote 2026-08-24 — comentarios del jefe por WhatsApp (2026-08-21)
+
+Siete observaciones que Arthur mandó el 21/08 sobre `limaamericatours.com/staging`,
+con capturas. Cerradas seis; la séptima (el sello de la municipalidad) está
+construida y espera el archivo del cliente.
+
+### Defectos, con la medición que los confirmó
+
+1. **"Idioma" — el selector de idioma estaba ROTO, no solo feo.** Con el
+   desplegable abierto, el botón "Reservar Ahora" del header sticky tapaba las
+   opciones **Español** e **English**: medido con `elementFromPoint` a 1024×700
+   en staging, un clic real sobre "English" caía en `.lat-btn-reservar`. O sea
+   que **nadie podía pasar el sitio a inglés desde escritorio ni tablet** —
+   solo "Português", que quedaba libre por debajo del botón. Causa: el `<ul>`
+   llevaba el `z-50` de Tailwind y la topbar es `position: static`, así que
+   competía en el contexto raíz contra `.lat-header-shell` (z-index 9200) y
+   perdía. Arreglo: clase `.lat-lang-menu` con z-index 9300 **en el `<ul>`**, no
+   en la topbar (elevar la barra entera la dejaría tapando el header sticky
+   mientras sale de pantalla al hacer scroll). Verificado con clic real de
+   Playwright: navega a `/en`.
+
+2. **"En la parte de servicios me envía a galería" — tenía razón, y es
+   medible.** El ancla `#servicios` vivía en la tira de garantías. Medido a
+   1024×700 antes de tocar: tras el salto la tira dejaba 141 px visibles y el
+   **68% de la pantalla era la Galería**, con "Descubre la belleza del Perú"
+   en el centro óptico. El ancla pasó a **"Explora por categoría"** (decisión
+   de Anyerson entre cuatro opciones), que es la sección que sí enumera lo que
+   la agencia ofrece. Después: **77% de la pantalla es esa sección** y la
+   Galería queda en 3%. La tira de garantías conserva el ancla **solo si no hay
+   categorías publicadas** (esa sección vive dentro de un `@if` y sin el guard
+   el ítem del menú apuntaría a un id inexistente).
+
+3. **"La línea roja" — eran DOS.** El `::before` de 4 px rojo sobre la Galería
+   y el `border-top: 4px solid $lat-red` del footer. Retirados los dos. El
+   corte entre bandas lo hace el cambio de fondo; la raya encima solo sumaba
+   una línea dura a media pantalla.
+
+4. **"Las líneas" — el geoglifo de Nazca.** Trazo blanco al 16% con
+   `soft-light` sobre la foto del bloque de cierre: sobre una foto, las rectas
+   largas se leen como rayones de la pantalla. Es la **tercera figura que
+   falla en la misma superficie** (antes un colibrí que parecía torre de alta
+   tensión y otro que parecía avión de combate, lote del 13/08). La conclusión
+   no es que faltara acertar el dibujo: **esa superficie no admite motivo de
+   trazo**. El SVG queda en el historial de git.
+
+### Lo que se construyó (los tres pedidos nuevos)
+
+5. **RUC en el footer.** El campo `company_ruc` ya existía y sigue **vacío a
+   propósito**: en este repo llegaron a convivir dos RUC contradictorios
+   publicados a la vez. El footer lo imprime en la barra de copyright **solo
+   si está cargado**. Falta el número confirmado.
+
+6. **Sellos oficiales.** Dos campos nuevos en Configuración → Contacto → Datos
+   legales: `company_registry_seal` (el sello "Agencia de viajes y turismo
+   registrada" que le pide la municipalidad) con `company_registry_seal_url`
+   opcional para volverlo enlace comprobable, y `esnna_seal`. Son **archivos
+   del cliente**: no se dibuja un sello propio — un sello oficial redibujado
+   por nosotros sería una falsificación, no un placeholder. Sin imagen, no se
+   pinta nada.
+
+7. **Página ESNNA** — `/{locale}/esnna`, `PageController@esnna`,
+   `resources/views/pages/esnna.blade.php`. Cinco secciones (compromiso, qué
+   es, qué hacemos, cómo denunciar, marco legal) en ES/EN/PT, en
+   `lang/*/legal.php` como los otros dos legales. Enlazada **siempre** desde
+   los legales del footer (la página es texto nuestro y existe con sello o sin
+   él) y desde el sello si lo hay. Fecha de actualización **propia**: usar la
+   de Términos habría publicado "7 de mayo" en un documento creado en agosto.
+   **El texto cita solo normas verificables** — Ley N.° 28251 y Ley N.° 29408
+   (Ley General de Turismo) — y los canales reales del Estado (Línea 100 del
+   MIMP, 105 de la PNP). No se inventó ningún número de resolución; si el
+   asesor legal de la agencia quiere citar más, se agregan en el lang.
+
+8. **Bloque de reseñas de Tripadvisor** en la franja de confianza del footer:
+   búho + círculos verdes + rating + "N reseñas · #1 en Lima". El guard vive
+   en `App\Support\TripadvisorBadge` y es **todo o nada**: sin enlace, sin
+   rating o sin cantidad no se pinta, y un rating fuera de 1..5 tampoco. La
+   posición ("#1 en Lima") es el único campo opcional, porque cambia solo en
+   Tripadvisor sin que nadie toque el sitio. La URL se reutiliza de
+   `social_tripadvisor`, que ya alimentaba las tarjetas de rating de los tours:
+   dos campos para la misma URL terminan en dos URLs distintas.
+
+### Dos cosas que solo se vieron mirando, no midiendo
+
+- El **búho de Tripadvisor** con el path del ícono social de la topbar se leía
+  como un **antifaz** dentro de la caja verde de 46 px. Se rehízo con los ojos
+  dibujados (esclerótica + pupila). Las mediciones daban todo correcto.
+- El **RUC heredaba el gris del copyright** (`#7f776c`), que medido contra el
+  peor caso del footer da **3.45:1 a 13 px** — por debajo de AA. Se subió a
+  `#9a9287` (**4.96:1** medido en el navegador), lo que arregla de paso el
+  copyright y los dos legales, que llevaban el mismo gris. El peor caso se
+  obtuvo muestreando el píxel más claro de la foto de fondo (254,255,255) y
+  componiéndolo con el velo `rgba(16,13,11,.9)` → `rgb(40,37,35)`; el control
+  negativo con el gris viejo reprueba, así que la medición discrimina.
+
+### Contrastes medidos de la franja nueva (peor caso rgb(40,37,35))
+
+| Pieza | Contraste | Mínimo |
+|---|---|---|
+| "Tripadvisor" | 15.23:1 | 4.5 |
+| rating 4,9 | 15.23:1 | 4.5 |
+| "3.968 reseñas · #1 en Lima" | 6.58:1 | 4.5 |
+| círculos verdes (gráfico) | 8.94:1 | 3.0 |
+| enlace ESNNA | 11.45:1 | 4.5 |
+| RUC / copyright / legales | 4.96:1 | 4.5 |
+
+### Tests
+
+**598 verdes** (16 nuevos: `FooterTrustAndEsnnaTest`,
+`HomeServicesAnchorAndLinesTest`). Los dos nuevos se probaron **por mutación**:
+al cambiar el id del ancla y al forzar el guard del RUC, fallan. Un test que
+no puede fallar no protege nada.
+
+### Abierto
+
+- **RUC real** y **el archivo del sello** de la municipalidad: sin ellos las
+  dos piezas quedan ocultas (construidas, no visibles).
+- **Rating y cantidad de opiniones de Tripadvisor** + la URL del perfil: hasta
+  que se carguen, el bloque no aparece.
+- **La bandera del selector de idioma** sigue siendo 🇪🇸 para español, mientras
+  el pie del footer usa 🇵🇪. No se cambió sin preguntar: es criterio de marca
+  (idioma vs. país), no un defecto.
+- Nada de este lote está en **producción** (el WordPress de la raíz sigue
+  intacto) ni en staging hasta correr el deploy.
+
 ## Ola 2, no empezada
 
 La parte visual del rebrand: romper el molde de las cinco secciones idénticas

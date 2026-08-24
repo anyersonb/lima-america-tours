@@ -1,11 +1,14 @@
 // ═══════════════════════════════════════════════════════════════════════
-// LIMA AMÉRICA TOURS — Footer (fondo fotográfico + overlay, borde rojo)
+// LIMA AMÉRICA TOURS — Footer (fondo fotográfico + overlay)
 // ═══════════════════════════════════════════════════════════════════════
 @use '../abstracts/variables' as *;
 
 .lat-footer {
     position: relative;
-    border-top: 4px solid $lat-red;
+    // El `border-top: 4px solid $lat-red` se retiró el 2026-08-24 por pedido
+    // del jefe ("La línea roja", captura de WhatsApp 09.48.35). El corte con
+    // el bloque de cierre ya lo hace el cambio de fondo; la raya roja encima
+    // solo sumaba una línea dura a media pantalla.
     background-color: #100d0b;
     background-size: cover;
     background-position: center;
@@ -206,6 +209,70 @@
         &:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
     }
 
+    // ── Franja de confianza: Tripadvisor + sellos oficiales ──────────────
+    // 2026-08-21, pedido del jefe. Reseñas a la izquierda y sellos a la
+    // derecha en escritorio; en móvil se apilan centrados. La franja entera
+    // no existe en el DOM si no hay ningún dato cargado (guard en el Blade),
+    // así que estos estilos nunca pintan una caja vacía.
+    &__trust {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px 32px;
+        padding: 24px 0;
+        border-top: 1px solid rgba(255, 255, 255, .1);
+
+        @media (max-width: 720px) {
+            justify-content: center;
+            text-align: center;
+        }
+    }
+
+    // Caja clara detrás de cada sello oficial: vienen con tinta oscura sobre
+    // fondo transparente y sobre el footer (#100d0b) desaparecerían. Ancho
+    // acotado para que un archivo grande del cliente no reviente la fila.
+    &__seal-imgs {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    &__seal-img {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        border-radius: 10px;
+        padding: 8px 10px;
+        transition: transform .15s, box-shadow .15s;
+
+        img {
+            display: block;
+            width: auto;
+            height: clamp(52px, 7vw, 68px);
+            max-width: 160px;
+            object-fit: contain;
+        }
+
+        &[href]:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 0, .35); }
+        &[href]:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+    }
+
+    &__ruc {
+        white-space: nowrap;
+    }
+
+    &__legal-esnna {
+        // Se destaca del resto de los legales, como en la referencia del
+        // jefe. Crema y no rojo: el rojo de marca sobre el fondo del footer
+        // no llega a AA en texto de 13 px (ver feedback del repo sobre el
+        // rojo en superficies oscuras). #e7ded4 sobre #100d0b mide 12.3:1.
+        color: #e7ded4 !important;
+        font-weight: 600;
+    }
+
     &__seals {
         display: flex;
         flex-wrap: wrap;
@@ -241,6 +308,14 @@
         svg { width: 14px; height: 14px; }
     }
 
+    // El gris de esta barra subió de #7f776c a #9a9287 el 2026-08-24, al
+    // sumarle el RUC. MEDIDO sobre el render, no supuesto: se muestreó el
+    // píxel más claro de la foto de fondo (254,255,255) y se compuso con el
+    // velo (rgba(16,13,11,.9)) → peor caso rgb(40,37,35). Contra ese fondo,
+    // el #7f776c anterior daba 3.45:1 a 13 px: por debajo del 4.5:1 que pide
+    // AA. El RUC es un dato legal obligatorio y no podía quedar ahí; de paso
+    // se arregla el copyright y los dos legales, que llevaban el mismo gris.
+    // #9a9287 mide 5.0:1 en el mismo peor caso.
     &__bottom {
         border-top: 1px solid rgba(255, 255, 255, .08);
         padding: 20px 0;
@@ -250,14 +325,14 @@
         gap: 16px;
         flex-wrap: wrap;
         font-size: .82rem;
-        color: #7f776c;
+        color: #9a9287;
     }
 
     &__legal {
         display: flex;
         gap: 18px;
 
-        a { color: #7f776c; font-size: .82rem; }
+        a { color: #9a9287; font-size: .82rem; }
         a:hover { color: #fff; }
     }
 
@@ -276,4 +351,59 @@
     margin-top: 12px;
 
     li { background: #fff; border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; }
+}
+
+// ── Bloque de reseñas de Tripadvisor ────────────────────────────────────
+// 2026-08-21, pedido del jefe con la referencia de incatrilogytours. Vive en
+// el footer pero no anidado dentro de `.lat-footer`: es una pieza cerrada y
+// la ficha de tour puede querer la misma.
+//
+// El verde es el de la marca Tripadvisor (#34e0a1). Sobre el fondo del footer
+// (#100d0b) mide 13.9:1, muy por encima del 3:1 que WCAG 1.4.11 pide a un
+// gráfico; el texto va en blanco y crema, nunca en el verde.
+.lat-ta {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    color: #efe7dc;
+    text-decoration: none;
+
+    &__logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        background: #34e0a1;
+        color: #0b1f17;
+        flex: none;
+
+        svg { width: 30px; height: 30px; }
+    }
+
+    &__body { display: grid; gap: 3px; }
+
+    &__name {
+        font-family: $lat-font-sans;
+        font-size: .95rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: .01em;
+    }
+
+    &__row { display: inline-flex; align-items: center; gap: 8px; }
+
+    &__dots { display: inline-flex; gap: 2px; color: #34e0a1; }
+
+    &__dot { width: 14px; height: 14px; flex: none; }
+
+    &__rating { font-size: .92rem; font-weight: 700; color: #fff; }
+
+    &__meta { font-size: .8rem; color: #b3a99c; }
+
+    &:hover .lat-ta__name { text-decoration: underline; }
+    &:focus-visible { outline: 2px solid #fff; outline-offset: 4px; border-radius: 8px; }
+
+    @media (max-width: 720px) { justify-content: center; }
 }

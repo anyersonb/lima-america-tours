@@ -75,6 +75,23 @@
     // cualquier otra página, $__env->shared(...) devuelve false y el
     // footer se ve exactamente igual que siempre.
     $hideFooterNewsletter = (bool) $__env->shared('lat_hide_footer_newsletter', false);
+
+    // ── Franja de confianza (2026-08-21, los tres pedidos del jefe por
+    // WhatsApp: RUC, "un logotipo que nos pide la municipalidad de Lima" y
+    // "nuestro icono de Tripadvisor para reseñas").
+    //
+    // Los cuatro son datos del cliente y los cuatro tienen guard propio: sin
+    // dato, la pieza no se pinta. Ninguno trae default — un RUC equivocado o
+    // un rating inventado en el footer viajan a TODAS las páginas del sitio
+    // (ver App\Models\Setting::companyRuc() y App\Support\TripadvisorBadge).
+    $taBadge = \App\Support\TripadvisorBadge::data($locale);
+    // Los sellos se guardan con FileUpload en el disco "media", igual que las
+    // imágenes del home: se resuelven con ImagePath::homeImage(), NO con
+    // ::url(), que apunta al disco "public".
+    $registrySeal = \App\Support\ImagePath::homeImage(\App\Models\Setting::registrySealPath());
+    $registrySealUrl = \App\Models\Setting::registrySealUrl();
+    $esnnaSeal = \App\Support\ImagePath::homeImage(\App\Models\Setting::esnnaSealPath());
+    $companyRuc = \App\Models\Setting::companyRuc();
 @endphp
 <footer class="lat-footer" role="contentinfo"
         style="background-image:linear-gradient(rgba(16,13,11,.9), rgba(16,13,11,.96)), url('{{ $footBg }}');">
@@ -259,6 +276,100 @@
                 </address>
         </section>
 
+        {{-- ══════════════════════════════════════════════════════════════
+             FRANJA DE CONFIANZA — reseñas de Tripadvisor + sellos oficiales.
+             Pedido del jefe el 2026-08-21, con la referencia del footer de
+             incatrilogytours (logo + calificación + "3,968 reseñas · #1 en
+             Lima") y la del sello "Agencia de viajes y turismo registrada"
+             de limaexperience.
+
+             La sección entera desaparece si no hay ninguno de los tres: un
+             titular de "Certificaciones" sobre el vacío se lee como una
+             pantalla a medio terminar (mismo criterio que "Síguenos").
+             ══════════════════════════════════════════════════════════════ --}}
+        @if ($taBadge || $registrySeal || $esnnaSeal)
+            <section class="lat-footer__trust" aria-labelledby="footer-trust">
+                <h3 id="footer-trust" class="sr-only">{{ __('footer.trust_title') }}</h3>
+
+                @if ($taBadge)
+                    {{-- Las estrellas de Tripadvisor son sus círculos verdes,
+                         no estrellas: medio círculo cuando el decimal cae
+                         entre .25 y .74. Son decorativos (aria-hidden) — la
+                         cifra va en texto y el enlace lleva su propio
+                         aria-label con rating y cantidad, así que un lector
+                         de pantalla no oye "imagen" cinco veces. --}}
+                    <a class="lat-ta" href="{{ $taBadge['url'] }}" target="_blank" rel="noopener"
+                       aria-label="{{ __('footer.tripadvisor_aria', ['rating' => $taBadge['rating_label'], 'count' => $taBadge['count_label']]) }}">
+                        {{-- El búho va con los ojos DIBUJADOS (esclerótica
+                             blanca + pupila), no como los dos huecos del path
+                             que usa el ícono social de la topbar: a 30 px
+                             dentro de la caja verde, ese path se lee como un
+                             antifaz y no como un búho — se vio en la captura
+                             a 1440, no en las mediciones. --}}
+                        <span class="lat-ta__logo" aria-hidden="true">
+                            <svg viewBox="0 0 32 32">
+                                <path d="M16 7.5c-4.9 0-9.2 2.1-11.6 5.4a7.5 7.5 0 0 0 11.6 9.7 7.5 7.5 0 0 0 11.6-9.7C25.2 9.6 20.9 7.5 16 7.5z" fill="currentColor"/>
+                                <circle cx="10.7" cy="17.2" r="4.3" fill="#fff"/>
+                                <circle cx="10.7" cy="17.2" r="1.9" fill="currentColor"/>
+                                <circle cx="21.3" cy="17.2" r="4.3" fill="#fff"/>
+                                <circle cx="21.3" cy="17.2" r="1.9" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        <span class="lat-ta__body">
+                            <b class="lat-ta__name">Tripadvisor</b>
+                            <span class="lat-ta__row">
+                                <span class="lat-ta__dots" aria-hidden="true">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        @php $fill = $taBadge['rating'] >= $i ? 'full' : ($taBadge['rating'] >= $i - 0.75 ? 'half' : 'empty'); @endphp
+                                        <svg viewBox="0 0 20 20" class="lat-ta__dot lat-ta__dot--{{ $fill }}">
+                                            <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                            @if ($fill === 'full')
+                                                <circle cx="10" cy="10" r="6" fill="currentColor"/>
+                                            @elseif ($fill === 'half')
+                                                <path d="M10 4a6 6 0 0 0 0 12z" fill="currentColor"/>
+                                            @endif
+                                        </svg>
+                                    @endfor
+                                </span>
+                                <b class="lat-ta__rating">{{ $taBadge['rating_label'] }}</b>
+                            </span>
+                            <span class="lat-ta__meta">
+                                {{ __('footer.tripadvisor_reviews', ['count' => $taBadge['count_label']]) }}@if ($taBadge['rank']) &middot; {{ $taBadge['rank'] }}@endif
+                            </span>
+                        </span>
+                    </a>
+                @endif
+
+                @if ($registrySeal || $esnnaSeal)
+                    {{-- Caja clara detrás de cada sello: los sellos oficiales
+                         vienen con tinta oscura sobre transparente y sobre el
+                         footer (fondo #100d0b) se perderían. La caja es la
+                         misma solución que usa la referencia. --}}
+                    <div class="lat-footer__seal-imgs">
+                        @if ($registrySeal)
+                            @if ($registrySealUrl)
+                                <a href="{{ $registrySealUrl }}" target="_blank" rel="noopener" class="lat-footer__seal-img">
+                                    <img src="{{ $registrySeal }}" alt="{{ __('footer.registry_seal_alt') }}" loading="lazy">
+                                </a>
+                            @else
+                                <span class="lat-footer__seal-img">
+                                    <img src="{{ $registrySeal }}" alt="{{ __('footer.registry_seal_alt') }}" loading="lazy">
+                                </span>
+                            @endif
+                        @endif
+                        @if ($esnnaSeal)
+                            {{-- El sello de ESNNA enlaza a la página del
+                                 código de conducta: un sello que no lleva a
+                                 ninguna parte es solo un dibujo. --}}
+                            <a href="{{ route('legal.esnna', ['locale' => $locale]) }}" class="lat-footer__seal-img">
+                                <img src="{{ $esnnaSeal }}" alt="{{ __('footer.esnna_seal_alt') }}" loading="lazy">
+                            </a>
+                        @endif
+                    </div>
+                @endif
+            </section>
+        @endif
+
         {{-- Sellos de confianza. "Pago 100% Seguro" se quitó 2026-08-12: el
              alcance v1 no tiene pasarela de pago activa (ver
              docs/rebrand/LOTE-MOCKUPS-AGO-2026.md, Fix 2) — prometerlo era
@@ -279,10 +390,24 @@
             <span class="lat-footer__lang">
                 🇵🇪 {{ ['es' => 'Español', 'en' => 'English', 'pt' => 'Português'][$locale] ?? 'Español' }}
             </span>
-            <p>&copy; <time datetime="{{ now()->year }}">{{ now()->year }}</time> Lima América Tours &ndash; {{ __('common.rights_reserved') }}.</p>
+            <p>
+                &copy; <time datetime="{{ now()->year }}">{{ now()->year }}</time> Lima América Tours &ndash; {{ __('common.rights_reserved') }}.
+                {{-- RUC: pedido del jefe el 2026-08-21. Sale de
+                     Configuración → Contacto → Datos legales y se oculta si
+                     está vacío: en este repo llegaron a convivir DOS RUC
+                     contradictorios publicados a la vez, así que sin
+                     confirmación no se imprime ninguno. --}}
+                @if ($companyRuc)
+                    <span class="lat-footer__ruc">&middot; {{ __('footer.ruc_label') }} {{ $companyRuc }}</span>
+                @endif
+            </p>
             <div class="lat-footer__legal">
                 <a href="{{ route('legal.terms', ['locale' => $locale]) }}">{{ __('footer.terms') }}</a>
                 <a href="{{ route('legal.privacy', ['locale' => $locale]) }}">{{ __('footer.privacy') }}</a>
+                {{-- ESNNA: el enlace va SIEMPRE (la página es texto nuestro y
+                     existe con sello o sin él). Destacado como en la
+                     referencia del jefe, que lo pinta distinto del resto. --}}
+                <a href="{{ route('legal.esnna', ['locale' => $locale]) }}" class="lat-footer__legal-esnna">{{ __('footer.esnna') }}</a>
             </div>
         </div>
     </div>

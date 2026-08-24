@@ -15,6 +15,7 @@ return [
     'about_short' => 'Nosotros',
     'terms' => 'Términos y condiciones',
     'privacy' => 'Política de privacidad',
+    'esnna' => 'Código de conducta ESNNA',
     'locate_us' => 'Encuéntranos en',
     // 'address' y 'hours' se retiraron 2026-08-11: eran una TERCERA dirección/
     // horario hardcodeados, distintos de lo que el cliente carga en el panel
@@ -30,6 +31,16 @@ return [
     // llaves del cliente; la reserva se cierra por WhatsApp/correo).
     // Prometer "pago seguro" es afirmar algo falso — ver
     // docs/rebrand/LOTE-MOCKUPS-AGO-2026.md, tabla "Lo que NO se publica".
+    // ── Franja de confianza (2026-08-21, pedido del jefe) ─────────────────
+    // El bloque de Tripadvisor solo aparece con enlace + calificación +
+    // cantidad de opiniones cargados (App\Support\TripadvisorBadge); los
+    // sellos, solo si el cliente subió la imagen.
+    'trust_title' => 'Certificaciones y reseñas',
+    'tripadvisor_aria' => 'Calificación :rating de 5 en Tripadvisor, :count opiniones. Abre el perfil en una pestaña nueva.',
+    'tripadvisor_reviews' => ':count reseñas',
+    'registry_seal_alt' => 'Agencia de viajes y turismo registrada',
+    'esnna_seal_alt' => 'Compromiso contra la explotación sexual de niñas, niños y adolescentes (ESNNA)',
+    'ruc_label' => 'RUC',
     'seal_best_price' => 'Mejores Precios Garantizados',
     'seal_responsible' => 'Viajes Responsables',
     'rights_reserved_by' => 'Todos los derechos reservados.',

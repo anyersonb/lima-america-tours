@@ -161,6 +161,10 @@ Route::prefix('{locale}')
         // Legal pages
         Route::get('/terminos', [PageController::class, 'terms'])->name('legal.terms');
         Route::get('/privacidad', [PageController::class, 'privacy'])->name('legal.privacy');
+        // ESNNA: el slug NO se traduce (es un acrónimo peruano y así lo
+        // enlazan las agencias del sector). El prefijo de idioma del grupo
+        // sigue aplicando: /es/esnna, /en/esnna, /pt/esnna.
+        Route::get('/esnna', [PageController::class, 'esnna'])->name('legal.esnna');
 
         // Generic CMS pages (App\Models\Page) — "contacto"/"nosotros" redirect
         // to their dedicated routes; any other published slug renders here.

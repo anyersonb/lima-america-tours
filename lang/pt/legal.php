@@ -49,4 +49,27 @@ return [
     'privacy_s5_exercise_email' => 'Para exercer esses direitos, envie uma solicitação por escrito para nosso e-mail.',
     'privacy_s5_exercise_email_and_address' => 'Para exercer esses direitos, envie uma solicitação por escrito para nosso e-mail ou endereço físico (:address).',
     'privacy_s5_response_time' => 'Responderemos em um prazo máximo de 20 dias úteis.',
+
+    // ── ESNNA — código de conduta (ver a nota em lang/es/legal.php) ────────
+    'esnna_last_updated' => 'Última atualização: 24 de agosto de 2026',
+    'esnna_title' => 'Código de conduta contra a ESNNA',
+    'esnna_intro' => 'A Lima América Tours rejeita de forma absoluta a exploração sexual de crianças e adolescentes (ESNNA) no âmbito do turismo e assume o compromisso público de preveni-la e denunciá-la.',
+
+    'esnna_s1_title' => 'Nosso compromisso',
+    'esnna_s1_body' => 'Como agência de viagens peruana, partimos do princípio de que o turismo não pode ser um caminho para o abuso. Comprometemo-nos a não facilitar, promover, tolerar nem acobertar qualquer forma de exploração sexual de crianças e adolescentes, nem por ação própria nem por meio de terceiros que trabalhem conosco. Este compromisso vale para toda a nossa equipe, nossos guias e cada fornecedor de transporte, hospedagem e atividades com quem operamos.',
+
+    'esnna_s2_title' => 'O que é a ESNNA',
+    'esnna_s2_body' => 'A exploração sexual de crianças e adolescentes é qualquer situação em que uma pessoa com menos de 18 anos é utilizada para atividades sexuais em troca de dinheiro, bens, favores ou qualquer outra vantagem, para quem a explora ou para um terceiro. Não é trabalho, não é uma escolha e não deixa de ser crime porque houve um pagamento, um intermediário ou o consentimento aparente da vítima ou de sua família.',
+
+    'esnna_s3_title' => 'O que fazemos na prática',
+    'esnna_s3_body' => 'Informamos e capacitamos nossa equipe para reconhecer sinais de risco; incluímos este compromisso nos acordos com nossos fornecedores; recusamos qualquer solicitação de serviços que possa ter como fim a exploração de menores, cancelando a reserva sem reembolso; e comunicamos às autoridades competentes qualquer fato ou indício que detectemos, protegendo a identidade da vítima e de quem informa.',
+
+    'esnna_s4_title' => 'Como denunciar',
+    'esnna_s4_intro' => 'Se você conhece ou suspeita de um caso, a denúncia é gratuita, pode ser anônima e não precisa de provas: basta a suspeita razoável.',
+    'esnna_s4_line100' => 'Línea 100 (Ministério da Mulher e Populações Vulneráveis): disque 100, gratuito, 24 horas por dia, de qualquer telefone no Peru.',
+    'esnna_s4_police' => 'Polícia Nacional do Peru: disque 105 em caso de emergência ou vá à delegacia mais próxima.',
+    'esnna_s4_us' => 'Você também pode nos escrever: se o que você viu aconteceu durante um de nossos tours ou envolveu um de nossos fornecedores, queremos saber para agir e denunciar.',
+
+    'esnna_s5_title' => 'Marco legal',
+    'esnna_s5_body' => 'No Peru, a exploração sexual comercial de crianças e adolescentes no âmbito do turismo é crime previsto no Código Penal a partir da Lei N.° 28251. A Lei N.° 29408, Lei Geral de Turismo, obriga os prestadores de serviços turísticos a colaborar na sua prevenção. Este código de conduta é a nossa aplicação dessas obrigações e é revisado sempre que a normativa muda.',
 ];

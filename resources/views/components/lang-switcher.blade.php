@@ -33,7 +33,7 @@
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
         role="listbox"
-        class="absolute right-0 top-full mt-2 min-w-[11rem] bg-white text-lat-ink rounded-lg shadow-xl py-1 ring-1 ring-black/5 z-50">
+        class="absolute right-0 top-full mt-2 min-w-[11rem] bg-white text-lat-ink rounded-lg shadow-xl py-1 ring-1 ring-black/5 lat-lang-menu">
         @foreach ($supported as $loc)
             <li>
                 <a href="{{ url('/' . $loc . ($path ? '/' . $path : '')) }}"

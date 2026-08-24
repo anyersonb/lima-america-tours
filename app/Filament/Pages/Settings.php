@@ -166,6 +166,34 @@ class Settings extends Page implements HasForms
                                     ->helperText('Sin confirmar todavía. No escribas un RUC que no puedas verificar con el cliente — vacío es mejor que uno equivocado.'),
                                 TextInput::make('company_legal_name')
                                     ->label('Razón social'),
+
+                                // Sellos oficiales — pedido del jefe el 2026-08-21
+                                // ("un logotipo que nos pide la municipalidad de Lima"
+                                // y "ESNNA también"). Son ARCHIVOS DEL CLIENTE: no se
+                                // redibujan acá. Vacío = el footer no pinta el sello,
+                                // en vez de mostrar un cuadro roto o un dibujo propio
+                                // que parecería un sello oficial sin serlo.
+                                FileUpload::make('company_registry_seal')
+                                    ->label('Sello "Agencia de viajes y turismo registrada"')
+                                    ->image()
+                                    ->disk('media')
+                                    ->directory('legal')
+                                    ->saveUploadedFileUsing(\App\Support\ImageOptimizer::saver('legal', 480, disk: 'media', deletePrevious: true))
+                                    ->helperText('El sello oficial que entrega la autoridad (MINCETUR / Municipalidad). Súbelo tal como te lo dieron, con fondo transparente si se puede. Se muestra en el footer de todas las páginas.')
+                                    ->columnSpanFull(),
+                                TextInput::make('company_registry_seal_url')
+                                    ->label('Enlace de verificación del sello')
+                                    ->url()
+                                    ->helperText('Opcional. Si el registro tiene una ficha pública en línea, ponla acá y el sello del footer se vuelve un enlace comprobable.')
+                                    ->columnSpanFull(),
+                                FileUpload::make('esnna_seal')
+                                    ->label('Sello ESNNA')
+                                    ->image()
+                                    ->disk('media')
+                                    ->directory('legal')
+                                    ->saveUploadedFileUsing(\App\Support\ImageOptimizer::saver('legal', 480, disk: 'media', deletePrevious: true))
+                                    ->helperText('Opcional. La página "Código de conducta ESNNA" del sitio funciona igual sin este sello: el compromiso se publica como texto y el footer siempre enlaza a esa página.')
+                                    ->columnSpanFull(),
                             ]),
 
                         TextInput::make('booking_notification_email')
@@ -216,7 +244,47 @@ class Settings extends Page implements HasForms
                         TextInput::make('social_tripadvisor')
                             ->label('Enlace "Ver en Tripadvisor"')
                             ->url()
-                            ->helperText('Enlace al perfil de Tripadvisor. Usado en las tarjetas de rating de cada tour.'),
+                            ->helperText('Enlace al perfil de Tripadvisor. Usado en las tarjetas de rating de cada tour Y en el bloque de reseñas del footer (abajo).'),
+
+                        // Bloque de reseñas del footer — pedido del jefe el
+                        // 2026-08-21 ("sería bueno tener nuestro icono de
+                        // Tripadvisor para reseñas"), con la referencia de
+                        // incatrilogytours: logo + estrellas + 4.9 + "3,968
+                        // reseñas · #1 en Lima".
+                        //
+                        // El guard vive en App\Support\TripadvisorBadge y es TODO
+                        // O NADA: sin enlace, sin rating o sin cantidad, el bloque
+                        // no se pinta. Este repo ya publicó un "4.8 (0 reseñas)"
+                        // sembrado en los 24 tours; un default acá sería una reseña
+                        // falsa en el footer de todo el sitio.
+                        \Filament\Forms\Components\Fieldset::make('Bloque de reseñas de Tripadvisor (footer)')
+                            ->columns(2)
+                            ->schema([
+                                TextInput::make('tripadvisor_rating')
+                                    ->label('Calificación')
+                                    ->numeric()
+                                    ->step(0.1)
+                                    ->minValue(1)
+                                    ->maxValue(5)
+                                    ->placeholder('4.9')
+                                    ->helperText('Tal como figura en el perfil, de 1 a 5.'),
+                                TextInput::make('tripadvisor_reviews_count')
+                                    ->label('Cantidad de opiniones')
+                                    ->numeric()
+                                    ->minValue(1)
+                                    ->placeholder('3968')
+                                    ->helperText('Solo el número, sin comas ni texto.'),
+                                \Filament\Forms\Components\Placeholder::make('tripadvisor_badge_note')
+                                    ->label('')
+                                    ->content('El bloque del footer aparece solo si están los tres datos: enlace al perfil (arriba), calificación y cantidad de opiniones. Con uno vacío no se muestra nada — es a propósito: una cifra sin enlace verificable no se distingue de una inventada.')
+                                    ->columnSpanFull(),
+                                TextInput::make('tripadvisor_rank_es')
+                                    ->label('Posición (ES)')
+                                    ->placeholder('#1 en Lima')
+                                    ->helperText('Opcional. Se puede vaciar sin que desaparezca el bloque: es un dato que cambia solo en Tripadvisor, así que solo se publica si alguien lo mantiene al día.'),
+                                TextInput::make('tripadvisor_rank_en')->label('Posición (EN)')->placeholder('#1 in Lima'),
+                                TextInput::make('tripadvisor_rank_pt')->label('Posición (PT)')->placeholder('#1 em Lima'),
+                            ]),
                     ]),
                     Tabs\Tab::make('Pagos')->icon('heroicon-o-credit-card')->schema([
                         // Moneda del sitio: la lee App\Support\Money::site() y con

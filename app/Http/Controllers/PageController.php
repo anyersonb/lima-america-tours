@@ -72,4 +72,27 @@ class PageController extends Controller
             abort(500);
         }
     }
+
+    /**
+     * Código de conducta contra la ESNNA (explotación sexual de niñas, niños
+     * y adolescentes en el ámbito del turismo). Pedido del jefe el
+     * 2026-08-21; el texto vive en lang/{es,en,pt}/legal.php igual que los
+     * otros dos legales, no en la base.
+     */
+    public function esnna(): View
+    {
+        try {
+            $locale = app()->getLocale();
+            $title = __('legal.esnna_title');
+
+            return view('pages.esnna', compact('locale', 'title'));
+        } catch (\Throwable $e) {
+            Log::error('PageController@esnna: failed to render ESNNA page', [
+                'locale' => app()->getLocale(),
+                'exception' => $e->getMessage(),
+            ]);
+
+            abort(500);
+        }
+    }
 }

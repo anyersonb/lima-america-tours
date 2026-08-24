@@ -952,8 +952,20 @@
 
     {{-- ============================================================
          TIRA DE GARANTÍAS
+
+         El ancla #servicios (el ítem "Servicios" del menú) ESTABA acá y se
+         movió a "Explora por categoría" el 2026-08-24. El jefe reportó que
+         "Servicios" lo mandaba a la Galería, y medido a 1024x700 tenía razón:
+         esta tira mide 141 px visibles tras el salto y el 68% de la pantalla
+         que queda es la Galería, con su título "Descubre la belleza del Perú"
+         justo en el centro óptico. Categorías es además la sección que sí
+         enumera lo que la agencia ofrece.
+
+         Se queda como ancla de RESPALDO solo si no hay categorías publicadas
+         (esa sección va dentro de un @if): sin este guard, el ítem del menú
+         apuntaría a un id que no existe y el clic no haría nada.
          ============================================================ --}}
-    <div class="lat-guarantee" id="servicios">
+    <div class="lat-guarantee" @if ($categories->isEmpty()) id="servicios" @endif>
         <div class="lat-wrap lat-guarantee__grid">
             <div class="lat-gt">
                 <div class="lat-gt__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
@@ -1025,7 +1037,9 @@
          EXPLORA POR CATEGORÍA — reales (modelo Category)
          ============================================================ --}}
     @if ($categories->isNotEmpty())
-        <section class="lat-wrap lat-sec" aria-labelledby="cats-title">
+        {{-- id="servicios": destino del ítem "Servicios" del menú desde el
+             2026-08-24 (ver la nota en la tira de garantías, más arriba). --}}
+        <section class="lat-wrap lat-sec" id="servicios" aria-labelledby="cats-title">
             {{-- Encabezado alineado a la IZQUIERDA con enlace a la derecha, no
                  centrado (2026-08-14). La home tenía seis encabezados centrados
                  idénticos uno tras otro — eyebrow, H2, párrafo, siempre igual —
@@ -1265,38 +1279,13 @@
     <div class="lat-closing"
          style="background-image:linear-gradient(rgba(14,11,10,.74), rgba(14,11,10,.93)), url('{{ $newsImgUrl }}');">
 
-        {{-- Motivo de fondo: geoglifo tipo líneas de Nazca (rectas de la pampa,
-             trapecio y espiral), dibujado en SVG y no con una foto ni un asset
-             de terceros — mismo criterio que `.lat-gallery__mark`. Venía del
-             lote del 13/08 (pedido del jefe sobre una captura) y se conserva
-             tal cual: cambia el fondo bajo el que vive, no el dibujo.
-
-             Al fusionarse los dos bloques, la silueta punteada del Perú que
-             tenía el newsletter SE RETIRA: dos motivos decorativos distintos
-             en la misma superficie compiten entre sí y ninguno se lee. Su
-             SVG sigue en el historial si algún día se la quiere en otra
-             pantalla. --}}
-        <div class="lat-closing__mark" aria-hidden="true">
-            <svg viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
-                {{-- Se probaron dos figuras antes de llegar acá y las dos fallaron en
-                     pantalla: un colibrí con alas horizontales se leía como torre de alta
-                     tensión, y con alas en V como avión de combate. A este tamaño y con
-                     trazo fino, la lectura correcta no es figurativa: lo que dice "Nazca"
-                     sin ambigüedad es la GEOMETRÍA de la pampa — un centro radial del que
-                     salen rectas larguísimas, trapecios, y la espiral. --}}
-                <path d="M296 128 L-30 236" opacity=".85"/>
-                <path d="M296 128 L-30 154" opacity=".85"/>
-                <path d="M296 128 L20 440" opacity=".7"/>
-                <path d="M296 128 L142 448" opacity=".7"/>
-                <path d="M296 128 L286 452" opacity=".55"/>
-                <path d="M296 128 L444 392" opacity=".55"/>
-                <path d="M296 128 L448 76" opacity=".7"/>
-                <circle cx="296" cy="128" r="7" opacity=".9"/>
-                <path d="M118 30 L86 402 L214 418 L182 34" opacity=".8"/>
-                <path d="M112 300 A11 11 0 0 1 134 300 A17 17 0 0 1 100 300 A23 23 0 0 1 146 300 A29 29 0 0 1 88 300" opacity=".9"/>
-            </svg>
-        </div>
-
+    {{-- Acá vivía el geoglifo de Nazca en SVG inline (.lat-closing__mark).
+         RETIRADO el 2026-08-24: el jefe lo reportó por WhatsApp ("Las
+         líneas", captura 09.48.45). Sobre una foto, las rectas largas del
+         geoglifo se leen como rayones de la pantalla y no como grabado; es la
+         tercera figura que falla en esta misma superficie (ver la nota en
+         _lat-home.scss, .lat-closing). El SVG completo sigue en el historial
+         de git por si se lo quiere en otra pantalla de fondo plano. --}}
     <section class="lat-home-cta" aria-labelledby="home-cta-title">
         <div class="lat-wrap lat-home-cta__inner lat-reveal">
             <span class="lat-eyebrow is-center">{{ $L('Vive la experiencia', 'Live the experience', 'Viva a experiência') }}</span>

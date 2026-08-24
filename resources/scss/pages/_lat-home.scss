@@ -1183,23 +1183,19 @@
     .lat-reveal-armed .lat-reveal { opacity: 1; transform: none; transition: none; }
 }
 
-// ── Galería "Descubre la belleza del Perú" — acento de marca ────────────
-// Los estilos propios de .lat-gallery viven en pages/_lat-gallery.scss
-// (fuera del alcance de este lote — solo home.blade.php y este archivo).
-// Este bloque SOLO añade propiedades que ese parcial no declara (position,
-// ::before) para no pelear la cascada con un import posterior (ver nota de
-// .lat-btn--wa más arriba en el repo): es un marco rojo superpuesto, no una
-// redefinición de nada que ya exista allí.
+// ── Galería "Descubre la belleza del Perú" ──────────────────────────────
+// El filete rojo de 4px que llevaba arriba (`&::before`) SE RETIRÓ el
+// 2026-08-24: el jefe lo marcó por WhatsApp ("La línea roja"). Era la misma
+// pieza que el `border-top` del footer y se leía como una raya suelta
+// atravesando la pantalla, no como remate de marca. Si algún día se quiere
+// volver a separar esta banda de la anterior, el camino es el fondo de la
+// sección, no una línea.
+//
+// `position: relative` SE QUEDA y no es residuo: `.lat-gallery__mark` (la
+// textura punteada en SVG inline) se posiciona en absoluto contra este
+// contenedor y sin él se iría a buscar el viewport.
 .lat-gallery {
     position: relative;
-
-    &::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 4px;
-        background: $lat-red;
-    }
 }
 
 // ── BLOQUE DE CIERRE (CTA + newsletter sobre una sola foto) ─────────────
@@ -1220,12 +1216,19 @@
     background-position: center;
     color: #fff;
 
-    // Geoglifo de Nazca (SVG inline en home.blade.php; pedido del jefe el
-    // 2026-08-13, se conserva). Sobre foto necesita MÁS opacidad que sobre el
-    // rojo plano: al 9% sobre una foto con textura directamente no existía.
-    // 16% con mezcla `soft-light` lo integra como un grabado en la foto en vez
-    // de un dibujo pegado encima — y al ser trazo blanco sobre un velo oscuro
-    // no baja el contraste de ningún texto (medido, ver reporte del lote).
+    // El GEOGLIFO DE NAZCA que vivía acá (`&__mark`, SVG inline en
+    // home.blade.php) SE RETIRÓ el 2026-08-24: el jefe lo marcó por WhatsApp
+    // ("Las líneas", captura 09.48.45). Al 16% sobre una foto, las rectas
+    // largas del geoglifo no se leen como grabado sino como rayones de la
+    // pantalla — que es exactamente lo que reportó. Es la tercera figura que
+    // falla en este mismo lugar (antes un colibrí que parecía torre de alta
+    // tensión y otro que parecía avión, ver el lote del 13/08): la conclusión
+    // es que esta superficie no admite motivo de trazo, no que faltara acertar
+    // el dibujo. El rojo de marca sigue en el botón, el eyebrow y los iconos.
+    //
+    // Las mediciones de contraste de abajo se conservan porque NO eran del
+    // motivo: son del velo sobre la foto, que no cambió, y justifican que los
+    // dos eyebrows vayan en crema y no en rojo.
     // MEDIDO sobre el render, no supuesto: se ocultó el contenido, se capturó
     // el fondo (foto + velo) y se muestreó el píxel más claro de cada mitad.
     // Peor caso arriba rgb(58,62,31), abajo rgb(53,48,45). Contra eso:
@@ -1237,29 +1240,6 @@
     // el botón (fondo propio) y en los iconos de los beneficios, que son
     // gráficos y no texto — ahí el mínimo es 3:1 (WCAG 1.4.11) y 3.40 cumple.
     .lat-eyebrow, .lat-eyebrow--on-dark { color: #f2e9de; }
-
-    &__mark {
-        position: absolute;
-        top: 42%;
-        right: 3%;
-        transform: translateY(-50%);
-        height: clamp(240px, 32vw, 420px);
-        aspect-ratio: 1 / 1;
-        color: #fff;
-        opacity: .16;
-        mix-blend-mode: soft-light;
-        pointer-events: none;
-        z-index: 0;
-
-        svg { width: 100%; height: 100%; display: block; }
-
-        @media (max-width: 640px) {
-            opacity: .14;
-            height: clamp(180px, 55vw, 260px);
-            right: -6%;
-            top: 22%;
-        }
-    }
 }
 
 // ── CTA "Tu próxima aventura empieza aquí" — primera mitad del cierre ────
