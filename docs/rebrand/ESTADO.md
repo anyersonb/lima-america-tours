@@ -1,9 +1,130 @@
 # Estado del rebrand "anti-IA" y del lote de mockups
 
-Actualizado: 2026-08-15 · Rama `feat/mockups-ago-2026` · Publicado en staging: **ver `.deployed-commit` del servidor**
+Actualizado: 2026-08-24 · Rama `feat/mockups-ago-2026` · Publicado en staging: **ver `.deployed-commit` del servidor**
 
 Este archivo existe para que el siguiente que abra el proyecto (o yo mismo dentro
 de un mes) no tenga que reconstruir de memoria en qué quedó todo.
+
+## Lote 2026-08-24 (tarde) — los cuatro comentarios del jefe sobre staging
+
+Cuatro capturas por WhatsApp. Los cuatro eran defectos reales; ninguno era de
+maquetación pura.
+
+### 1. "Leer más" de las promociones llevaba al WordPress viejo
+
+`OfferSeeder` guardaba `cta_url = '/es/tours'`. Es una ruta absoluta **desde la
+raíz del dominio**, y esta app no vive en el docroot: staging cuelga de
+`/staging`, así que el navegador pedía `limaamericatours.com/es/tours` — que es
+el WordPress — y devolvía "No se ha podido encontrar la página". Es la misma
+clase de fallo que ya había tumbado el `site.webmanifest` en julio.
+
+Se arregló en los dos niveles, porque el dato y el código fallaban por separado:
+
+- **Código:** `Offer::ctaHref($locale)` pasa cualquier ruta interna por `url()`,
+  respeta las URLs absolutas (`http`, `https`, `mailto`, `tel`, ancla) tal cual,
+  y sin `cta_url` cae al tour vinculado o al catálogo **del idioma que se está
+  viendo**. Eso arregla de paso un segundo defecto que nadie había reportado: el
+  `/es` fijo sacaba de su idioma a quien navegaba en inglés o portugués.
+- **Dato:** `cta_url` a `null` en el seeder y en las 3 filas de staging.
+
+Lo vigila `OfferCtaUrlIsNotRootRelativeTest` (5 casos), **probado en rojo**
+rompiendo `ctaHref()` a propósito antes de darlo por bueno.
+
+### 2. El correo publicado no era del cliente
+
+La barra superior mostraba `hola@limaamericatours.com`. No es una casilla suya:
+salía de un `?:` escrito en la vista. Midiéndolo aparecieron **tres direcciones
+inventadas distintas** repartidas por el repo — `hola@`, `info@` y `reservas@` —
+así que el sitio publicaba una u otra según qué archivo pintara la línea, y
+ninguna existe. Mismo patrón que el teléfono de Lima View en julio.
+
+Única fuente ahora: `Setting::contactEmail()` y `contactEmailSecondary()`, **sin
+default**. Sin dato, la línea no se pinta (topbar, footer, ficha de Contacto,
+ESNNA, `llms.txt` y la propiedad `email` del JSON-LD, que directamente no se
+declara). Los correos transaccionales caen a `config('mail.from.address')`, que
+es una casilla que sí existe.
+
+Publicadas las **dos** cuentas reales — `americatours09@gmail.com` e
+`infolimaamericatours@gmail.com` — juntas en footer y Contacto, como en
+producción. En la topbar va solo la principal: no entra más de una.
+
+### 3. "Esto es una imagen completa en el footer, no 2"
+
+El bloque de cierre pintaba Barranco y el footer la panorámica de Machu Picchu,
+uno pegado al otro, con una costura horizontal en el medio. Es la misma queja
+que se había atendido a medias el mismo día quitando la raya roja del borde: el
+corte que él ve **no era la raya, era el cambio de foto**.
+
+**Ponerles la misma foto no alcanza, y se comprobó en pantalla:** con la misma
+imagen la costura sigue viéndose, porque cada bloque la recorta con su propio
+`cover` y las alturas son distintas — la foto pega un salto justo en la unión.
+La primera versión del fix hacía exactamente eso y la captura a 1440 la
+descartó.
+
+Lo que sí funciona: el cierre apaga su velo hasta el color **exacto** del footer
+(`rgba(16,13,11,1)` al 100% del gradiente) y el footer no pinta foto, se queda
+con su `background-color: #100d0b`. La única foto de la zona es la del cierre y
+se funde a negro sin borde. Verificado en 1440 y 390, sin scroll horizontal. Si
+algún día se le devuelve una foto propia al footer, vuelve la costura.
+
+### 4. Reseñas de Tripadvisor, traídas de producción
+
+Pedido literal: "aquí se podría colocar reseñas de Tripadvisor también" y
+"verifica producción para traerte la configuración de comentarios".
+
+Lo que hay en el WordPress de producción (plugin **TrustIndex**, leído de su
+base):
+
+| Dato | Valor |
+|---|---|
+| Perfil Tripadvisor | `.../Attraction_Review-g294316-**d19923192**-Reviews-Lima_America_Tours-Lima_Lima_Region.html` |
+| Tripadvisor | **5,0 · 69 opiniones**, 10 reseñas cacheadas (dic 2025 – feb 2026) |
+| Google Place ID | `ChIJZ_zFUQuxPScRYW0y3wdpP50` |
+| Google | **5,0 · 186 opiniones**, 10 reseñas cacheadas (may – jun 2026) |
+
+**No hay API keys que reutilizar.** TrustIndex no usa las APIs de Google ni de
+Tripadvisor: descarga por su propio servicio con un id de pedido. Se buscó
+`AIza…` y cualquier `*_key` en `wp_options` — solo hay las de SMTP, WooCommerce
+y Elementor. Los dos identificadores de arriba sí quedan cargados, listos para
+el día que el cliente consiga las keys.
+
+Las 10 reseñas de Tripadvisor se importaron con **`reviews:import-tripadvisor`**,
+idempotente por `external_ref` (`ta_review_{id}`), origen `Tripadvisor`. El JSON
+vive en **`database/data/`**, dentro del repo, y no en `storage/app/` como el de
+`ImportWpReviews`: aquel quedó fuera del control de versiones (`storage/app/.gitignore`
+ignora todo) y hoy no se puede volver a correr en un servidor limpio.
+
+Con eso, y con los tres datos del perfil cargados, aparecieron solos: la tarjeta
+de resumen de Tripadvisor y su chip de filtro en `/resenas`, el enlace al perfil
+en el bloque "déjanos tu reseña", y **el bloque de Tripadvisor del footer**, que
+estaba escrito desde el 21/08 pero nunca se había visto por falta de datos.
+
+Las tarjetas de resumen que publican la cifra del PERFIL ahora **enlazan al
+perfil**: un número que el visitante no puede comprobar es indistinguible de uno
+inventado.
+
+### Abierto, decide Anyerson
+
+- **La tarjeta de Google dice "13 reseñas" y la de Tripadvisor "69".** No es un
+  error: la de Tripadvisor publica la cifra del perfil (enlazada y comprobable)
+  y la de Google cuenta las que tenemos publicadas acá, porque para Google no
+  existe el par de campos que sí tiene Tripadvisor. El perfil real de Google es
+  **5,0 · 186**. O se construye ese par de campos y las dos tarjetas dicen lo
+  mismo, o se quita el de Tripadvisor y las dos cuentan lo nuestro. Hoy conviven
+  dos significados con el mismo aspecto.
+- **El "5,0 · 69" de Tripadvisor es una foto de febrero de 2026** (es lo que
+  tenía cacheado producción). Conviene que el cliente confirme el número actual
+  antes de pasar a producción; se edita en Configuración → Reseñas.
+- **La ficha de Tripadvisor trae una dirección**: "Emilio althaus 673, Lima 115,
+  PE". **No se publicó**: `contact_address_*` sigue vacío a propósito desde el
+  episodio de la dirección de Lima View. Si el cliente la confirma, se carga en
+  Configuración → Contacto y aparece sola en footer y JSON-LD.
+- Quedan sin traer las **10 reseñas de Google** de producción (son reales y más
+  recientes que las 13 que ya tenemos). No se importaron porque el pedido era
+  Tripadvisor; es una línea de comando si se quieren.
+
+Desplegado en staging (`f2118c8`), **607 tests en verde**, `data:audit-foreign`
+limpio.
 
 ## Lote 2026-08-14 — la home según las referencias del cliente
 
