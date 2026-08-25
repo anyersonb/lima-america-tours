@@ -14,7 +14,8 @@
     // correspondiente se oculta con @if más abajo.
     $contactPhone          = \App\Models\Setting::contactPhone();
     $contactPhoneSecondary = \App\Models\Setting::get('contact_phone_secondary');
-    $contactEmail          = \App\Models\Setting::get('contact_email') ?: 'hola@limaamericatours.com';
+    $contactEmail          = \App\Models\Setting::contactEmail();
+    $contactEmailSecondary = \App\Models\Setting::contactEmailSecondary();
     // SIN horario inventado ("Lunes a domingo 9:30-7pm" no es un dato real:
     // era un CUARTO horario distinto, además de los 3 que ya convivían en
     // footer.php/ui.php/legal.php — ver App\Models\Setting::contactHours()).
@@ -285,6 +286,7 @@
                     </div>
                     @endif
 
+                    @if ($contactEmail || $contactEmailSecondary)
                     <div class="lat-contact-card lat-contact-card--sm">
                         <div class="lat-contact-channel">
                             <div class="lat-contact-icon-circle" aria-hidden="true">
@@ -292,10 +294,18 @@
                             </div>
                             <div>
                                 <h3>{{ $bl('channel_email_label', $L('Correo', 'Email', 'E-mail')) }}</h3>
-                                <a href="mailto:{{ $contactEmail }}">{{ $contactEmail }}</a>
+                                @if ($contactEmail)
+                                    <a href="mailto:{{ $contactEmail }}">{{ $contactEmail }}</a>
+                                @endif
+                                {{-- Segunda casilla en su propia línea: el cliente
+                                     atiende por dos cuentas. Ver Setting::contactEmailSecondary(). --}}
+                                @if ($contactEmailSecondary)
+                                    <a href="mailto:{{ $contactEmailSecondary }}" style="display:block;">{{ $contactEmailSecondary }}</a>
+                                @endif
                             </div>
                         </div>
                     </div>
+                    @endif
 
                     @if ($contactHours)
                     <div class="lat-contact-card lat-contact-card--sm">

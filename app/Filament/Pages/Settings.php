@@ -134,7 +134,14 @@ class Settings extends Page implements HasForms
                         Textarea::make('site_description_en')->rows(2)->label('Descripción (EN)'),
                     ]),
                     Tabs\Tab::make('Contacto')->icon('heroicon-o-phone')->schema([
-                        TextInput::make('contact_email')->email()->label('Correo de contacto'),
+                        TextInput::make('contact_email')
+                            ->email()
+                            ->label('Correo de contacto (principal)')
+                            ->helperText('Se ve en la barra superior de todas las páginas, en el footer, en la ficha de Contacto y en los datos que lee Google. Vacío = no se muestra ningún correo, en vez de mostrar uno inventado.'),
+                        TextInput::make('contact_email_secondary')
+                            ->email()
+                            ->label('Correo de contacto (secundario)')
+                            ->helperText('Opcional. Se publica junto al principal en el footer y en la ficha de Contacto. En la barra superior va solo el principal: no entra más de uno.'),
                         TextInput::make('contact_phone')->label('Teléfono principal'),
                         TextInput::make('contact_phone_secondary')->label('Teléfono secundario'),
                         TextInput::make('whatsapp')

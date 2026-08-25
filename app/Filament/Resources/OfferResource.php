@@ -70,6 +70,8 @@ class OfferResource extends Resource
                     ->label('CTA (Português)'),
                 Forms\Components\TextInput::make('cta_url')
                     ->label('URL destino')
+                    ->placeholder('Vacío = lleva al tour de abajo, o al catálogo')
+                    ->helperText('Déjalo VACÍO salvo que el botón tenga que ir a otro sitio: vacío lleva al tour vinculado (o al catálogo) en el idioma que el visitante esté viendo. Si escribes algo, que sea la dirección completa (https://…): escribir solo "/es/tours" mandaba al visitante a una página de error.')
                     ->maxLength(255),
                 Forms\Components\Select::make('tour_id')
                     ->label('Tour')

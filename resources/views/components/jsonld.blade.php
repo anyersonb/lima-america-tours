@@ -10,7 +10,10 @@
     $siteName   = ($settings['site_name'] ?? '')   ?: __('seo.site_name');
     $description= ($settings['site_description_' . $locale] ?? '')
                   ?: (($settings['site_description_es'] ?? '') ?: __('seo.default_description'));
-    $email      = ($settings['contact_email'] ?? '')   ?: 'hola@limaamericatours.com';
+    // Sin correo inventado en el schema que lee Google: ver Setting::contactEmail().
+    // Null = la propiedad "email" no se declara, en vez de declarar una casilla
+    // que no existe.
+    $email      = \App\Models\Setting::contactEmail();
     // Sin fallback a otro número de contacto: ver App\Models\Setting::contactPhone().
     // Un "telephone" falso o heredado de otro cliente en el schema que lee
     // Google es peor que no declarar la propiedad.
@@ -115,6 +118,13 @@
 
     if (! empty($sameAs)) {
         $organization['sameAs'] = $sameAs;
+    }
+
+    // Sin correo cargado NO se declara la propiedad, en vez de declararla en
+    // null (que en el JSON sale como `"email": null` y es un dato roto para
+    // quien lo lea). Mismo criterio que `telephone` unas líneas más arriba.
+    if (! $email) {
+        unset($organization['email']);
     }
 
     $website = [

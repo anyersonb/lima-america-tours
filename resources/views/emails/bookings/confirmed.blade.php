@@ -15,7 +15,7 @@
     // WhatsApp no se imprime (queda solo "Ver más tours").
     $contactPhone = \App\Models\Setting::contactPhone();
     $wa  = \App\Models\Setting::whatsappNumber();
-    $contactEmail = \App\Models\Setting::get('contact_email') ?: 'reservas@limaamericatours.com';
+    $contactEmail = \App\Models\Setting::contactEmail() ?: config('mail.from.address');
     $urlLocale = in_array($locale, ['en', 'pt'], true) ? $locale : 'es';
     $toursUrl = url('/' . $urlLocale . '/tours');
     $fallbackImg = asset('assets/banners/banner-hero.jpg');

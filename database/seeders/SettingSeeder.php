@@ -18,7 +18,13 @@ class SettingSeeder extends Seeder
             ['key' => 'site_description_en', 'value' => 'Tours in Lima, Ica, Cusco and Machu Picchu with official guides and authentic experiences.', 'group' => 'general'],
 
             // Contacto
-            ['key' => 'contact_email', 'value' => 'hola@limaamericatours.com', 'group' => 'contact'],
+            // 2026-08-24 — Las DOS cuentas reales del cliente, confirmadas por
+            // él por WhatsApp y verificadas en el footer del sitio de
+            // producción. Acá había `hola@limaamericatours.com`, que NO es una
+            // casilla suya: era relleno heredado del fork y salía publicado en
+            // la barra superior de todas las páginas del sitio.
+            ['key' => 'contact_email', 'value' => 'americatours09@gmail.com', 'group' => 'contact'],
+            ['key' => 'contact_email_secondary', 'value' => 'infolimaamericatours@gmail.com', 'group' => 'contact'],
             // Vacíos a propósito: "+51 925 886 725" / "51925886725" eran el
             // teléfono y WhatsApp REALES de Lima View Tours (otro cliente,
             // proyecto del que este se forkeó), sembrados aquí como si fueran
@@ -52,6 +58,19 @@ class SettingSeeder extends Seeder
             ['key' => 'social_facebook', 'value' => 'https://facebook.com/limaamericatours', 'group' => 'social'],
             ['key' => 'social_tiktok', 'value' => 'https://tiktok.com/@limaamericatours', 'group' => 'social'],
             ['key' => 'social_youtube', 'value' => 'https://youtube.com/@limaamericatours', 'group' => 'social'],
+            // Perfil REAL de Tripadvisor, tomado del sitio de producción
+            // (plugin TrustIndex, opción `wptripadvisor_tripadvisor_settings`).
+            // De acá salen el enlace del footer, el del bloque de Tripadvisor
+            // de la página de Reseñas y el Location ID (el "d19923192" de la
+            // URL) que necesitaría la Content API el día que haya API Key.
+            //
+            // El RATING y la CANTIDAD de opiniones NO se siembran a propósito:
+            // son cifras que cambian solas, sin que nadie edite el sitio, y un
+            // seeder que las pisa cada vez publicaría un número viejo en el
+            // footer de todas las páginas. Se cargan en Configuración →
+            // Reseñas (ver App\Support\TripadvisorBadge, que oculta el bloque
+            // entero mientras falte cualquiera de los tres datos).
+            ['key' => 'social_tripadvisor', 'value' => 'https://www.tripadvisor.com.pe/Attraction_Review-g294316-d19923192-Reviews-Lima_America_Tours-Lima_Lima_Region.html', 'group' => 'social'],
 
             // SEO
             ['key' => 'seo_default_title', 'value' => 'Lima América Tours — Tours auténticos por Perú', 'group' => 'seo'],

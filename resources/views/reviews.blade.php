@@ -85,9 +85,24 @@
     <div class="container mx-auto px-5 lg:px-10 max-w-6xl">
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
             @foreach ($summaryOrder as $key)
-                @php $s = $stats[$key] ?? null; @endphp
+                @php
+                    $s = $stats[$key] ?? null;
+                    // Si la tarjeta publica la cifra del PERFIL de la plataforma
+                    // —y no solo las reseñas que mostramos en esta página— tiene
+                    // que llevar al perfil: un número que el visitante no puede
+                    // comprobar es indistinguible de uno inventado. Ver
+                    // ReviewController, donde se superponen las cifras de Google
+                    // (API) y de Tripadvisor (TripadvisorBadge, el MISMO origen
+                    // que alimenta el bloque del footer).
+                    $sLink = $links[$key] ?? null;
+                @endphp
                 @if ($s)
+                    @if ($sLink)
+                    <a href="{{ $sLink }}" target="_blank" rel="noopener"
+                       class="block bg-white rounded-2xl ring-1 ring-black/5 shadow-sm hover:shadow-md transition-shadow px-4 py-5 text-center">
+                    @else
                     <div class="bg-white rounded-2xl ring-1 ring-black/5 shadow-sm px-4 py-5 text-center">
+                    @endif
                         <div class="flex items-center justify-center gap-2 mb-2">
                             <span class="inline-block w-2.5 h-2.5 rounded-full" style="background: {{ $srcMeta[$key]['dot'] }}"></span>
                             <span class="font-semibold text-teal-900">{{ $srcMeta[$key]['label'] }}</span>
@@ -95,7 +110,11 @@
                         <p class="font-display text-3xl lg:text-4xl text-teal-900 leading-none">{{ number_format($s['rating'], 1) }}</p>
                         <p class="text-orange-400 text-sm mt-1" aria-hidden="true">{{ str_repeat('★', max(0, min(5, (int) round($s['rating'])))) }}</p>
                         <p class="text-xs text-teal-800/60 mt-1.5">{{ $s['count'] }} {{ $L('reseñas', 'reviews', 'avaliações') }}</p>
+                    @if ($sLink)
+                    </a>
+                    @else
                     </div>
+                    @endif
                 @endif
             @endforeach
         </div>

@@ -3,7 +3,12 @@
     // Sin fallback a otro número: ver App\Models\Setting::contactPhone().
     // Si el cliente aún no lo cargó, el <li> de teléfono no se imprime.
     $contactPhone = \App\Models\Setting::contactPhone();
-    $contactEmail = \App\Models\Setting::get('contact_email') ?: 'info@limaamericatours.com';
+    // Mismo criterio que el teléfono: sin casilla inventada. Ver
+    // App\Models\Setting::contactEmail(). El cliente atiende por DOS cuentas y
+    // las dos están publicadas en el footer de producción, así que el segundo
+    // correo también sale de acá (opcional: sin dato no se pinta ese <li>).
+    $contactEmail          = \App\Models\Setting::contactEmail();
+    $contactEmailSecondary = \App\Models\Setting::contactEmailSecondary();
     // docs/qa/F7-personas.md §g #5: la dirección del panel (Configuración → Contacto)
     // se guardaba correctamente pero el footer ignoraba el Setting y mostraba el string
     // fijo de idioma __('footer.address'). SIN fallback a texto de idioma desde
@@ -29,7 +34,26 @@
     // detalle, y así en móvil reutiliza EXACTAMENTE el archivo que el hero ya
     // descargó (misma URL, sale de caché y cuesta 0 KB). Medido: 139 KB → 60 KB
     // en desktop, gratis en móvil.
-    $footBg = \App\Support\ResponsiveImage::defaultPhotoUrl(640);
+    //
+    // 2026-08-24 — Si la página que se está viendo ya pintó un bloque de
+    // cierre a sangre (hoy solo el home, .lat-closing), el footer usa SU MISMA
+    // foto y continúa el velo donde el cierre lo dejó. Antes cada uno traía la
+    // suya: el cierre Barranco y el footer la panorámica de Machu Picchu, uno
+    // encima del otro y con una costura horizontal en el medio. El jefe lo
+    // reportó así — "esto es una imagen completa en el footer, no 2". La foto
+    // llega por $__env->shared(), el mismo canal que ya usa
+    // `lat_hide_footer_newsletter` unas líneas más abajo; en cualquier otra
+    // página shared() devuelve null y el footer se ve exactamente igual que
+    // siempre.
+    // MEDIDO, no supuesto: poner la MISMA foto en los dos no alcanza. Cada
+    // bloque la recorta con su propio `cover` (alturas distintas ⇒ escalas
+    // distintas), así que en la unión la foto pega un salto — se vio en la
+    // captura a 1440, no en los números. Lo que sí funciona es que el bloque de
+    // cierre APAGUE su velo hasta el color exacto del footer (#100d0b) y el
+    // footer no traiga foto: la única foto de la zona es la del cierre y se
+    // funde a negro sin borde. Ver el velo en home.blade.php (.lat-closing).
+    $groundImg = $__env->shared('lat_ground_image', null);
+    $footBg = $groundImg ? null : \App\Support\ResponsiveImage::defaultPhotoUrl(640);
 
     // Tours Populares: usa los tours reales destacados (mismo criterio que la home)
     try {
@@ -93,8 +117,8 @@
     $esnnaSeal = \App\Support\ImagePath::homeImage(\App\Models\Setting::esnnaSealPath());
     $companyRuc = \App\Models\Setting::companyRuc();
 @endphp
-<footer class="lat-footer" role="contentinfo"
-        style="background-image:linear-gradient(rgba(16,13,11,.9), rgba(16,13,11,.96)), url('{{ $footBg }}');">
+<footer class="lat-footer{{ $groundImg ? ' lat-footer--ground' : '' }}" role="contentinfo"
+        @if ($footBg) style="background-image:linear-gradient(rgba(16,13,11,.9), rgba(16,13,11,.96)), url('{{ $footBg }}');" @endif>
 
     {{-- ══════════════════════════════════════════════════════════════════
          Footer de 5 columnas (2026-08-14, referencia que aprobó el cliente):
@@ -263,10 +287,22 @@
                         <a href="tel:{{ str_replace([' ', '+'], '', $contactPhone) }}">{{ $contactPhone }}</a>
                     </li>
                     @endif
+                    @if ($contactEmail)
                     <li>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
                         <a href="mailto:{{ $contactEmail }}">{{ $contactEmail }}</a>
                     </li>
+                    @endif
+                    {{-- Segunda casilla: el cliente atiende por dos y las dos
+                         están publicadas en el footer de producción. Es un <li>
+                         propio, no un "a@b / c@d" en una sola línea: así cada
+                         una es un mailto: clicable de verdad. --}}
+                    @if ($contactEmailSecondary)
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+                        <a href="mailto:{{ $contactEmailSecondary }}">{{ $contactEmailSecondary }}</a>
+                    </li>
+                    @endif
                     @if ($contactHours)
                     <li>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>

@@ -188,7 +188,10 @@ class SitemapController extends Controller
         // todavía, la línea de contacto simplemente no lo menciona (ver
         // App\Models\Setting::contactPhone()).
         $phone = \App\Models\Setting::contactPhone();
-        $email = \App\Models\Setting::get('contact_email') ?: 'info@limaamericatours.com';
+        // Mismo criterio que el teléfono: sin correo cargado, la línea no lo
+        // menciona en vez de publicar una casilla inventada (ver
+        // App\Models\Setting::contactEmail()).
+        $email = \App\Models\Setting::contactEmail();
         $wa = \App\Models\Setting::whatsappNumber();
 
         $L = [];
@@ -216,7 +219,11 @@ class SitemapController extends Controller
         $L[] = '- [Nosotros]('.$base.'/es/nosotros): quiénes somos y por qué reservar con nosotros.';
         $L[] = '- [Reseñas]('.$base.'/es/resenas): opiniones verificadas de viajeros (Google, TripAdvisor y web).';
         $L[] = '- [Blog]('.$base.'/es/blog): guías de viaje y consejos sobre Perú.';
-        $contactLine = '- [Contacto]('.$base.'/es/contacto): '.($phone ? 'WhatsApp '.$phone.' · ' : '').'Email '.$email.'.';
+        $canales = array_filter([
+            $phone ? 'WhatsApp '.$phone : null,
+            $email ? 'Email '.$email : null,
+        ]);
+        $contactLine = '- [Contacto]('.$base.'/es/contacto)'.($canales ? ': '.implode(' · ', $canales).'.' : '.');
         $L[] = $contactLine;
         $L[] = '';
 
@@ -224,7 +231,9 @@ class SitemapController extends Controller
         if ($wa) {
             $L[] = '- WhatsApp: https://wa.me/'.$wa;
         }
-        $L[] = '- Email: '.$email;
+        if ($email) {
+            $L[] = '- Email: '.$email;
+        }
         $L[] = '- Reserva online directa desde la página de cada tour (botón "Reservar ahora").';
         $L[] = '';
 

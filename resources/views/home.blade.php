@@ -378,6 +378,15 @@
         $__env->share('lat_hide_footer_newsletter', true);
     }
 
+    // Le pasa al footer la MISMA foto que pinta el bloque de cierre, por el
+    // mismo canal ($__env, ver arriba). Sin esto, el cierre pintaba Barranco y
+    // el footer la panorámica de Machu Picchu, uno pegado al otro: dos
+    // paisajes distintos con una costura horizontal en el medio. El jefe lo
+    // reportó el 2026-08-24 — "esto es una imagen completa en el footer, no 2".
+    // Con la misma foto y el velo continuando donde el cierre lo dejó
+    // (.93 → .97), la zona se lee como un solo fondo que se va oscureciendo.
+    $__env->share('lat_ground_image', $newsImgUrl);
+
     $badgeClass = fn (?string $type) => match ($type) {
         'success' => 'lat-dcard__badge--g',
         'warn'    => 'lat-dcard__badge--o',
@@ -730,8 +739,11 @@
                 @foreach ($offers as $offer)
                     @php
                         $offerImg = \App\Support\ImagePath::url($offer->image) ?? \App\Support\ResponsiveImage::defaultPhotoUrl(640);
-                        $offerHref = $offer->cta_url
-                            ?: ($offer->tour ? route('tours.show', ['locale' => $locale, 'slug' => $offer->tour->slug]) : route('tours.index', ['locale' => $locale]));
+                        // Ver App\Models\Offer::ctaHref(). NO usar `$offer->cta_url` en
+                        // crudo: una ruta guardada como "/es/tours" apunta a la RAÍZ del
+                        // dominio (el WordPress viejo), no a esta app, que cuelga de
+                        // /staging. Es el 404 que reportó el jefe el 2026-08-24.
+                        $offerHref = $offer->ctaHref($locale);
                     @endphp
                     <article class="lat-promo">
                         <a href="{{ $offerHref }}" class="lat-promo__media">
@@ -1277,7 +1289,7 @@
          desde Configuración → Home, este velo sigue siendo el peor caso
          razonable; una foto casi blanca habría que volver a medirla. --}}
     <div class="lat-closing"
-         style="background-image:linear-gradient(rgba(14,11,10,.74), rgba(14,11,10,.93)), url('{{ $newsImgUrl }}');">
+         style="background-image:linear-gradient(rgba(14,11,10,.74) 0%, rgba(14,11,10,.93) 72%, rgba(16,13,11,1) 100%), url('{{ $newsImgUrl }}');">
 
     {{-- Acá vivía el geoglifo de Nazca en SVG inline (.lat-closing__mark).
          RETIRADO el 2026-08-24: el jefe lo reportó por WhatsApp ("Las

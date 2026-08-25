@@ -14,7 +14,7 @@
     // Sin fallback a otro teléfono: ver App\Models\Setting::contactPhone().
     // Sin dato, el footer omite el teléfono.
     $contactPhone = \App\Models\Setting::contactPhone();
-    $contactEmail = \App\Models\Setting::get('contact_email') ?: 'reservas@limaamericatours.com';
+    $contactEmail = \App\Models\Setting::contactEmail() ?: config('mail.from.address');
     $fallbackImg  = asset('assets/banners/banner-hero.jpg');
 
     $recoverUrl = route('cart.recover', ['locale' => $locale, 'token' => $cart->token]);

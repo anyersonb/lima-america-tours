@@ -10,7 +10,7 @@
     // "Pagar por WhatsApp" no se imprime (queda solo "Ver mis tours").
     $contactPhone = \App\Models\Setting::contactPhone();
     $wa           = \App\Models\Setting::whatsappNumber();
-    $contactEmail = \App\Models\Setting::get('contact_email') ?: 'reservas@limaamericatours.com';
+    $contactEmail = \App\Models\Setting::contactEmail() ?: config('mail.from.address');
     $toursUrl     = url('/' . ($locale === 'en' ? 'en' : 'es') . '/tours');
     $fallbackImg  = asset('assets/banners/banner-hero.jpg');
     $travelDate   = $first?->travel_date ? \Carbon\Carbon::parse($first->travel_date) : null;

@@ -24,7 +24,7 @@
 
 @php
     $esnnaSeal = \App\Support\ImagePath::homeImage(\App\Models\Setting::esnnaSealPath());
-    $esnnaEmail = \App\Models\Setting::get('contact_email') ?: 'info@limaamericatours.com';
+    $esnnaEmail = \App\Models\Setting::contactEmail();
     $esnnaPhone = \App\Models\Setting::contactPhone();
 @endphp
 
@@ -90,8 +90,7 @@
                 <li>{{ __('legal.esnna_s4_police') }}</li>
                 <li>
                     {{ __('legal.esnna_s4_us') }}
-                    <a href="mailto:{{ $esnnaEmail }}" class="text-lat-red font-semibold">{{ $esnnaEmail }}</a>@if ($esnnaPhone)
-                        · <a href="tel:{{ str_replace([' ', '+'], '', $esnnaPhone) }}" class="text-lat-red font-semibold">{{ $esnnaPhone }}</a>@endif
+                    @if ($esnnaEmail)<a href="mailto:{{ $esnnaEmail }}" class="text-lat-red font-semibold">{{ $esnnaEmail }}</a>@endif@if ($esnnaEmail && $esnnaPhone) · @endif@if ($esnnaPhone)<a href="tel:{{ str_replace([' ', '+'], '', $esnnaPhone) }}" class="text-lat-red font-semibold">{{ $esnnaPhone }}</a>@endif
                 </li>
             </ul>
         </section>

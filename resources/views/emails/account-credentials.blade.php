@@ -6,7 +6,7 @@
     };
     $accountUrl = route('customer.account', ['locale' => $locale]);
     $loginUrl   = route('customer.login',   ['locale' => $locale]);
-    $contactEmail = \App\Models\Setting::get('contact_email') ?: 'reservas@limaamericatours.com';
+    $contactEmail = \App\Models\Setting::contactEmail() ?: config('mail.from.address');
     // Sin fallback a otro teléfono: ver App\Models\Setting::contactPhone().
     // Sin dato, la línea del footer solo muestra el correo.
     $contactPhone = \App\Models\Setting::contactPhone();

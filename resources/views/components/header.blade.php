@@ -5,7 +5,10 @@
     // de teléfono y los botones de WhatsApp de este header se ocultan con
     // @if cuando el cliente todavía no cargó el dato real.
     $contactPhone = \App\Models\Setting::contactPhone();
-    $contactEmail = \App\Models\Setting::get('contact_email') ?: 'info@limaamericatours.com';
+    // Sin fallback a una casilla inventada: ver App\Models\Setting::contactEmail().
+    // La topbar llegó a publicar `hola@limaamericatours.com`, que no es del
+    // cliente (reportado el 2026-08-24). Null = el enlace no se pinta.
+    $contactEmail = \App\Models\Setting::contactEmail();
     $whatsapp     = \App\Models\Setting::whatsappNumber();
 
     $sFb  = \App\Models\Setting::get('social_facebook');
@@ -86,10 +89,15 @@
                 {{ $contactPhone }}
             </a>
             @endif
+            {{-- Una sola cuenta acá: en la barra superior no entran dos y la
+                 principal es la que el cliente quiere ver primero. Las dos se
+                 publican juntas en el footer y en la ficha de Contacto. --}}
+            @if ($contactEmail)
             <a class="lat-topbar__email" href="mailto:{{ $contactEmail }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
                 {{ $contactEmail }}
             </a>
+            @endif
         </div>
         <div class="lat-topbar__right">
             <div class="lat-topbar__socials">

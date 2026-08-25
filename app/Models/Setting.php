@@ -57,6 +57,38 @@ class Setting extends Model
     }
 
     /**
+     * Correo de contacto público. Única fuente para topbar, footer, ficha de
+     * contacto, JSON-LD y ESNNA.
+     *
+     * SIN default en código, y el motivo no es teórico: el 2026-08-24 el jefe
+     * reportó que la topbar publicaba `hola@limaamericatours.com`, que no es
+     * una cuenta suya. Ese correo salía de un `?: 'hola@…'` escrito en la
+     * vista. Peor: había TRES direcciones inventadas distintas repartidas por
+     * el repo — `hola@`, `info@` y `reservas@` — así que el sitio publicaba
+     * una u otra según qué archivo pintara la línea, y ninguna existía. Mismo
+     * criterio que contactPhone(): null significa "el cliente no lo cargó" y
+     * cada consumidor oculta la línea en vez de inventar una casilla.
+     */
+    public static function contactEmail(): ?string
+    {
+        $value = trim((string) static::get('contact_email', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
+    /**
+     * Segundo correo de contacto. El cliente atiende por dos cuentas y las dos
+     * están publicadas en el footer del sitio de producción, una debajo de la
+     * otra. Opcional: vacío = se pinta solo el principal.
+     */
+    public static function contactEmailSecondary(): ?string
+    {
+        $value = trim((string) static::get('contact_email_secondary', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
+    /**
      * Número de WhatsApp listo para un enlace wa.me: solo dígitos, con
      * código de país, sin "+" ni espacios. Prioriza el Setting 'whatsapp'
      * explícito; si no existe, lo deriva de contactPhone(). Sin fallback a

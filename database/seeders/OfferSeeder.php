@@ -26,6 +26,16 @@ class OfferSeeder extends Seeder
      * lo carga por tarjeta en el panel y el bloque aparece solo (el Blade ya
      * envuelve el precio en `@if ($offer->price)`). Lo vigila
      * OfferPriceIsNotSeededTest.
+     *
+     * 2026-08-24 — `cta_url` pasó de `'/es/tours'` a `null` en las tres. Ese
+     * valor es una ruta absoluta DESDE LA RAÍZ DEL DOMINIO, y esta app no vive
+     * en el docroot: en staging (limaamericatours.com/staging) el botón "Leer
+     * más" mandaba al visitante a limaamericatours.com/es/tours, que es el
+     * WordPress viejo, y devolvía "No se ha podido encontrar la página".
+     * Reportado por el jefe con la captura del 404. Con `null`, el Blade cae al
+     * catálogo del idioma que se está viendo — que además arregla que en inglés
+     * y portugués el botón sacara al visitante de su idioma. Lo vigila
+     * OfferCtaUrlIsNotRootRelativeTest.
      */
     public function run(): void
     {
@@ -37,7 +47,7 @@ class OfferSeeder extends Seeder
                 'price' => null, // sin precio propio: el bloque "Desde" no se pinta (ver nota arriba)
                 'image' => 'tours/FULL-DAY-LIMA-ANCESTRAL-5-1-1.jpg',
                 'cta_label_es' => 'Leer más',
-                'cta_url' => '/es/tours',
+                'cta_url' => null, // ruta absoluta desde la raíz = 404 fuera del docroot; ver Offer::ctaHref()
                 'is_active' => true,
                 'order' => 1,
             ],
@@ -48,7 +58,7 @@ class OfferSeeder extends Seeder
                 'price' => null, // sin precio propio: el bloque "Desde" no se pinta (ver nota arriba)
                 'image' => 'tours/OASIS-DE-HUACACHINA-CON-BUGGIE-6-scaled-1.jpg',
                 'cta_label_es' => 'Leer más',
-                'cta_url' => '/es/tours',
+                'cta_url' => null, // ruta absoluta desde la raíz = 404 fuera del docroot; ver Offer::ctaHref()
                 'is_active' => true,
                 'order' => 2,
             ],
@@ -59,7 +69,7 @@ class OfferSeeder extends Seeder
                 'price' => null, // sin precio propio: el bloque "Desde" no se pinta (ver nota arriba)
                 'image' => 'tours/Machu_Picchu_Peru_-_Laslovarga_262-scaled.jpg',
                 'cta_label_es' => 'Leer más',
-                'cta_url' => '/es/tours',
+                'cta_url' => null, // ruta absoluta desde la raíz = 404 fuera del docroot; ver Offer::ctaHref()
                 'is_active' => true,
                 'order' => 3,
             ],

@@ -51,6 +51,22 @@ class ReviewController extends Controller
             }
         }
 
+        // Lo mismo para Tripadvisor, y por el mismo motivo: la tarjeta de
+        // resumen contaba solo las reseñas que tenemos publicadas acá (10),
+        // cuando el perfil del cliente tiene bastantes más. Sale de
+        // TripadvisorBadge, que es "todo o nada": si falta el enlace, el rating
+        // o la cantidad, devuelve null y la tarjeta sigue contando lo nuestro
+        // en vez de publicar una cifra a medias. Es el MISMO origen que
+        // alimenta el bloque del footer, así que las dos pantallas no pueden
+        // decir números distintos.
+        $taBadge = \App\Support\TripadvisorBadge::data($locale);
+        if ($taBadge && isset($stats['tripadvisor'])) {
+            $stats['tripadvisor'] = [
+                'count'  => $taBadge['count'],
+                'rating' => $taBadge['rating'],
+            ];
+        }
+
         $totalCount = $testimonials->count();
         // Sin reseñas NO hay promedio: `rating` viaja null y la vista oculta el
         // bloque entero. Antes caía a un 5.0 fijo, así que con la tabla vacía

@@ -12,6 +12,28 @@
     background-color: #100d0b;
     background-size: cover;
     background-position: center;
+
+    // Pedido del jefe el 2026-08-24: "esto es una imagen completa en el footer,
+    // no 2". Es la misma queja que ya se había atendido a medias quitando la
+    // raya roja de arriba: el corte que él ve NO era la raya, era que el bloque
+    // de cierre y el footer traían cada uno su propia foto (Barranco arriba, la
+    // panorámica de Machu Picchu abajo).
+    //
+    // La solución NO es ponerles la misma foto: probado en pantalla a 1440, con
+    // la misma foto la costura sigue viéndose porque cada bloque la recorta con
+    // su propio `cover` y las alturas son distintas, así que la imagen pega un
+    // salto justo en la unión.
+    //
+    // Lo que sí funciona: el cierre apaga su velo hasta ESTE mismo color
+    // (rgba(16,13,11,1) al 100% del gradiente, ver home.blade.php) y el footer
+    // no pinta foto — se queda con `background-color: #100d0b`. La única foto
+    // de la zona es la del cierre, que se funde a negro y entra al footer sin
+    // borde. Si algún día se le devuelve una foto propia al footer, vuelve la
+    // costura.
+    &--ground {
+        background-image: none;
+    }
+
     color: #c9c0b4;
     font-family: $lat-font-sans;
     padding-top: 64px;

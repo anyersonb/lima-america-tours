@@ -343,6 +343,12 @@ class AdminEditableCopyLoteAgo2026Test extends TestCase
     public function test_contact_channel_labels_render_from_page_blocks(): void
     {
         Setting::set('contact_phone', '+51 900 000 000');
+        // Desde 2026-08-24 el correo NO tiene fallback inventado (ver
+        // App\Models\Setting::contactEmail()): sin dato cargado, la tarjeta de
+        // correo entera se oculta —etiqueta incluida— en vez de publicar una
+        // casilla que no existe. Para verificar la ETIQUETA hay que cargar un
+        // correo, que es lo que pasa en el sitio real.
+        Setting::set('contact_email', 'qa@example.test');
         Setting::set('contact_hours_es', 'QA_ 9 a 6');
         Page::create([
             'slug' => 'contacto',
@@ -370,6 +376,9 @@ class AdminEditableCopyLoteAgo2026Test extends TestCase
     public function test_contact_channel_labels_fall_back_to_defaults_when_empty(): void
     {
         Setting::set('contact_phone', '+51 900 000 000');
+        // Ver la nota del test de arriba: sin correo cargado la tarjeta no se
+        // pinta, y su etiqueta por defecto tampoco.
+        Setting::set('contact_email', 'qa@example.test');
         Page::create(['slug' => 'contacto', 'title_es' => 'Contacto', 'is_published' => true, 'blocks' => []]);
 
         $response = $this->get('/es/contacto')->assertOk();
