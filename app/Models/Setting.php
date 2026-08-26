@@ -197,6 +197,27 @@ class Setting extends Model
         return $value !== '' ? $value : null;
     }
 
+    /**
+     * AFICHE oficial "Protégeme — Turismo Responsable" de MINCETUR, el que la
+     * agencia debe exhibir. Es distinto del SELLO: el sello es la marquita del
+     * footer y el afiche es el documento completo, con las tres leyes y las
+     * líneas de denuncia (1818 y Línea 100).
+     *
+     * Pedido del jefe el 2026-08-25 con la referencia de limaexperience: "al
+     * dar clic debe abrir esto". Por eso la página /esnna lo publica arriba
+     * del todo y el enlace del footer sigue llevando ahí.
+     *
+     * Como los sellos: es un archivo de la autoridad, sin default y sin
+     * versión redibujada por nosotros. Sin archivo, la página se publica con
+     * su texto y nada más.
+     */
+    public static function esnnaPosterPath(): ?string
+    {
+        $value = trim((string) static::get('esnna_poster', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
     /** Razón social. Mismo criterio que companyRuc(): sin default inventado. */
     public static function companyLegalName(): ?string
     {

@@ -113,6 +113,9 @@
     // imágenes del home: se resuelven con ImagePath::homeImage(), NO con
     // ::url(), que apunta al disco "public".
     $registrySeal = \App\Support\ImagePath::homeImage(\App\Models\Setting::registrySealPath());
+    // Caja del manual de marca (150x250 vertical / 300x120 horizontal): se
+    // decide midiendo el archivo, no suponiendo la orientación.
+    $registrySealBox = \App\Support\RegistrySeal::box(\App\Models\Setting::registrySealPath());
     $registrySealUrl = \App\Models\Setting::registrySealUrl();
     $esnnaSeal = \App\Support\ImagePath::homeImage(\App\Models\Setting::esnnaSealPath());
     $companyRuc = \App\Models\Setting::companyRuc();
@@ -383,13 +386,23 @@
                          misma solución que usa la referencia. --}}
                     <div class="lat-footer__seal-imgs">
                         @if ($registrySeal)
+                            {{-- Los width/height salen del manual de marca del
+                                 sello (RegistrySeal::box), no de un tamaño que
+                                 nos parezca bien: es un sello oficial y su
+                                 tamaño de exhibición está normado. --}}
+                            @php
+                                $sealAttrs = $registrySealBox
+                                    ? ' width="'.$registrySealBox['w'].'" height="'.$registrySealBox['h'].'"'
+                                    : '';
+                                $sealClass = 'lat-footer__seal-img'.($registrySealBox ? ' lat-footer__seal-img--'.$registrySealBox['orientation'] : '');
+                            @endphp
                             @if ($registrySealUrl)
-                                <a href="{{ $registrySealUrl }}" target="_blank" rel="noopener" class="lat-footer__seal-img">
-                                    <img src="{{ $registrySeal }}" alt="{{ __('footer.registry_seal_alt') }}" loading="lazy">
+                                <a href="{{ $registrySealUrl }}" target="_blank" rel="noopener" class="{{ $sealClass }}">
+                                    <img src="{{ $registrySeal }}" alt="{{ __('footer.registry_seal_alt') }}" loading="lazy"{!! $sealAttrs !!}>
                                 </a>
                             @else
-                                <span class="lat-footer__seal-img">
-                                    <img src="{{ $registrySeal }}" alt="{{ __('footer.registry_seal_alt') }}" loading="lazy">
+                                <span class="{{ $sealClass }}">
+                                    <img src="{{ $registrySeal }}" alt="{{ __('footer.registry_seal_alt') }}" loading="lazy"{!! $sealAttrs !!}>
                                 </span>
                             @endif
                         @endif

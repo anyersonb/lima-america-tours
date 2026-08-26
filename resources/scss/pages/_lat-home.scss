@@ -1537,7 +1537,9 @@
 
     &__quote { font-size: .88rem; color: $lat-ink-soft; line-height: 1.55; flex: 1; }
 
-    &__src { font-size: .74rem; font-weight: 700; color: $lat-muted; text-transform: uppercase; letter-spacing: .04em; }
+    // El origen de la reseña lo pinta <x-review-source> desde 2026-08-25:
+    // el rótulo en versalitas gris que había acá era justo lo que el jefe leyó
+    // como "en color negro". No queda regla propia.
 
     &--agg {
         align-items: center;

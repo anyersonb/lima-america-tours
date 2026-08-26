@@ -56,6 +56,9 @@ return [
     'esnna_title' => 'Code of conduct against ESNNA',
     'esnna_intro' => 'Lima América Tours absolutely rejects the sexual exploitation of children and adolescents (ESNNA) in tourism, and publicly commits to preventing and reporting it.',
 
+    'esnna_poster_alt' => 'Official MINCETUR poster: this agency does not promote or permit the sexual exploitation of children and adolescents, in accordance with Peruvian Law No. 29408. Report it free of charge on 1818 or Línea 100.',
+    'esnna_poster_caption' => 'Official poster of the Peruvian Ministry of Foreign Trade and Tourism. Click to view it full size.',
+
     'esnna_s1_title' => 'Our commitment',
     'esnna_s1_body' => 'As a Peruvian travel agency, we take it as given that tourism must never become a route to abuse. We commit to never facilitate, promote, tolerate or cover up any form of sexual exploitation of children and adolescents, neither directly nor through third parties working with us. This commitment binds our whole staff, our guides and every transport, lodging and activity provider we operate with.',
 

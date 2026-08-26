@@ -24,6 +24,7 @@
 
 @php
     $esnnaSeal = \App\Support\ImagePath::homeImage(\App\Models\Setting::esnnaSealPath());
+    $esnnaPoster = \App\Support\ImagePath::homeImage(\App\Models\Setting::esnnaPosterPath());
     $esnnaEmail = \App\Models\Setting::contactEmail();
     $esnnaPhone = \App\Models\Setting::contactPhone();
 @endphp
@@ -45,6 +46,26 @@
     </section>
 
     <div class="lat-wrap" style="padding:56px 24px 80px;max-width:920px">
+
+        {{-- El AFICHE va primero y a lo ancho: el pedido del jefe (2026-08-25,
+             con la referencia de limaexperience) fue literal — "cuando damos
+             clic debe abrir esto". El enlace del footer lleva acá, así que lo
+             primero que se ve al llegar tiene que ser el afiche, no la bajada.
+             Enlaza al archivo para poder abrirlo a pantalla completa: en el
+             pie del afiche están las leyes y los teléfonos de denuncia, y a
+             920px de ancho de columna esa letra no se lee. --}}
+        @if ($esnnaPoster)
+            <figure class="mb-10">
+                <a href="{{ $esnnaPoster }}" target="_blank" rel="noopener"
+                   class="block rounded-xl overflow-hidden ring-1 ring-black/10 hover:ring-black/25 transition">
+                    <img src="{{ $esnnaPoster }}" alt="{{ __('legal.esnna_poster_alt') }}"
+                         class="w-full h-auto block" width="1200" height="1689">
+                </a>
+                <figcaption class="mt-3 text-sm text-lat-muted">
+                    {{ __('legal.esnna_poster_caption') }}
+                </figcaption>
+            </figure>
+        @endif
 
         <p class="text-lat-ink leading-relaxed text-lg mb-10">{{ __('legal.esnna_intro') }}</p>
 

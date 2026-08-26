@@ -20,12 +20,15 @@
             : (str_contains($s, 'trivago') ? 'trivago' : 'web'));
     };
 
-    // Metadatos visuales por origen
+    // Nombre visible de cada origen. El logo y el color ya no viven acá: los
+    // pinta <x-review-source>, que es la única fuente desde 2026-08-25 (antes
+    // esta pantalla tenía su propia paleta de puntos y píldoras, distinta de
+    // la de la home y la de Nosotros).
     $srcMeta = [
-        'google'      => ['label' => 'Google',      'dot' => '#4285F4', 'soft' => 'bg-blue-50 text-blue-700 ring-blue-200'],
-        'tripadvisor' => ['label' => 'Tripadvisor', 'dot' => '#00AA6C', 'soft' => 'bg-emerald-50 text-emerald-700 ring-emerald-200'],
-        'trivago'     => ['label' => 'Trivago',     'dot' => '#E5546C', 'soft' => 'bg-rose-50 text-rose-700 ring-rose-200'],
-        'web'         => ['label' => $L('Nuestra web', 'Our website', 'Nosso site'), 'dot' => '#0E7C6B', 'soft' => 'bg-teal-50 text-teal-700 ring-teal-200'],
+        'google'      => ['label' => 'Google'],
+        'tripadvisor' => ['label' => 'Tripadvisor'],
+        'trivago'     => ['label' => 'Trivago'],
+        'web'         => ['label' => $L('Nuestra web', 'Our website', 'Nosso site')],
     ];
 
     // Tarjetas de resumen (solo orígenes con reseñas), en orden fijo
@@ -103,9 +106,10 @@
                     @else
                     <div class="bg-white rounded-2xl ring-1 ring-black/5 shadow-sm px-4 py-5 text-center">
                     @endif
-                        <div class="flex items-center justify-center gap-2 mb-2">
-                            <span class="inline-block w-2.5 h-2.5 rounded-full" style="background: {{ $srcMeta[$key]['dot'] }}"></span>
-                            <span class="font-semibold text-teal-900">{{ $srcMeta[$key]['label'] }}</span>
+                        <div class="flex items-center justify-center mb-2">
+                            {{-- Logo de la plataforma en vez del punto de color
+                                 ("el colorcito"), pedido del jefe 2026-08-25. --}}
+                            <x-review-source :source="$key" variant="card" class="lat-rsrc--lg" />
                         </div>
                         <p class="font-display text-3xl lg:text-4xl text-teal-900 leading-none">{{ number_format($s['rating'], 1) }}</p>
                         <p class="text-orange-400 text-sm mt-1" aria-hidden="true">{{ str_repeat('★', max(0, min(5, (int) round($s['rating'])))) }}</p>
@@ -149,13 +153,17 @@
                 @foreach ($testimonials as $t)
                     @php
                         $k = $srcKey($t);
-                        $meta = $srcMeta[$k];
                         $rate = (int) round((float) ($t->rating ?? 5));
                         $quote = trim((string) ($t->quote ?? ''));
                         $initial = strtoupper(mb_substr(trim((string) ($t->name ?? '?')), 0, 1));
                         $long = mb_strlen($quote) > 200; // umbral para mostrar "ver más"
                     @endphp
-                    <article class="flex flex-col bg-white rounded-2xl ring-1 ring-black/5 shadow-sm hover:shadow-md transition-shadow p-5 h-full"
+                    {{-- min-w-0: sin esto el item de grid toma su ancho MÍNIMO DE CONTENIDO
+                         (la cabecera: avatar + nombre + sello de origen) y a 390px la
+                         tarjeta salía 411px de ancho dentro de un documento de 375 —
+                         scroll horizontal en toda la página. Medido: 431 -> 375 de
+                         scrollWidth. Venía de antes del cambio de sellos. --}}
+                    <article class="flex flex-col min-w-0 bg-white rounded-2xl ring-1 ring-black/5 shadow-sm hover:shadow-md transition-shadow p-5 h-full"
                              x-data="{ exp: false }"
                              x-show="f === 'all' || f === '{{ $k }}'" x-transition.opacity>
                         <div class="flex items-center gap-3">
@@ -172,10 +180,7 @@
                                     <p class="text-xs text-teal-800/60 truncate">{{ $t->country }}</p>
                                 @endif
                             </div>
-                            <span class="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full ring-1 {{ $meta['soft'] }}">
-                                <span class="inline-block w-1.5 h-1.5 rounded-full" style="background: {{ $meta['dot'] }}"></span>
-                                {{ $meta['label'] }}
-                            </span>
+                            <x-review-source :source="$k" variant="chip" class="ml-auto shrink-0" />
                         </div>
 
                         <p class="text-orange-400 text-sm mt-3" aria-label="{{ $rate }} {{ $L('de 5 estrellas', 'out of 5 stars', 'de 5 estrelas') }}">

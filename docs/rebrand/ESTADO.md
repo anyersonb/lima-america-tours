@@ -1,9 +1,135 @@
 # Estado del rebrand "anti-IA" y del lote de mockups
 
-Actualizado: 2026-08-24 · Rama `feat/mockups-ago-2026` · Publicado en staging: **ver `.deployed-commit` del servidor**
+Actualizado: 2026-08-25 · Rama `feat/mockups-ago-2026` · Publicado en staging: **ver `.deployed-commit` del servidor**
 
 Este archivo existe para que el siguiente que abra el proyecto (o yo mismo dentro
 de un mes) no tenga que reconstruir de memoria en qué quedó todo.
+
+## Lote 2026-08-25 — los cinco comentarios del jefe sobre staging (móvil)
+
+Cinco capturas por WhatsApp, todas desde el celular. Tres eran datos que ya
+tenían su campo esperando vacío en Configuración; dos eran código.
+
+### 1. "Aquí abajo faltaría el RUC: 20616108264"
+
+Solo faltaba el DATO. El campo `company_ruc`, su guard y su lugar en el
+copyright estaban escritos desde el 21/08 y vacíos **a propósito**: en este repo
+llegaron a convivir dos RUC contradictorios publicados a la vez, así que se
+decidió no imprimir ninguno sin confirmación del cliente. Hoy la hay.
+
+Cargado en `Configuración → Contacto → Datos legales`, y también en
+`database/data/lote-2026-08-25-datos.sql` — un `git push` no lleva filas.
+
+### 2. "Falta colocar el código ESSNA" + el sello de agencia registrada
+
+Dos piezas distintas que el jefe nombró juntas, y conviene no confundirlas
+nunca más:
+
+| | Qué es | Dónde va |
+|---|---|---|
+| **Sello RNAVT** | "Agencia de viajes y turismo registrada" (MINCETUR) | Franja de confianza del footer |
+| **Afiche ESNNA** | "Protégeme — Turismo Responsable": el documento con las tres leyes y las líneas 1818 / Línea 100 | Arriba de `/esnna` |
+
+**El sello tiene tamaño NORMADO y no lo estábamos respetando.** El manual de
+marca fija dos presentaciones para medios digitales: vertical **150×250** y
+horizontal **300×120**. El footer lo pintaba con `height: clamp(52px,7vw,68px)`
+y ancho automático; como el archivo del cliente resultó vertical (480×758), el
+navegador lo dejaba en **33×52 px** — medido en pantalla, no supuesto — con las
+cuatro líneas de texto convertidas en una mancha.
+
+Ahora la caja la decide `App\Support\RegistrySeal::box()` **midiendo el
+archivo**, no suponiendo la orientación: el día que el cliente suba la versión
+horizontal desde el panel, el footer la pinta a 300×120 sin tocar código. El
+`getimagesize()` se cachea por ruta+mtime; sin eso sería una lectura de disco en
+el footer de todas las páginas del sitio.
+
+Lo vigila `RegistrySealBoxTest` (5 casos), **probado en rojo** cambiando la
+constante del helper a 999×999 antes de darlo por bueno.
+
+**El afiche**: el pedido fue literal, con la referencia de limaexperience —
+"cuando damos clic debe abrir esto". El enlace del footer ya llevaba a `/esnna`,
+así que lo que cambió es qué se ve al llegar: el afiche va primero, a lo ancho
+de la columna, y enlaza al archivo para abrirlo a pantalla completa (en su pie
+están las leyes y los teléfonos de denuncia, y a 920px de columna esa letra no
+se lee). El texto del compromiso sigue debajo: es contenido nuestro, indexable,
+y la página se publica igual si algún día no hay afiche.
+
+Campo nuevo `esnna_poster` en Configuración, a 1200px de ancho — la gente lo
+abre para LEERLO, no para reconocerlo. Es distinto de `esnna_seal`, que es la
+marquita chica del footer.
+
+### 3 y 4. "Los comentarios de Google quedarán así, en color negro?" / "Si utilizamos el logo de Google en vez del colorcito"
+
+El mismo pedido visto en dos pantallas, y las dos lo resolvían distinto:
+
+- home y Nosotros → el nombre del origen en versalitas grises (`TRIPADVISOR`),
+  que es lo que él leyó como "en color negro";
+- `/resenas` → un punto de color con el nombre al lado ("el colorcito").
+
+Tres marcados para el mismo dato. Ahora hay uno: `<x-review-source>`, con
+variantes `card` / `dark` / `chip` / `--lg`. Los dos orígenes con marca propia
+van con su **logo real** — el isotipo de Google en sus cuatro colores y el búho
+de Tripadvisor en su verde — sin recolorear: son marcas de terceros y el
+reconocimiento es justo lo que le da valor a la atribución.
+
+"Nuestra web" **no** lleva logo: no es una plataforma externa, y un sello propio
+ahí haría pasar por verificada una reseña que cargamos nosotros. Conserva su
+punto de color.
+
+El nombre en texto sí toma el color de la marca, pero no el del logo: el
+`#00AA6C` de Tripadvisor no llega a 3:1 como texto sobre blanco. El texto usa
+`#00623d` (7.26:1) y el verde vivo se queda en el logo. Google va en `#1a73e8`
+(4.68:1). Sobre la franja oscura de Nosotros los dos se apagan, y ahí el nombre
+va en blanco al 72% con el logo sosteniéndose solo.
+
+**De paso apareció un defecto que no era del pedido**: `/resenas` tenía **scroll
+horizontal en móvil**, y venía de antes (medido: 415px de `scrollWidth` en un
+documento de 375 incluso con la píldora vieja; con el chip nuevo, 431). La causa
+no era el chip sino el `min-width: auto` que traen por defecto los items de
+grid: la tarjeta tomaba su ancho mínimo de contenido y salía de 411px. Con
+`min-w-0` en el `<article>`, 375. Además, bajo 480px el chip deja solo el logo
+—el nombre queda en sr-only— para no robarle el ancho al nombre del viajero.
+
+### 5. "¿Habrá forma de administrar esa parte?" (los guías)
+
+Sí, y ya la había: **Admin → Guías**, con foto, rol, biografía e idiomas por
+idioma, redes, orden y activo/inactivo. Lo que él vio en la captura son las
+iniciales en un círculo rojo, que es el *fallback* de cuando el guía no tiene
+foto cargada. **Faltan las fotos, no el módulo.**
+
+### 6. Cusco en los primeros lugares
+
+"Aquí podrían aparecer en primeros lugares los tours de Cusco creo yo". Los
+siete tours de Cusco estaban publicados y completos (foto, precio, galería) pero
+ninguno destacado, así que "Tours Destacados" era todo Lima/Ica.
+
+Es dato, no código: `featured_order` es manual y se edita tour por tour en el
+panel. Se **intercaló** en vez de poner los cuatro de Cusco arriba — subir Cusco
+no es apagar Lima, que da nombre a la agencia y de donde vienen casi todas las
+reseñas:
+
+Machu Picchu · City Tour Lima · Montaña 7 Colores · Paracas-Ica · Valle Sagrado
+· Huaca Pucllana · Laguna Humantay · Parque de las Aguas.
+
+En `database/data/lote-2026-08-25-datos.sql`, con la advertencia de verificar
+los ids antes de correrlo en otro servidor.
+
+### Abierto, decide Anyerson
+
+- **La versión horizontal del sello (300×120) no la tenemos.** Solo llegó la
+  vertical. El footer ya sabe pintar las dos; si el cliente manda el archivo
+  horizontal, encaja mejor en esa franja y se carga desde el panel sin tocar
+  código.
+- **Los guías no tienen foto.** Hay que pedírselas o la sección seguirá
+  mostrando iniciales.
+- **Las tarjetas de tour publican "4.8 (0)"**: una nota con cero reseñas
+  detrás. Es la misma clase de cifra sin respaldo que ya se limpió en otras
+  pantallas; no entraba en este lote.
+- **El FAB de WhatsApp tapa el chip de idioma del footer en móvil.** Se ve en
+  la captura del jefe. NO se tocó: el chip no es un control, y sumar elementos
+  no-CTA a `CONTROL_SELECTOR` ya provocó dos regresiones documentadas (el FAB
+  aterriza encima de otra cosa). Si molesta, se resuelve moviendo el chip, no
+  el FAB.
 
 ## Lote 2026-08-24 (tarde) — los cuatro comentarios del jefe sobre staging
 

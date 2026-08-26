@@ -1186,8 +1186,6 @@
                 @foreach ($homeReviewCards as $t)
                     @php
                         $tInitial = strtoupper(mb_substr(trim((string) $t->name), 0, 1));
-                        $tSrc = app(\App\Services\ReviewAggregator::class)->normalizeSource($t->source);
-                        $tSrcLabel = ['google' => 'Google', 'tripadvisor' => 'Tripadvisor', 'trivago' => 'Trivago', 'web' => $L('Nuestra web', 'Our website', 'Nosso site')][$tSrc];
                     @endphp
                     <article class="lat-rcard lat-reveal" style="transition-delay:{{ min($loop->index, 5) * 70 }}ms">
                         <div class="lat-rcard__head">
@@ -1203,7 +1201,7 @@
                         </div>
                         <span class="lat-stars"><span class="lat-stars__s">@for ($i = 0; $i < 5; $i++)<svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6L12 2z"/></svg>@endfor</span></span>
                         <p class="lat-rcard__quote clamp-3">{{ $t->quote }}</p>
-                        <span class="lat-rcard__src">{{ $tSrcLabel }}</span>
+                        <x-review-source :source="$t->source" variant="card" />
                     </article>
                 @endforeach
 

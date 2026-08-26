@@ -270,16 +270,48 @@
         padding: 8px 10px;
         transition: transform .15s, box-shadow .15s;
 
+        // Sellos SIN caja normada (hoy el de ESNNA): tope de alto y de ancho.
+        // Nunca una altura fija — el sello del cliente resultó vertical y con
+        // los 68px que había antes salía renderizado a 33x52, con las cuatro
+        // líneas de texto ilegibles (medido en el navegador, no supuesto).
         img {
             display: block;
             width: auto;
-            height: clamp(52px, 7vw, 68px);
+            height: auto;
+            max-height: clamp(84px, 16vw, 120px);
             max-width: 160px;
             object-fit: contain;
         }
 
         &[href]:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 0, .35); }
         &[href]:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+    }
+
+    // El sello de registro SÍ tiene tamaño normado: el manual de marca fija
+    // 150x250 para la versión vertical y 300x120 para la horizontal. La
+    // orientación la decide App\Support\RegistrySeal midiendo el archivo.
+    // El ancho es el que manda; la altura sale del ratio para no deformarlo.
+    &__seal-img--vertical img,
+    &__seal-img--horizontal img {
+        max-height: none;
+        height: auto;
+    }
+
+    &__seal-img--vertical img {
+        width: 150px;
+        max-width: 150px;
+    }
+
+    &__seal-img--horizontal img {
+        width: 300px;
+        max-width: 300px;
+    }
+
+    // Bajo 400px de viewport, 300px de sello más el padding de la caja y el
+    // del footer no entran: el horizontal cede al ancho disponible. El
+    // vertical (150px) entra sin tocarlo.
+    @media (max-width: 400px) {
+        &__seal-img--horizontal img { width: 100%; max-width: 260px; }
     }
 
     &__ruc {

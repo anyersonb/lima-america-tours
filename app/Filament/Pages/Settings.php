@@ -201,6 +201,20 @@ class Settings extends Page implements HasForms
                                     ->saveUploadedFileUsing(\App\Support\ImageOptimizer::saver('legal', 480, disk: 'media', deletePrevious: true))
                                     ->helperText('Opcional. La página "Código de conducta ESNNA" del sitio funciona igual sin este sello: el compromiso se publica como texto y el footer siempre enlaza a esa página.')
                                     ->columnSpanFull(),
+
+                                // El AFICHE no es el sello: es el documento
+                                // completo de MINCETUR ("Protégeme — Turismo
+                                // Responsable") con las leyes y las líneas de
+                                // denuncia. Va a 1200px porque la gente lo
+                                // abre para LEERLO, no para reconocerlo.
+                                FileUpload::make('esnna_poster')
+                                    ->label('Afiche ESNNA "Protégeme" (MINCETUR)')
+                                    ->image()
+                                    ->disk('media')
+                                    ->directory('legal')
+                                    ->saveUploadedFileUsing(\App\Support\ImageOptimizer::saver('legal', 1200, disk: 'media', deletePrevious: true))
+                                    ->helperText('El afiche oficial completo. Se publica arriba de la página "Código de conducta ESNNA", que es a donde lleva el enlace del footer. Súbelo en la mejor calidad que tengas: se puede abrir a pantalla completa para leer las leyes y los teléfonos de denuncia.')
+                                    ->columnSpanFull(),
                             ]),
 
                         TextInput::make('booking_notification_email')

@@ -55,6 +55,9 @@ return [
     'esnna_title' => 'Código de conduta contra a ESNNA',
     'esnna_intro' => 'A Lima América Tours rejeita de forma absoluta a exploração sexual de crianças e adolescentes (ESNNA) no âmbito do turismo e assume o compromisso público de preveni-la e denunciá-la.',
 
+    'esnna_poster_alt' => 'Cartaz oficial do MINCETUR: nesta agência não promovemos nem permitimos a exploração sexual de crianças e adolescentes, conforme a Lei n.º 29408 do Peru. Denuncie pela linha gratuita 1818 ou pela Línea 100.',
+    'esnna_poster_caption' => 'Cartaz oficial do Ministério do Comércio Exterior e Turismo do Peru. Clique para ver em tamanho real.',
+
     'esnna_s1_title' => 'Nosso compromisso',
     'esnna_s1_body' => 'Como agência de viagens peruana, partimos do princípio de que o turismo não pode ser um caminho para o abuso. Comprometemo-nos a não facilitar, promover, tolerar nem acobertar qualquer forma de exploração sexual de crianças e adolescentes, nem por ação própria nem por meio de terceiros que trabalhem conosco. Este compromisso vale para toda a nossa equipe, nossos guias e cada fornecedor de transporte, hospedagem e atividades com quem operamos.',
 
