@@ -37,7 +37,8 @@ set -uo pipefail
 
 HOST="${HOST:-86.48.23.174}"
 SSH_USER="${SSH_USER:-root}"
-SSH_KEY="${SSH_KEY:-$HOME/.ssh/lima_america_staging}"
+# La llave buena es la `_installed` (ver la nota junto a DEPLOYED_COMMIT).
+SSH_KEY="${SSH_KEY:-$HOME/.ssh/lima_america_staging_installed}"
 REMOTE="${REMOTE:-/home/limaamericatours.com/public_html/staging}"
 SITE_USER="${SITE_USER:-limaa3133}"          # dueño real de los archivos
 PHP="${PHP:-/usr/local/lsws/lsphp82/bin/php}" # el PHP del sistema NO trae mysqli
@@ -95,7 +96,21 @@ SSH_OPTS=(-i "$SSH_KEY" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15
 # Desde el 2026-08-13 este valor es solo un respaldo: manda `.deployed-commit` del
 # servidor (ver el bloque de abajo). Ya no hace falta actualizarlo a mano en cada
 # deploy, pero se deja apuntando al último publicado por si el archivo remoto se pierde.
-DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-486337e}"
+# 2026-08-25 · 03cac72 — los cinco comentarios del jefe (RUC, sello RNAVT a 150x250,
+# afiche ESNNA, logos de Google/Tripadvisor en reseñas, Cusco arriba). NO trajo
+# migración, pero SÍ datos: hay que correr a mano, después del deploy,
+#   sudo -u limaa3133 $PHP artisan tinker  con  database/data/lote-2026-08-25-datos.sql
+# (o el mysql equivalente) + `artisan cache:clear`, porque Setting::get() cachea
+# `settings.all` para siempre y sin eso el sello y el RUC no aparecen aunque la
+# fila esté puesta. `data:audit-foreign` quedó limpio. 612 tests en verde.
+#
+# OJO CON LA LLAVE: `~/.ssh/lima_america_staging` YA NO la acepta el servidor
+# (Permission denied publickey). La que entra es
+# `~/.ssh/lima_america_staging_installed` — el nombre no es decorativo, es la que
+# quedó instalada en el VPS. Con la otra el script aborta en el paso 0 y, peor,
+# antes de eso no puede leer `.deployed-commit`, así que avisa "el servidor no lo
+# tiene todavía" y calcula el diff contra el respaldo de este archivo.
+DEPLOYED_COMMIT="${DEPLOYED_COMMIT:-03cac72}"
 
 # --- La fuente de verdad la tiene el SERVIDOR, no este archivo ---------------
 # El valor de arriba es un respaldo para el primer deploy y para leerlo como
